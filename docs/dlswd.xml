@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<dlsw:Helping xmlns:dlsw="http://www.linux-sna.org/dlsw">
+<dlsw:dlswd>  
+  <dlsw:global>
+    <dlsw:debuglevel>20</dlsw:debuglevel>
+  </dlsw:global>
+  <dlsw:monitor>
+    <dlsw:port>4110</dlsw:port>
+  </dlsw:monitor>
+  <dlsw:partner>
+    <dlsw:device>eth0</dlsw:device>
+    <dlsw:ip>little.screamingdaemon.com</dlsw:ip>
+    <dlsw:sap>0xAB</dlsw:sap>
+  </dlsw:partner>
+</dlsw:dlswd>
+</dlsw:Helping>

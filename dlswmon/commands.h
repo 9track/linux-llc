@@ -1,0 +1,10 @@
+void quit(void);
+void help(int argc, char *argv[]);
+void open_monitor(int argc, char *argv[]);
+void disconnect(void);
+void syst(void);
+void status(void);
+void network(void);
+void suspend(void);
+void resume(void);
+void setdebug(int argc, char *argv[]);

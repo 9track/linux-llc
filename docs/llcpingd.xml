@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<llcping:Helping xmlns:llcping="http://www.linux-sna.org/llcping">
+<llcping:llcpingd>
+  <llcping:global>
+    <llcping:debuglevel>1</llcping:debuglevel>
+  </llcping:global>
+  <llcping:listen>
+    <llcping:type>1</llcping:type>
+    <llcping:lsap>0x88</llcping:lsap>
+    <llcping:iface>eth0</llcping:iface>
+  </llcping:listen>
+  <llcping:listen>
+    <llcping:type>1</llcping:type>
+    <llcping:lsap>0x90</llcping:lsap>
+    <llcping:iface>any</llcping:iface>
+  </llcping:listen>
+  <llcping:listen>
+    <llcping:type>2</llcping:type>
+    <llcping:lsap>0x50</llcping:lsap>
+    <llcping:iface>eth0</llcping:iface>
+  </llcping:listen>
+  <llcping:listen>
+    <llcping:type>2</llcping:type>
+    <llcping:lsap>0x52</llcping:lsap>
+    <llcping:iface>any</llcping:iface>
+  </llcping:listen>
+</llcping:llcpingd>
+</llcping:Helping>

@@ -8,12 +8,15 @@
 packets to network hosts
 .Sh SYNOPSIS
 .Nm llcping
-.Op Fl fqvhb
+.Op Fl hvxbfq
+.Op Fl t Ar 1|2
+.Op Fl s Ar ssap
+.Op Fl d Ar dsap
 .Op Fl c Ar count
 .Op Fl i Ar wait
-.Op Fl l Ar preload
 .Op Fl p Ar pattern
-.Op Fl s Ar packetsize
+.Op Fl l Ar len
+.Op SR:CM:AC:AD:DR:ES DS:TM:AC:AD:DR:ES
 .Sh DESCRIPTION
 .Nm llcping
 uses the
@@ -33,6 +36,10 @@ and then an arbitrary number of ``pad'' bytes used to fill out the
 packet.
 The options are as follows:
 .Bl -tag -width Ds
+.It Fl h
+Useless help information.
+.It Fl x
+Hexdump each outgoing and incomming llcping packet.
 .It Fl b
 Bit-swap the destination MAC address.
 .It Fl c Ar count
@@ -63,14 +70,31 @@ The default is to wait for one second between each packet.
 This option is incompatible with the
 .Fl f
 option.
-.It Fl l Ar preload
+.It Fl t Ar 1|2
 If
-.Ar preload
+.Ar 1|2
 is specified,
 .Nm llcping
-sends that many packets as fast as possible before falling into its normal
-mode of behavior.
-Only the super-user may use this option.
+sends ``ping'' packets over an LLC1 or LLC2 connection. In order to
+send a llc ping over LLC1 or LLC2 a LLC echo server must be configured
+and running on the Destination MAC. AFAIK the linux-llc llcpingd is the
+only echo server of this type. If
+.Nm -t 1|2
+is
+.Nm *not*
+specified llcping defaults to sending LLC TEST frames.
+.It Fl s Ar ssap
+Use
+.Nm ssap
+as the LLC connection's source SAP. If no ssap is specified or a ssap of 0x00
+is specified the linux-llc stack will dynamicly allocate a ssap for this
+connection.
+.It Fl d Ar dsap
+Use
+.Nm dsap
+as the LLC connection's destination SAP. If no dsap is specified then the default
+is 0x00 or NULL DSAP. The remote LLC station will only respond to llc TEST frames
+using a NULL DSAP.
 .It Fl p Ar pattern
 You may specify up to 16 ``pad'' bytes to fill out the packet you send.
 This is useful for diagnosing data-dependent problems in a network.
@@ -82,7 +106,7 @@ ones.
 Quiet output.
 Nothing is displayed except the summary lines at startup time and
 when finished.
-.It Fl s Ar packetsize
+.It Fl l Ar len
 Specifies the number of data bytes to be sent.  
 The default is 61, which translates into 64
 .Tn LLC TEST COMMAND 
@@ -167,4 +191,4 @@ broadcast address should only be done under very controlled conditions.
 .Xr aping 8
 .Pp
 .Sh AUTHORS
-Jay Schulist, <jschlst@turbolinux.com>
+Jay Schulist, <jschlst@samba.org>

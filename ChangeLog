@@ -1,5 +1,24 @@
 Change log for Linux-LLC package.
 
+1.00PRE11, November 2, 2001.
+- changed llcping dsap and ssap default to 0x00.
+- updated llcping.8 man page.
+- removed start.sh from llcping directory.
+- rewrote llcping client, YES!
+
+1.00PRE10, November 1, 2001.
+- New netbeui+8022 and llc_sock patch.
+
+1.00PRE09, October 25, 2001
+- Rewrote llcpingd to be a respectable server process.
+- Removed llcpingd2, a sad life it had.
+- Coded protocol headers and structures.
+- Added base code for dlsw daemon and monitor
+- Updated THANKS file.
+- Added directory for DLSwMon code.
+- Added directory for DLSw code.
+- Removed one more offending debug message.
+
 1.00PRE08, September 25, 2001
 - New llc-ui patch with less debug
 

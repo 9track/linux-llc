@@ -2,7 +2,7 @@
 
 AUTOMAKE_OPTIONS = 1.3e foreign
 
-BUILD_SUBDIRS = . include docs llcping
+BUILD_SUBDIRS = . include docs llcping dlswd dlswmon
 SUBDIRS = $(BUILD_SUBDIRS)
 DIST_SUBDIRS = $(BUILD_SUBDIRS) $(CONF_SUBDIRS)
 
@@ -17,7 +17,7 @@ CLEANFILES = libtool
 
 # Patch-o-matic happenings
 KERNEL_DIR=/usr/src/linux
-PENDING_PATCHES:=ac-llc-20010904.patch llc-ui-20010915.patch
+PENDING_PATCHES:=netbeui+8022.patch llc_sock.patch
 export KERNEL_DIR
 
 ################################################################

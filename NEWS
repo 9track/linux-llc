@@ -1,5 +1,14 @@
 Linux-LLC software NEWs.
 
+1.00PRE11:
+see ChangeLog
+
+1.00PRE10:
+New llc kernel patches.
+
+1.00PRE09:
+New llcpingd server and dlsw base code.
+
 1.00PRE08:
 New llc-ui patch with less debug
 

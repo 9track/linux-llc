@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to create configure.
 
-AC_INIT(llcping.c)
-AM_INIT_AUTOMAKE(llcping, 1.00PRE11)
+AC_INIT(dlswd.c)
+AM_INIT_AUTOMAKE(dlswd, 1.00PRE11)
 
 AC_PROG_CC
 AC_EXEEXT

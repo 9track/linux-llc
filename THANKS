@@ -2,3 +2,10 @@ Thanks to all the people that have fixed or reported bugs in Linux-LLC!
 
 In particular:
   Jay Schulist <jschlst@samba.org>
+	- llc user interface sockets
+	- data link switching
+
+  Arnaldo Carvalho de Melo <acme@conectiva.com.br>
+	- Porting Procomm llc stack
+
+  If your name is missing please send e-mail to jschlst@samba.org
