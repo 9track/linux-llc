@@ -77,30 +77,39 @@ XML_CONFIG = @XML_CONFIG@
 AUTOMAKE_OPTIONS = foreign
 
 EXTRA_DIST = $(man_MANS)
-INCLUDES = -I../include -fPIC
+INCLUDES = -I../include
 CFLAGS = -Wall
 
-lib_LTLIBRARIES = libllcdb.la
+bin_PROGRAMS = llctelnet
+sbin_PROGRAMS = llctelnetd
 
-libllcdb_la_LDFLAGS = -Wc,-nostartfiles -release $(VERSION)
-libllcdb_la_SOURCES = llcdb.c
+llctelnet_SOURCES = llctelnet.c
+llctelnetd_SOURCES = llctelnetd.c
 
-include_HEADERS = llcdb.h
+include_HEADERS = 
 noinst_HEADERS = 
 
 man_MANS = 
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/../mkinstalldirs
 CONFIG_CLEAN_FILES = 
-LTLIBRARIES =  $(lib_LTLIBRARIES)
+bin_PROGRAMS =  llctelnet$(EXEEXT)
+sbin_PROGRAMS =  llctelnetd$(EXEEXT)
+PROGRAMS =  $(bin_PROGRAMS) $(sbin_PROGRAMS)
 
 
 DEFS = @DEFS@ -I. -I$(srcdir) 
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
-libllcdb_la_LIBADD = 
-libllcdb_la_OBJECTS =  llcdb.lo
+llctelnet_OBJECTS =  llctelnet.o
+llctelnet_LDADD = $(LDADD)
+llctelnet_DEPENDENCIES = 
+llctelnet_LDFLAGS = 
+llctelnetd_OBJECTS =  llctelnetd.o
+llctelnetd_LDADD = $(LDADD)
+llctelnetd_DEPENDENCIES = 
+llctelnetd_LDFLAGS = 
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -117,8 +126,8 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
-SOURCES = $(libllcdb_la_SOURCES)
-OBJECTS = $(libllcdb_la_OBJECTS)
+SOURCES = $(llctelnet_SOURCES) $(llctelnetd_SOURCES)
+OBJECTS = $(llctelnet_OBJECTS) $(llctelnetd_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
@@ -138,29 +147,54 @@ config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 $(srcdir)/configure: $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
 	cd $(srcdir) && $(AUTOCONF)
 
-mostlyclean-libLTLIBRARIES:
+mostlyclean-binPROGRAMS:
 
-clean-libLTLIBRARIES:
-	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+clean-binPROGRAMS:
+	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
 
-distclean-libLTLIBRARIES:
+distclean-binPROGRAMS:
 
-maintainer-clean-libLTLIBRARIES:
+maintainer-clean-binPROGRAMS:
 
-install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libdir)
-	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
 	  if test -f $$p; then \
-	    echo "$(LIBTOOL)  --mode=install $(INSTALL) $$p $(DESTDIR)$(libdir)/$$p"; \
-	    $(LIBTOOL)  --mode=install $(INSTALL) $$p $(DESTDIR)$(libdir)/$$p; \
+	    echo " $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	    $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	  else :; fi; \
 	done
 
-uninstall-libLTLIBRARIES:
+uninstall-binPROGRAMS:
 	@$(NORMAL_UNINSTALL)
-	list='$(lib_LTLIBRARIES)'; for p in $$list; do \
-	  $(LIBTOOL)  --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
+	list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	done
+
+mostlyclean-sbinPROGRAMS:
+
+clean-sbinPROGRAMS:
+	-test -z "$(sbin_PROGRAMS)" || rm -f $(sbin_PROGRAMS)
+
+distclean-sbinPROGRAMS:
+
+maintainer-clean-sbinPROGRAMS:
+
+install-sbinPROGRAMS: $(sbin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(sbindir)
+	@list='$(sbin_PROGRAMS)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo " $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(sbindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	    $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(sbindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	  else :; fi; \
+	done
+
+uninstall-sbinPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	list='$(sbin_PROGRAMS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(sbindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	done
 
 .c.o:
@@ -201,8 +235,13 @@ distclean-libtool:
 
 maintainer-clean-libtool:
 
-libllcdb.la: $(libllcdb_la_OBJECTS) $(libllcdb_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libllcdb_la_LDFLAGS) $(libllcdb_la_OBJECTS) $(libllcdb_la_LIBADD) $(LIBS)
+llctelnet$(EXEEXT): $(llctelnet_OBJECTS) $(llctelnet_DEPENDENCIES)
+	@rm -f llctelnet$(EXEEXT)
+	$(LINK) $(llctelnet_LDFLAGS) $(llctelnet_OBJECTS) $(llctelnet_LDADD) $(LIBS)
+
+llctelnetd$(EXEEXT): $(llctelnetd_OBJECTS) $(llctelnetd_DEPENDENCIES)
+	@rm -f llctelnetd$(EXEEXT)
+	$(LINK) $(llctelnetd_LDFLAGS) $(llctelnetd_OBJECTS) $(llctelnetd_LDADD) $(LIBS)
 install-man: $(MANS)
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS)
@@ -310,7 +349,7 @@ check-am: all-am
 check: check-am
 installcheck-am:
 installcheck: installcheck-am
-install-exec-am: install-libLTLIBRARIES
+install-exec-am: install-binPROGRAMS install-sbinPROGRAMS
 install-exec: install-exec-am
 
 install-data-am: install-man install-includeHEADERS
@@ -319,15 +358,16 @@ install-data: install-data-am
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-am
-uninstall-am: uninstall-libLTLIBRARIES uninstall-man \
+uninstall-am: uninstall-binPROGRAMS uninstall-sbinPROGRAMS uninstall-man \
 		uninstall-includeHEADERS
 uninstall: uninstall-am
-all-am: Makefile $(LTLIBRARIES) $(MANS) $(HEADERS)
+all-am: Makefile $(PROGRAMS) $(MANS) $(HEADERS)
 all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
 installdirs:
-	$(mkinstalldirs)  $(DESTDIR)$(libdir) $(DESTDIR)$(includedir)
+	$(mkinstalldirs)  $(DESTDIR)$(bindir) $(DESTDIR)$(sbindir) \
+		$(DESTDIR)$(includedir)
 
 
 mostlyclean-generic:
@@ -339,47 +379,48 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
-mostlyclean-am:  mostlyclean-libLTLIBRARIES mostlyclean-compile \
-		mostlyclean-libtool mostlyclean-tags \
-		mostlyclean-generic
+mostlyclean-am:  mostlyclean-binPROGRAMS mostlyclean-sbinPROGRAMS \
+		mostlyclean-compile mostlyclean-libtool \
+		mostlyclean-tags mostlyclean-generic
 
 mostlyclean: mostlyclean-am
 
-clean-am:  clean-libLTLIBRARIES clean-compile clean-libtool clean-tags \
-		clean-generic mostlyclean-am
+clean-am:  clean-binPROGRAMS clean-sbinPROGRAMS clean-compile \
+		clean-libtool clean-tags clean-generic mostlyclean-am
 
 clean: clean-am
 
-distclean-am:  distclean-libLTLIBRARIES distclean-compile \
-		distclean-libtool distclean-tags distclean-generic \
-		clean-am
+distclean-am:  distclean-binPROGRAMS distclean-sbinPROGRAMS \
+		distclean-compile distclean-libtool distclean-tags \
+		distclean-generic clean-am
 	-rm -f libtool
 
 distclean: distclean-am
 	-rm -f config.status
 
-maintainer-clean-am:  maintainer-clean-libLTLIBRARIES \
-		maintainer-clean-compile maintainer-clean-libtool \
-		maintainer-clean-tags maintainer-clean-generic \
-		distclean-am
+maintainer-clean-am:  maintainer-clean-binPROGRAMS \
+		maintainer-clean-sbinPROGRAMS maintainer-clean-compile \
+		maintainer-clean-libtool maintainer-clean-tags \
+		maintainer-clean-generic distclean-am
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
 maintainer-clean: maintainer-clean-am
 	-rm -f config.status
 
-.PHONY: mostlyclean-libLTLIBRARIES distclean-libLTLIBRARIES \
-clean-libLTLIBRARIES maintainer-clean-libLTLIBRARIES \
-uninstall-libLTLIBRARIES install-libLTLIBRARIES mostlyclean-compile \
-distclean-compile clean-compile maintainer-clean-compile \
-mostlyclean-libtool distclean-libtool clean-libtool \
-maintainer-clean-libtool install-man uninstall-man \
-uninstall-includeHEADERS install-includeHEADERS tags mostlyclean-tags \
-distclean-tags clean-tags maintainer-clean-tags distdir info-am info \
-dvi-am dvi check check-am installcheck-am installcheck install-exec-am \
-install-exec install-data-am install-data install-am install \
-uninstall-am uninstall all-redirect all-am all installdirs \
-mostlyclean-generic distclean-generic clean-generic \
+.PHONY: mostlyclean-binPROGRAMS distclean-binPROGRAMS clean-binPROGRAMS \
+maintainer-clean-binPROGRAMS uninstall-binPROGRAMS install-binPROGRAMS \
+mostlyclean-sbinPROGRAMS distclean-sbinPROGRAMS clean-sbinPROGRAMS \
+maintainer-clean-sbinPROGRAMS uninstall-sbinPROGRAMS \
+install-sbinPROGRAMS mostlyclean-compile distclean-compile \
+clean-compile maintainer-clean-compile mostlyclean-libtool \
+distclean-libtool clean-libtool maintainer-clean-libtool install-man \
+uninstall-man uninstall-includeHEADERS install-includeHEADERS tags \
+mostlyclean-tags distclean-tags clean-tags maintainer-clean-tags \
+distdir info-am info dvi-am dvi check check-am installcheck-am \
+installcheck install-exec-am install-exec install-data-am install-data \
+install-am install uninstall-am uninstall all-redirect all-am all \
+installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 

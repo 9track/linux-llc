@@ -1,4 +1,4 @@
-/* dlsw_ebcdic.c: EBCDIC/ASCII conversion functions.
+/* lar_ebcdic.c: EBCDIC/ASCII conversion functions.
  *
  * Written by Jay Schulist <jschlst@samba.org>
  * Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
@@ -26,7 +26,7 @@
 #include <sys/types.h>
 
 /* our stuff. */
-#include <dlsw_ebcdic.h>
+#include <lar_ebcdic.h>
 
 unsigned char etor(unsigned char a)
 {

@@ -1,23 +1,17 @@
-- llc kernel rpm.
-
 ** llc core **
 - test frames over ~70 bytes will cause an skb_put oops. (need dynamic
   allocation of test response frames).
 - client network layer needs to be able to tx test and xid rsp.
 - client network layer needs to be able to rx test and xid cmd.
-- llc loopback support.
 
 ** pf_llc **
 - llc2 recvmsg will lose data if whole frame is not read.
 - allow multiple outbound same connections, parse on linkno. 
   llc2 in non-listen state, allocate new linkno - allow bind.
-- test.. test.. test..
 
 ** lar **
 - finish larhosts.xml to allow static lar host name resolution.
-- check all lar code for memory leaks.
 - wildcard support.
-- use ebcdic.
 - check cached entries before network searches.
 - updated cached entry when newer information arrives.
 - enhance advertise/solicit packet support.
@@ -27,3 +21,9 @@
 - rest of ssp commands/actions.
 - process listener events.
 - process partner ssp events.
+
+** code en general **
+- check for memory leaks.
+- handle all errors.
+- improved error messages where needed.
+- other general cleanups for production use.

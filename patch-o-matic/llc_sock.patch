@@ -1,6 +1,19 @@
-diff -ruN linux-2.4.14/net/llc/llc_conn.c linux/net/llc/llc_conn.c
---- linux-2.4.14/net/llc/llc_conn.c	Thu Nov 22 15:22:27 2001
-+++ linux/net/llc/llc_conn.c	Thu Nov 22 15:03:03 2001
+diff -ruN linux-llc-0.1.15/include/net/llc_pdu.h linux/include/net/llc_pdu.h
+--- linux-llc-0.1.15/include/net/llc_pdu.h	Fri May  3 04:34:09 2002
++++ linux/include/net/llc_pdu.h	Fri May  3 04:18:55 2002
+@@ -51,7 +51,8 @@
+ #define LLC_PDU_TYPE_I         0           /* first bit */
+ #define LLC_PDU_TYPE_S         1           /* first two bits */
+ #define LLC_PDU_TYPE_U         3           /* first two bits */
+-
++#define LLC_PDU_TYPE_XID       4	   /* special type for xid pdu_init. */
++	
+ #define LLC_PDU_TYPE_IS_I(pdu) \
+            ((!(pdu->ctrl_1 & LLC_PDU_TYPE_I_MASK)) ? 0 : 1)
+ 
+diff -ruN linux-llc-0.1.15/net/llc/llc_conn.c linux/net/llc/llc_conn.c
+--- linux-llc-0.1.15/net/llc/llc_conn.c	Fri May  3 04:34:09 2002
++++ linux/net/llc/llc_conn.c	Fri May  3 02:16:24 2002
 @@ -422,7 +422,8 @@
  		struct llc_opt *llc = list_entry(entry, struct llc_opt, node);
  
@@ -11,9 +24,42 @@ diff -ruN linux-2.4.14/net/llc/llc_conn.c linux/net/llc/llc_conn.c
  			rc = sock_list_entry(entry, struct llc_opt, node);
  			break;
  		}
-diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
---- linux-2.4.14/net/llc/llc_sock.c	Thu Nov 22 15:22:27 2001
-+++ linux/net/llc/llc_sock.c	Thu Nov 22 15:15:08 2001
+diff -ruN linux-llc-0.1.15/net/llc/llc_pdu.c linux/net/llc/llc_pdu.c
+--- linux-llc-0.1.15/net/llc/llc_pdu.c	Fri May  3 04:34:09 2002
++++ linux/net/llc/llc_pdu.c	Fri May  3 04:42:10 2002
+@@ -222,7 +222,6 @@
+ 	xid_info->fmt_id = XID_FMT_ID;    /* 0x81*/
+ 	xid_info->type = svcs_supported;
+ 	xid_info->rw = (rx_window << 1);  /* size of recieve window */
+-	skb_put(skb, 3);
+ 	return 0;
+ }
+ 
+@@ -618,6 +617,9 @@
+ 			break;
+ 		case LLC_PDU_TYPE_U:
+ 			rtn_val = 3;
++			break;
++		case LLC_PDU_TYPE_XID:
++			rtn_val = 6;
+ 			break;
+ 	}
+ 	return rtn_val;
+diff -ruN linux-llc-0.1.15/net/llc/llc_s_ac.c linux/net/llc/llc_s_ac.c
+--- linux-llc-0.1.15/net/llc/llc_s_ac.c	Fri May  3 04:34:09 2002
++++ linux/net/llc/llc_s_ac.c	Fri May  3 04:21:14 2002
+@@ -83,7 +83,7 @@
+ 	struct sk_buff *skb = prim_data->skb;
+ 	int rc;
+ 	
+-	llc_pdu_header_init(skb, LLC_PDU_TYPE_U, prim_data->saddr.lsap,
++	llc_pdu_header_init(skb, LLC_PDU_TYPE_XID, prim_data->saddr.lsap,
+ 			    prim_data->daddr.lsap, LLC_PDU_CMD);
+ 	rc = llc_pdu_init_as_xid_cmd(skb, XID_NULL_CLASS_2, 0);
+ 	if (rc)
+diff -ruN linux-llc-0.1.15/net/llc/llc_sock.c linux/net/llc/llc_sock.c
+--- linux-llc-0.1.15/net/llc/llc_sock.c	Fri May  3 04:34:09 2002
++++ linux/net/llc/llc_sock.c	Fri May  3 03:59:56 2002
 @@ -45,7 +45,8 @@
  
  static u16 llc_ui_sap_last_autoport;
@@ -40,7 +86,21 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
   *	llc_ui_protocol_type - return eth protocol for ARP header type
   *	@arphrd: ARP header type.
   *
-@@ -203,7 +213,8 @@
+@@ -122,9 +132,11 @@
+ {
+ 	u8 rc = LLC_PDU_LEN_U;
+ 
+-	if (addr->sllc_test || addr->sllc_xid)
++	if (addr->sllc_test || addr->sllc_xid) {
+ 		rc = LLC_PDU_LEN_U;
+-	else if (sk->type == SOCK_STREAM)
++		if (addr->sllc_xid)
++			rc += 3;
++	} else if (sk->type == SOCK_STREAM)
+ 		rc = LLC_PDU_LEN_I;
+ 	return rc;
+ }
+@@ -203,7 +215,8 @@
  	union llc_u_prim_data prim_data;
  	struct llc_prim_if_block prim;
  	struct sock* core_sk = LLC_UI_SK(sk)->core_sk;
@@ -50,7 +110,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  	prim.data	   = &prim_data;
  	prim.sap	   = sap;
  	prim.prim	   = LLC_DATA_PRIM;
-@@ -211,8 +222,12 @@
+@@ -211,8 +224,12 @@
  	prim_data.data.pri = 0;
  	prim_data.data.sk  = core_sk;
  	skb->protocol	   = llc_ui_protocol_type(addr->sllc_arphrd);
@@ -65,7 +125,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  }
  
  /**
-@@ -300,6 +315,23 @@
+@@ -300,6 +317,23 @@
  	return sk;
  }
  
@@ -89,7 +149,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  /**
   *	__llc_ui_find_sk_by_addr - return socket matching local mac + sap.
   *	@addr: Local address to match.
-@@ -310,39 +342,45 @@
+@@ -310,39 +344,45 @@
   *	for connected sockets.
   *	Returns sock upon match, %NULL otherwise.
   */
@@ -148,7 +208,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  	if (sk)
  		sock_hold(sk);
  	read_unlock(&llc_ui_sockets_lock);
-@@ -350,11 +388,11 @@
+@@ -350,11 +390,11 @@
  }
  
  static struct sock *llc_ui_bh_find_sk_by_addr(struct llc_addr *addr,
@@ -162,7 +222,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  	if (sk)
  		sock_hold(sk);
  	read_unlock_bh(&llc_ui_sockets_lock);
-@@ -575,20 +613,25 @@
+@@ -575,20 +615,25 @@
  		if (!sap)
  			goto out;
  	} else {
@@ -192,7 +252,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  		if (ask) {
  			sock_put(ask);
  			goto out;
-@@ -696,35 +739,28 @@
+@@ -696,35 +741,28 @@
  	rc = -EAFNOSUPPORT;
  	if (addr->sllc_family != AF_LLC)
  		goto out;
@@ -238,7 +298,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  	llc->link = llc_ui_next_link_no(llc->sap->laddr.lsap);
  	rc = llc_ui_send_conn(sk, llc->sap, addr, dev, llc->link);
  	if (rc) {
-@@ -886,6 +922,9 @@
+@@ -886,6 +924,9 @@
  	LLC_UI_SK(newsk)->core_sk = skb->sk;
  	memcpy(&LLC_UI_SK(newsk)->addr, &LLC_UI_SK(sk)->addr,
  	       sizeof(LLC_UI_SK(sk)->addr));
@@ -248,7 +308,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  	/* put orignal socket back into a clean listen state. */
  	sk->state		  = TCP_LISTEN;
  	sk->ack_backlog--;
-@@ -969,21 +1008,18 @@
+@@ -969,21 +1010,18 @@
  	if (flags & ~MSG_DONTWAIT)
  		goto release;
  	rc = -EINVAL;
@@ -275,7 +335,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  	}
  	if (!llc->dev) {
  		rtnl_lock();
-@@ -1250,7 +1286,8 @@
+@@ -1250,7 +1288,8 @@
  	struct llc_prim_test *prim_data = &prim->data->test;
  	struct sockaddr_llc *llc;
  	struct sk_buff *skb2, *skb = prim_data->skb;
@@ -285,7 +345,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  
  	if (!sk)
  		goto out;
-@@ -1289,7 +1326,8 @@
+@@ -1289,7 +1328,8 @@
  	struct llc_prim_xid *prim_data = &prim->data->xid;
  	struct sk_buff *skb2, *skb = prim_data->skb;
  	struct sockaddr_llc *llc;
@@ -295,7 +355,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  
  	if (!sk)
  		goto out;
-@@ -1329,7 +1367,8 @@
+@@ -1329,7 +1369,8 @@
  	struct llc_prim_unit_data *prim_data = &prim->data->udata;
  	struct sockaddr_llc *llc;
  	struct sk_buff *skb2, *skb = prim_data->skb;
@@ -305,7 +365,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  
  	if (!sk)
  		goto out;
-@@ -1372,6 +1411,7 @@
+@@ -1372,6 +1413,7 @@
  
  	LLC_SK(prim_data->sk)->laddr.lsap = prim->sap->laddr.lsap;
  	sk = llc_ui_find_sk_by_addr(&LLC_SK(prim_data->sk)->laddr,
@@ -313,7 +373,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  				    prim_data->dev);
  	if (!sk)
  		goto out;
-@@ -1499,6 +1539,7 @@
+@@ -1499,6 +1541,7 @@
  {
  	struct llc_prim_conn *prim_data = &prim->data->conn;
  	struct sock *sk = llc_ui_find_sk_by_addr(&LLC_SK(prim_data->sk)->laddr,
@@ -321,7 +381,7 @@ diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
  						 prim_data->dev);
  
  	if (!sk)
-@@ -1648,20 +1689,12 @@
+@@ -1648,20 +1691,12 @@
  			len += sprintf(buffer + len,
  				"%02X:%02X:%02X:%02X:%02X:%02X@0x%02X ",
  				0, 0, 0, 0, 0, 0, 0);

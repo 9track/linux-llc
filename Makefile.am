@@ -2,7 +2,7 @@
 
 AUTOMAKE_OPTIONS = 1.3e foreign
 
-BUILD_SUBDIRS = . include docs llcdb llcping lar dlsw
+BUILD_SUBDIRS = . include docs llcdb llcping llctftp llctelnet lar dlsw
 SUBDIRS = $(BUILD_SUBDIRS)
 DIST_SUBDIRS = $(BUILD_SUBDIRS) $(CONF_SUBDIRS)
 

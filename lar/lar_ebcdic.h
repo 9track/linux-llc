@@ -1,4 +1,4 @@
-/* dlsw_ebcdic.h: Data link ebcdic character maps.
+/* lar_ebcdic.h: Data link ebcdic character maps.
  * 
  * Written by Jay Schulist <jschlst@samba.org>
  * Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
@@ -13,8 +13,8 @@
  * This material is provided "as is" and at no charge.
  */
 
-#ifndef _DLSW_EBCDIC_H
-#define _DLSW_EBCDIC_H
+#ifndef _LAR_EBCDIC_H
+#define _LAR_EBCDIC_H
 
 static unsigned char const ebcdic_to_rotated[256] = {
 	 0,   1,   2,   3,   4,   5,   6,   7,         /* 0 -     7 */
@@ -124,4 +124,4 @@ extern int etoa_strcmp(const char *ecs, const char *act);
 extern int atoe_strncmp(const char *acs, const char *ect, size_t count);
 extern int etoa_strncmp(const char *ecs, const char *act, size_t count);
 extern unsigned char flip_byte(unsigned char v);
-#endif	/* _DLSW_EBCDIC_H */
+#endif	/* _LAR_EBCDIC_H */

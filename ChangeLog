@@ -1,5 +1,14 @@
 ChangeLog for linux-LLC package.
 
+0.1.16, May 3, 2002.
+- new llc_sock.patch in patch-o-matic.
+- fixed problem with XID length handling in llc_sock.c, llc_pdu.c.
+- created null mains for llctftp and llctelnet so everything will compile clean.
+- added llctftp and llctelnet directories.
+- allowed anonymous cvs for linux-LLC module.
+- added ebcdic support to lar.
+- removed ebcdic support for dlsw.. haha wrong protocol.
+
 0.1.15, December 11, 2001.
 - better handling of capXchange error cases.
 - changed logpid() to take a path.

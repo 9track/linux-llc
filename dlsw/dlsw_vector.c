@@ -37,7 +37,6 @@
 
 /* out stuff. */
 #include <dlsw_vector.h>
-#include <dlsw_ebcdic.h>
 
 int dlsw_vect_rx_cap_xchng_r(major_vector_t *mv, void *data, dlsw_cap_rsp_pkt_t *cap_r)
 {
