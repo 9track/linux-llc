@@ -76,11 +76,17 @@ STRIP = @STRIP@
 VERSION = @VERSION@
 XML_CONFIG = @XML_CONFIG@
 
-EXTRA_DIST = dlswd.xml llcpingd.xml llchosts.xml lard.xml llcping.txt llc.txt services 	rfc1434.html rfc1434.pdf rfc1795.html rfc1795.pdf 	rfc2166.html rfc2166.pdf
+EXTRA_DIST = $(man_MANS) dlswd.xml llcpingd.xml llchosts.xml larhosts.xml lard.xml 	llcping.txt llc.txt services llc-sap-note.txt 	rfc1434.html rfc1434.pdf rfc1795.html rfc1795.pdf 	rfc2166.html rfc2166.pdf
 
+
+man_MANS = llc.7
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../include/config.h
 CONFIG_CLEAN_FILES = 
+man7dir = $(mandir)/man7
+MANS = $(man_MANS)
+
+NROFF = nroff
 DIST_COMMON =  Makefile.am Makefile.in
 
 
@@ -97,6 +103,45 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
+
+install-man7:
+	$(mkinstalldirs) $(DESTDIR)$(man7dir)
+	@list='$(man7_MANS)'; \
+	l2='$(man_MANS)'; for i in $$l2; do \
+	  case "$$i" in \
+	    *.7*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
+	  else file=$$i; fi; \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " $(INSTALL_DATA) $$file $(DESTDIR)$(man7dir)/$$inst"; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(man7dir)/$$inst; \
+	done
+
+uninstall-man7:
+	@list='$(man7_MANS)'; \
+	l2='$(man_MANS)'; for i in $$l2; do \
+	  case "$$i" in \
+	    *.7*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " rm -f $(DESTDIR)$(man7dir)/$$inst"; \
+	  rm -f $(DESTDIR)$(man7dir)/$$inst; \
+	done
+install-man: $(MANS)
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-man7
+uninstall-man:
+	@$(NORMAL_UNINSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) uninstall-man7
 tags: TAGS
 TAGS:
 
@@ -127,19 +172,20 @@ installcheck: installcheck-am
 install-exec-am:
 install-exec: install-exec-am
 
-install-data-am:
+install-data-am: install-man
 install-data: install-data-am
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-am
-uninstall-am:
+uninstall-am: uninstall-man
 uninstall: uninstall-am
-all-am: Makefile
+all-am: Makefile $(MANS)
 all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
+	$(mkinstalldirs)  $(DESTDIR)$(mandir)/man7
 
 
 mostlyclean-generic:
@@ -170,12 +216,12 @@ maintainer-clean-am:  maintainer-clean-generic distclean-am
 
 maintainer-clean: maintainer-clean-am
 
-.PHONY: tags distdir info-am info dvi-am dvi check check-am \
-installcheck-am installcheck install-exec-am install-exec \
-install-data-am install-data install-am install uninstall-am uninstall \
-all-redirect all-am all installdirs mostlyclean-generic \
-distclean-generic clean-generic maintainer-clean-generic clean \
-mostlyclean distclean maintainer-clean
+.PHONY: install-man7 uninstall-man7 install-man uninstall-man tags \
+distdir info-am info dvi-am dvi check check-am installcheck-am \
+installcheck install-exec-am install-exec install-data-am install-data \
+install-am install uninstall-am uninstall all-redirect all-am all \
+installdirs mostlyclean-generic distclean-generic clean-generic \
+maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

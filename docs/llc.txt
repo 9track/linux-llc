@@ -1,6 +1,11 @@
 llc.txt: Documentation for the Linux IEEE 802.2 LLC UI layer.
          Written by: Jay Schulist <jschlst@samba.org>
 
+!!!
+!!! This document is out of date and is only keep for historical reasons.
+!!! Please refer to `man 7 llc` for up to date LLC socket information.
+!!!
+
 Logical Link Control (LLC) is a sublayer of the IEEE 802.2 LAN Protocol Suite.
 LLC is the top sub-layer in the data link layer and is the common access
 method to the different medium access techonologies such as Tokenring,

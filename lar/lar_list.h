@@ -1,7 +1,7 @@
 /* lar_list.h: Lan address resolution structure list defintions.
  *
- * Author:
- * Jay Schulist         <jschlst@samba.org>
+ * Written by Jay Schulist <jschlst@samba.org>
+ * Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,14 +38,19 @@ struct list_head {
                 pos = pos->next, (void)pos->next)
 
 #define list_for_each_safe(pos, n, head) \
-        for (pos = (head)->next, n = pos->next; pos != (head); \
-                pos = n, n = pos->next)
+	for (pos = (head)->next, n = pos->next; pos != (head); \
+		pos = n, n = pos->next)
+
+static __inline__ int list_empty(struct list_head *head)
+{
+        return head->next == head;
+}
 
 /* Return pointer to first true entry, if any, or NULL.  A macro
    required to allow inlining of cmpfn. */
-#define list_find(head, cmpfn, type, args...)        \
+#define list_find(head, cmpfn, type, args...)        	\
 ({                                                      \
-        const struct list_head *__i = (head);             \
+        const struct list_head *__i = (head);           \
                                                         \
         do {                                            \
                 __i = __i->next;                        \

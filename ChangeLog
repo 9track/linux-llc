@@ -1,5 +1,22 @@
 ChangeLog for linux-LLC package.
 
+0.1.14, November 23, 2001.
+- new patch-o-matic llc kernel patches.
+- updated all applications to use new PF_LLC number (26).
+- added/wrote llookup.8 man page.
+- added/wrote lar.3 man page.
+- added/wrote lard.8 man page.
+- added/wrote llc.7 man page.
+- cleaned up license and copyright information on all files.
+- added better error messages for llcpingd on failure of startup.
+- added exit from llcping on recv errno ENOTCONN.
+- updated error message to display errno string on recvfrom error.
+- updated llcping man page for new llcping xid option.
+- added send xid frame option to llcping.
+- added error message in llcping when can't resolve hostname.
+- lots of updates to lar, it is generally code/feature complete now.
+  see the todo list for additional things that need to be done.
+
 0.1.13, November 12, 2001.
 - new patch-o-matic llc kernel patches.
 - added location to get libxml-devel from in error message.

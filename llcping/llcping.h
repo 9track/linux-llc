@@ -1,7 +1,7 @@
 /* llcping.h: main header file.
  *
- * Author:
- * Jay Schulist         <jschlst@samba.org>
+ * Written by Jay Schulist <jschlst@samba.org>
+ * Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -42,7 +42,8 @@ struct llc_options {
 	u_int8_t fill;
 	u_int8_t test;
 	u_int8_t ua;
-
+	u_int8_t xid;
+	
 	u_int8_t options;
 	u_int32_t retry;
 	u_int32_t size;

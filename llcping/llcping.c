@@ -1,7 +1,7 @@
 /* llcping.c: Linux LLC Ping Client utility.
- * Copyright (c) 2001, Jay Schulist.
  *
  * Written by Jay Schulist <jschlst@samba.org>
+ * Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -48,7 +48,7 @@
 #include "llcping.h"
 
 #ifndef AF_LLC
-#define AF_LLC          22
+#define AF_LLC          26
 #define PF_LLC          AF_LLC
 #endif
 
@@ -468,7 +468,7 @@ int setup_llc_socket(struct llc_options *llc)
 	err = bind(llc->sk, (struct sockaddr *)&llc->dst, 
 		sizeof(struct sockaddr_llc));
 	if(err < 0) {
-		printf("%s: bind %s.\n", name_s, strerror(err));
+		printf("%s: bind %s.\n", name_s, strerror(errno));
 		close(llc->sk);
 		return (err);
 	}
@@ -479,7 +479,7 @@ int setup_llc_socket(struct llc_options *llc)
 	err = connect(llc->sk, (struct sockaddr *)&llc->dst, 
 		sizeof(struct sockaddr_llc));
 	if(err < 0) {
-		printf("%s: connect %s.\n", name_s, strerror(err));
+		printf("%s: connect %s.\n", name_s, strerror(errno));
 		close(llc->sk);
 		return (err);
 	}
@@ -499,7 +499,7 @@ void version(void)
 void help(void)
 {
         printf("Usage: %s [-h] [-v] [-t 1|2] [-s ssap] [-d dsap] [-c count] [-i wait] [-p pattern] [-l len]\n", name_s);
-	printf("	[-o retry:size:ack:p:reject:busy:txwin:rxwin] [-nxbfquz] source_host destination_host\n");
+	printf("	[-o retry:size:ack:p:reject:busy:txwin:rxwin] [-nxbfqwuz] source_host destination_host\n");
         exit(1);
 }
 
@@ -656,17 +656,29 @@ void pinger(void)
 		                        sizeof(struct sockaddr_llc));
                         	llc->dst.sllc_test = 0;
 			} else {
-				i = send(llc->sk, llc->outpacket, cc, 0);
+				if(llc->xid) {
+					llc->dst.sllc_xid = 1;
+					i = sendto(llc->sk, llc->outpacket, cc,
+						0, (struct sockaddr *)&llc->dst,
+						sizeof(struct sockaddr_llc));
+					llc->dst.sllc_xid = 0;
+				} else {
+					i = send(llc->sk, llc->outpacket, cc,0);
+				}
 			}
 		}
 	} else {
 		if(llc->test)
 			llc->dst.sllc_test = 1;
+		if(llc->xid)
+			llc->dst.sllc_xid = 1;
 	        i = sendto(llc->sk, llc->outpacket, cc, 0, 
 			(struct sockaddr *)&llc->dst, 
 			sizeof(struct sockaddr_llc));
 		if(llc->test)
                         llc->dst.sllc_test = 0;
+		if(llc->xid)
+			llc->dst.sllc_xid = 0;
 	}
         if(i < 0 || i != cc) {
                 if(i < 0)
@@ -729,7 +741,7 @@ int main(int argc, char **argv)
 	set_llc_defaults(llc);
 	tmp_llc = llc;
 
-	while((c = getopt(argc, argv, "hvVbxfqnuzt:s:d:c:i:p:l:o:")) != EOF) {
+	while((c = getopt(argc, argv, "hvVbxfqnwuzt:s:d:c:i:p:l:o:")) != EOF) {
                 switch(c) {
                         case 'V':       /* Display author and version. */
                         case 'v':       /* Display author and version. */
@@ -828,6 +840,10 @@ int main(int argc, char **argv)
 				llc->ua = 1;
 				break;
 
+			case 'w':	/* send xid frame over llc1/2. */
+				llc->xid = 1;
+				break;
+				
 			case 'z':	/* send test frame over llc1/2. */
 				llc->test = 1;
 				break;
@@ -849,8 +865,10 @@ int main(int argc, char **argv)
 	if(err < 0) {
 		struct llchostent *lh;
 		lh = getllchostbyname(*argv);
-		if(!lh)
+		if(!lh) {
+			printf("%s: unknown host %s\n", name_s, *argv);
 			exit (2);
+		}
 		memcpy(llc->smac, lh->lh_addr, lh->lh_length);
 	}
 	argc--, argv++;
@@ -858,8 +876,10 @@ int main(int argc, char **argv)
 	if(err < 0) {
 		struct llchostent *lh;
                 lh = getllchostbyname(*argv);
-                if(!lh)
+                if(!lh) {
+			printf("%s: unknown host %s\n", name_s, *argv);
                         exit (2);
+		}
                 memcpy(llc->dmac, lh->lh_addr, lh->lh_length);
 	}
 
@@ -934,7 +954,9 @@ int main(int argc, char **argv)
 		if(cc < 0) {
 			if(errno == EINTR)
 				continue;
-                        printf("%s: recvfrom `%s'\n", name_s, strerror(cc));
+                        printf("%s: recvfrom `%s'\n", name_s, strerror(errno));
+			if(errno == ENOTCONN)
+				break;
                         continue;
 		}
 

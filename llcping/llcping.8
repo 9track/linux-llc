@@ -1,3 +1,12 @@
+.\" Written by Jay Schulist <jschlst@samba.org>
+.\" Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
+.\"
+.\" This program can be redistributed or modified under the terms of the
+.\" GNU General Public License as published by the Free Software Foundation.
+.\" This program is distributed without any warranty or implied warranty
+.\" of merchantability or fitness for a particular purpose.
+.\"
+.\" See the GNU General Public License for more details.
 .Dd November 2, 2001 
 .Dt LLCPING 8
 .Os "Linux-SNA Project"
@@ -8,7 +17,7 @@
 packets to network hosts
 .Sh SYNOPSIS
 .Nm llcping
-.Op Fl hvxbfqnuz
+.Op Fl hvxbfqnuwz
 .Op Fl t Ar 1|2
 .Op Fl s Ar ssap
 .Op Fl d Ar dsap
@@ -43,7 +52,9 @@ Hexdump each outgoing and incomming llcping packet.
 .It Fl u
 Send LLC UA frames over an established LLC2 connection.
 .It Fl z
-Send LLU TEST frames over an LLC1 or established LLC2 connection.
+Send LLC TEST frames over an LLC1 or established LLC2 connection.
+.It Fl w
+Send LLC XID frames over an LLC1 or established LLC2 connection.
 .It Fl n
 Display MAC address in numeric format, don't perform llc name resolution.
 .It Fl b

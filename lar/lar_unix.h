@@ -1,7 +1,7 @@
 /* lar_unix.h: Lan address resolution unix communications defintions.
  *
- * Author:
- * Jay Schulist         <jschlst@samba.org>
+ * Written by Jay Schulist <jschlst@samba.org>
+ * Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -16,19 +16,9 @@
 #ifndef _LAR_UNIX_H
 #define _LAR_UNIX_H
 
-enum lar_unix_type {
-	LAR_UNIX_RECORD = 1,
-	LAR_UNIX_ERASE,
-	LAR_UNIX_SEARCH,
-	LAR_UNIX_FIND,
-	LAR_UNIX_FIND_MEMBER,
-	LAR_UNIX_ERRNO
-};
-
 struct larmsg {
 	u_int16_t len;          /* size of lar_unix_hdr + payload. */
 	u_int16_t type;		/* operation to perform. */
-	u_int32_t seq;
 };
 
 struct larattr {
@@ -46,6 +36,7 @@ enum larattr_type_t {
 	LARA_GROUP,
 	LARA_SOLICIT,
 	LARA_SNPA,
+	LARA_MEMBER,
 	LARA_ERR
 };
 
@@ -78,10 +69,27 @@ enum larattr_type_t {
 #define LARA_DATA(lara)   	((void*)(((char*)(lara)) + LARA_LENGTH(0)))
 #define LARA_PAYLOAD(lara) 	((int)((lara)->lara_len) - LARA_LENGTH(0))
 
-extern struct larmsg *larmsg_put(int type, int seq, int len);
-extern void lara_put(struct larmsg *lh, int attrtype, int attrlen, 
+extern struct larmsg *larmsg_put(int type, int len);
+extern struct larmsg *lara_put(struct larmsg *lh, int attrtype, int attrlen, 
 	const void *attrdata);
-extern int lar_attr_print(struct larattr *la, void *data);
+
+extern int lar_unix_cnt_member(struct larattr *la, void *data, int *cnt);
+extern int lar_unix_cnt_snpa(struct larattr *la, void *data, int *cnt);
+
+extern int lar_unix_xtract_errno(struct larattr *la, void *data, int *err);
+extern int lar_unix_xtract_member(struct larattr *la, void *data, 
+        lar_member_t **members, int *cnt);
+extern int lar_unix_xtract_snpa(struct larattr *la, void *data, 
+	lar_snpa_t **snpa, int *cnt);
+
+extern int lar_unix_rx_find(struct larattr *la, void *data, 
+	lar_find_usr_t *find);
+extern int lar_unix_rx_search(struct larattr *la, void *data, 
+	lar_search_usr_t *srch);
+extern int lar_unix_rx_record(struct larattr *la, void *data, 
+	lar_record_usr_t *recd);
+extern int lar_unix_rx_erase(struct larattr *la, void *data,
+	lar_erase_usr_t *erase);
 
 #define lar_attr_parse(lh, pfn, args...)                	\
 ({                                                      	\
@@ -100,7 +108,8 @@ extern int lar_attr_print(struct larattr *la, void *data);
 
 extern int lar_unix_init(void);
 extern int lar_unix_fini(int sk);
+extern int lar_unix_send_errno(int skfd, int32_t err);
 extern int lar_unix_send(int skfd, void *data, int len);
-extern int lar_unix_recv(int skfd, void *data, int *len);
+extern int lar_unix_recv(int skfd, void *data, int len);
 
 #endif	/* _LAR_UNIX_H */

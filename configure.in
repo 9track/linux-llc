@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(ltmain.sh)
-AM_INIT_AUTOMAKE(linux-llc, 0.1.13)
+AM_INIT_AUTOMAKE(linux-llc, 0.1.14)
 AM_CONFIG_HEADER(include/config.h)
 
 CFLAGS="-Wall"

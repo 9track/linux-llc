@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<larhosts:Helping xmlns:larhosts="http://www.linux-sna.org/larhosts">
+<larhosts:hosts>
+  <larhosts:host>
+    <larhosts:netid>linux</larhosts:netid>
+    <larhosts:name>life-e0</larhosts:name>
+    <larhosts:rtcap>appn</larhosts:rtcap>
+    <larhosts:lsap>0x40</larhosts:lsap>
+    <larhosts:mac>02:00:06:E3:1F:C6</larhosts:mac>
+    <larhosts:groups>igivname igo2host iroutsna</larhosts:groups>
+  </larhosts:host>
+  <larhosts:host>
+    <larhosts:netid>linux</larhosts:netid>
+    <larhosts:name>life-e1</larhosts:name>
+    <larhosts:rtcap>appn</larhosts:rtcap>
+    <larhosts:lsap>0x42</larhosts:lsap>
+    <larhosts:mac>00:A0:CC:DC:13:A7</larhosts:mac>
+    <larhosts:groups>igivname</larhosts:groups>
+  </larhosts:host>
+  <larhosts:host>
+    <larhosts:netid>linux</larhosts:netid>
+    <larhosts:name>crash-e0</larhosts:name>
+    <larhosts:rtcap>appn</larhosts:rtcap>
+    <larhosts:lsap>0x44</larhosts:lsap>
+    <larhosts:mac>02:00:08:E3:85:C1</larhosts:mac>
+    <larhosts:group>llcping</larhosts:group>
+  </larhosts:host>
+  <larhosts:host>
+    <larhosts:netid>linux</larhosts:netid>
+    <larhosts:name>crash-e1</larhosts:name>
+    <larhosts:rtcap>appn</larhosts:rtcap>
+    <larhosts:lsap>0x50</larhosts:lsap>
+    <larhosts:mac>00:E0:18:3E:70:86</larhosts:mac>
+  </larhosts:host>
+</larhosts:hosts>
+</larhosts:Helping>

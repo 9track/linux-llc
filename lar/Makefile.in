@@ -62,17 +62,14 @@ host_triplet = @host@
 AS = @AS@
 CC = @CC@
 DLLTOOL = @DLLTOOL@
-ECHO = @ECHO@
 EXEEXT = @EXEEXT@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
 OBJDUMP = @OBJDUMP@
-OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
-STRIP = @STRIP@
 VERSION = @VERSION@
 XML_CONFIG = @XML_CONFIG@
 
@@ -88,16 +85,18 @@ sbin_PROGRAMS = lard llookup
 liblar_la_LDFLAGS = -Wc,-nostartfiles -release $(VERSION)
 liblar_la_SOURCES = lar.c lar_unix.c
 
-lard_LDADD = -llar
-lard_SOURCES = lard.c lard_load.c lar_list.c
-
 llookup_LDADD = -llar
 llookup_SOURCES = llookup.c
 
-include_HEADERS = lar.h
-noinst_HEADERS = lard.h lard_load.h llookup.h lar_unix.h lar_list.h
+lard_LDADD = -llar
+lard_SOURCES = lard.c lard_load.c lar_list.c lar_timer.c 	lar_vector.c lar_hosts.c
 
-man_MANS = 
+
+include_HEADERS = lar.h
+noinst_HEADERS = lard.h lard_load.h llookup.h lar_unix.h lar_list.h 	lar_timer.h lar_vector.h
+
+
+man_MANS = lar.3 lard.8 llookup.8
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/../mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -113,16 +112,19 @@ liblar_la_OBJECTS =  lar.lo lar_unix.lo
 sbin_PROGRAMS =  lard$(EXEEXT) llookup$(EXEEXT)
 PROGRAMS =  $(sbin_PROGRAMS)
 
-lard_OBJECTS =  lard.$(OBJEXT) lard_load.$(OBJEXT) lar_list.$(OBJEXT)
+lard_OBJECTS =  lard.o lard_load.o lar_list.o lar_timer.o lar_vector.o \
+lar_hosts.o
 lard_DEPENDENCIES = 
 lard_LDFLAGS = 
-llookup_OBJECTS =  llookup.$(OBJEXT)
+llookup_OBJECTS =  llookup.o
 llookup_DEPENDENCIES = 
 llookup_LDFLAGS = 
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
+man3dir = $(mandir)/man3
+man8dir = $(mandir)/man8
 MANS = $(man_MANS)
 
 NROFF = nroff
@@ -140,7 +142,7 @@ OBJECTS = $(liblar_la_OBJECTS) $(lard_OBJECTS) $(llookup_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
-.SUFFIXES: .S .c .lo .o .obj .s
+.SUFFIXES: .S .c .lo .o .s
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps Makefile
 
@@ -184,11 +186,6 @@ uninstall-libLTLIBRARIES:
 .c.o:
 	$(COMPILE) -c $<
 
-# FIXME: We should only use cygpath when building on Windows,
-# and only if it is available.
-.c.obj:
-	$(COMPILE) -c `cygpath -w $<`
-
 .s.o:
 	$(COMPILE) -c $<
 
@@ -197,7 +194,6 @@ uninstall-libLTLIBRARIES:
 
 mostlyclean-compile:
 	-rm -f *.o core *.core
-	-rm -f *.$(OBJEXT)
 
 clean-compile:
 
@@ -260,12 +256,78 @@ lard$(EXEEXT): $(lard_OBJECTS) $(lard_DEPENDENCIES)
 llookup$(EXEEXT): $(llookup_OBJECTS) $(llookup_DEPENDENCIES)
 	@rm -f llookup$(EXEEXT)
 	$(LINK) $(llookup_LDFLAGS) $(llookup_OBJECTS) $(llookup_LDADD) $(LIBS)
+
+install-man3:
+	$(mkinstalldirs) $(DESTDIR)$(man3dir)
+	@list='$(man3_MANS)'; \
+	l2='$(man_MANS)'; for i in $$l2; do \
+	  case "$$i" in \
+	    *.3*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
+	  else file=$$i; fi; \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " $(INSTALL_DATA) $$file $(DESTDIR)$(man3dir)/$$inst"; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(man3dir)/$$inst; \
+	done
+
+uninstall-man3:
+	@list='$(man3_MANS)'; \
+	l2='$(man_MANS)'; for i in $$l2; do \
+	  case "$$i" in \
+	    *.3*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " rm -f $(DESTDIR)$(man3dir)/$$inst"; \
+	  rm -f $(DESTDIR)$(man3dir)/$$inst; \
+	done
+
+install-man8:
+	$(mkinstalldirs) $(DESTDIR)$(man8dir)
+	@list='$(man8_MANS)'; \
+	l2='$(man_MANS)'; for i in $$l2; do \
+	  case "$$i" in \
+	    *.8*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
+	  else file=$$i; fi; \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " $(INSTALL_DATA) $$file $(DESTDIR)$(man8dir)/$$inst"; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(man8dir)/$$inst; \
+	done
+
+uninstall-man8:
+	@list='$(man8_MANS)'; \
+	l2='$(man_MANS)'; for i in $$l2; do \
+	  case "$$i" in \
+	    *.8*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " rm -f $(DESTDIR)$(man8dir)/$$inst"; \
+	  rm -f $(DESTDIR)$(man8dir)/$$inst; \
+	done
 install-man: $(MANS)
 	@$(NORMAL_INSTALL)
-	$(MAKE) $(AM_MAKEFLAGS)
+	$(MAKE) $(AM_MAKEFLAGS) install-man3 install-man8
 uninstall-man:
 	@$(NORMAL_UNINSTALL)
-	$(MAKE) $(AM_MAKEFLAGS)
+	$(MAKE) $(AM_MAKEFLAGS) uninstall-man3 uninstall-man8
 
 install-includeHEADERS: $(include_HEADERS)
 	@$(NORMAL_INSTALL)
@@ -385,6 +447,7 @@ install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
 	$(mkinstalldirs)  $(DESTDIR)$(libdir) $(DESTDIR)$(sbindir) \
+		$(DESTDIR)$(mandir)/man3 $(DESTDIR)$(mandir)/man8 \
 		$(DESTDIR)$(includedir)
 
 
@@ -434,7 +497,8 @@ distclean-compile clean-compile maintainer-clean-compile \
 mostlyclean-libtool distclean-libtool clean-libtool \
 maintainer-clean-libtool mostlyclean-sbinPROGRAMS \
 distclean-sbinPROGRAMS clean-sbinPROGRAMS maintainer-clean-sbinPROGRAMS \
-uninstall-sbinPROGRAMS install-sbinPROGRAMS install-man uninstall-man \
+uninstall-sbinPROGRAMS install-sbinPROGRAMS install-man3 uninstall-man3 \
+install-man8 uninstall-man8 install-man uninstall-man \
 uninstall-includeHEADERS install-includeHEADERS tags mostlyclean-tags \
 distclean-tags clean-tags maintainer-clean-tags distdir info-am info \
 dvi-am dvi check check-am installcheck-am installcheck install-exec-am \

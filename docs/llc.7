@@ -1,0 +1,375 @@
+.\" Written by Jay Schulist <jschlst@samba.org>
+.\" Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
+.\"
+.\" This program can be redistributed or modified under the terms of the
+.\" GNU General Public License as published by the Free Software Foundation.
+.\" This program is distributed without any warranty or implied warranty
+.\" of merchantability or fitness for a particular purpose.
+.\"
+.\" See the GNU General Public License for more details.
+.TH LLC 7 "22 November 2001" "Linux Man Page" "Linux Programmer's Manual"
+.SH NAME
+llc - socket interface for logical link control one and two.
+
+.SH SYNOPSIS
+.nf
+.B #include <sys/socket.h>
+.br
+.B #include <linux/if_ether.h>
+.br
+.B #include <linux/if_arp.h>
+.br
+.B #include <linux/llc.h>
+.br
+.sp
+.PP
+.BI "llc_socket = socket(PF_LLC, int " socket_type ", int " protocol );
+.fi
+
+.SH DESCRIPTION
+Logical Link Control (LLC) is a sublayer of the IEEE 802.2 LAN Protocol Suite.
+LLC is the top sub-layer in the data link layer and is the common access
+method to the different medium access techonologies such as Tokenring,
+Ethernet and FDDI. LLC sockets provides a convienient and easy to use method
+for accessing 
+.BR LLC1 
+and
+.BR LLC2 
+functions from user-space.
+
+An
+.BR LLC2
+socket inherits all the functionallity of an
+.BR LLC1
+socket. The
+.BR LLC1 
+socket uses the LLC datalink connectionless mode (Unacknowledged data transfer)
+protocol. Verses an 
+.BR LLC2
+socket uses the LLC datalink connection oriented mode plus datalink connectionless
+mode.
+
+The programmer's interface is BSD sockets compatible. For more information on
+sockets, see
+.BR socket (7).
+
+An LLC socket is created by calling the
+.BR socket(2)
+function as
+.BR "socket(PF_LLC, socket_type, protocol)" .
+Valid 
+.I socket_types 
+values are 
+.BR SOCK_STREAM 
+to open a
+.BR LLC2
+socket or
+.BR SOCK_DGRAM
+to open a
+.BR LLC1
+socket. The only value for
+.I protocol
+is 0.
+
+A fresh LLC1 socket has no remote or locate address and is not fully specified.
+LLC1 UA frames may be sent immediately using
+.BR sendto (2)
+or
+.BR sendmsg (2)
+with a valid destination and source address as an argument. When
+.BR connect (2)
+is called on the socket the default destination and source address is set and datagrams
+can now be sent using
+.BR send (2)
+or
+.BR write (2)
+without specifying an address. It is still possible to send to other
+destinations by passing an address to
+.BR sendto (2)
+or
+.BR sendmsg (2).
+In order to receive packets the socket can be bound to a local address first by
+using
+.BR bind (2).
+Otherwise the socket layer will automatically assign a free local port out of
+the range defined in the file
+.B linux/llc.h
+and bind the socket to a INADDR_ANY.
+
+A LLC1 socket has the ability to transmit and receive TEST and XID frames in
+addition to UA datagrams. To send an LLC1 TEST or XID frame the
+.I sllc_test
+or
+.I sllc_xid
+field in
+.I sockaddr_llc
+must be set to 1. This requires the user to specify a fully specified address
+using the
+.BR sendto (2)
+or
+.BR sendmsg (2)
+function for each TEST or XID frame transmitted. An LLC2 socket can additionly send
+UA frames to any LLC host by setting the
+.I sllc_ua
+field to 1.
+
+A fresh LLC2 socket has no remote or local address and is not fully specified.
+To create an outgoing LLC2 connection use
+.BR connect (2)
+to establish a connection to another LLC2 SAP. To receive new incoming connections
+.BR bind (2)
+the socket first to a local HW MAC and SAP and then call
+.BR listen (2)
+to put the socket into listening state. After that a new socket for each incomming
+connection can be accepted using
+.BR accept (2).
+A socket which has had
+.B accept
+or
+.B connect
+successfully called on it is fully specified and may transmit data. Data can not
+be transmitted on listening sockets and LLC2 data may not be transmitted on a socket
+not yet connected. LLC1 data may be transmitted on a non-listening LLC2 socket at
+anytime, provided the rules for LLC1 sockets are followed.
+
+.SH ADDRESS FORMAT
+An LLC socket address is defined as a combination of a HW MAC adddress and
+a LLC SAP number. 
+
+.RS
+.nf
+.ta 4n 20n 35n
+struct sockaddr_llc {
+	sa_family_t	sllc_family;	/* always PF_LLC.   */
+	sa_family_t	sllc_arphrd;	/* arp header type. */
+	unsigned char	sllc_test;	/* test frame.      */
+	unsigned char	sllc_xid;	/* xid frame.       */
+	unsigned char	sllc_ua;	/* ua frame.        */
+	unsigned char	sllc_dsap;	/* destination sap. */
+	unsigned char	sllc_ssap;	/* source sap.      */
+	unsigned char	sllc_dmac[6];	/* destination mac. */
+	unsigned char	sllc_smac[6];	/* source mac.      */
+	unsigned char	sllc_mmac[6];	/* multicast mac.   */
+};
+.ta
+.fi
+.RE
+.PP
+.I sllc_family
+is always set to
+.BR PF_LLC .
+.PP
+.I sllc_arphrd
+is set to the HW MAC address type you will be using. For Ethernet and Tokenring
+hardware an
+.BR sllc_arphrd
+value of 
+.BR ARPHRD_ETHER 
+is always used. No other hardware types are currently supported.
+.PP
+.I sllc_test
+is set to a
+.BR boolean
+(0 or 1)
+if the information associated with this address structure was received as a TEST frame
+or is to be transmitted as a TEST frame. 
+.PP
+.I sllc_xid
+is set to a
+.BR boolean
+(0 or 1)
+if the information associated with this address structure was received as an XID frame
+or is to be transmitted as an XID frame.
+.PP
+.I sllc_ua
+is set to a
+.BR boolean
+(0 or 1)
+if the information associated with this address structure was received as a UA frame
+or is to be transmitted as a UA frame. For
+.BR SOCK_DGRAM
+sockets this is the default operational mode and does not need to be set. For
+.BR SOCK_STREAM 
+sockets this will transmit a UA frame to the specified destination MAC.
+.PP
+.I sllc_dsap
+is set to the SAP of the destination LLC host. 
+.BR DSAP
+values of 0x00 through 0xFF are
+considered valid. An odd numbered SAP is considered a
+.BR "GROUP SAP"
+(ie. 0x01). An even numbered SAP is considered an
+.BR "INDIVIDUAL SAP"
+(ie. 0x02) and should be used for normal LLC communications.
+.PP
+A 
+.BR DSAP 
+value of 0x00 has special meaning and is a
+.BR "NULL DSAP" .
+The 
+.BR "NULL DSAP"
+addresses the LLC Station Component of the remote LLC host.
+.PP
+.I sllc_ssap
+is set to the desired local or source SAP for this LLC socket. A
+.BR SSAP
+of 0x00 indicates to the LLC layer to dynamicly assign a
+.BR SSAP
+number. The same rules for
+.BR "GROUP SAP"
+and
+.BR "INDIVIDUAL SAP"
+usage applies for
+.BR SSAP
+as with
+.BR DSAP
+numbers.
+.PP
+.I sllc_dmac
+is set to the destination HW MAC address of the remote LLC host.
+.PP
+.I sllc_smac
+is set to the local HW MAC address, corresponding to a physical network interface in the
+Linux system. A
+.BR "NULL SMAC"
+or source mac address of all zero's means every local interfaces that support LLC.
+.PP
+.I sllc_mmac
+is set to the multicast HW MAC address. If multicast HW MAC address usage is not desired
+then this field is set to all zero's. The multicast HW MAC address must be associated with
+a source HW mac address. The rules for setting the source HW mac are valid when used with
+a multicast HW MAC.
+.PP
+
+.SH SOCKET OPTIONS
+LLC supports some protocol specific socket options that can be set with
+.BR setsockopt (2)
+and read with
+.BR getsockopt (2) .
+The socket option level for LLC is
+.BR SOL_LLC .
+Options can only be set/get for SOCK_STREAM sockets, see the file
+.BR linux/llc.h
+for the maximum values for each option. All the options are 
+an integrer in value and size.
+
+.TP
+.B LLC_OPT_RETRY
+Sets the maximum retry attempts.
+
+.TP
+.B LLC_OPT_SIZE
+Sets the maximum PDU size in octets for an I-frame.
+
+.TP
+.B LLC_OPT_ACK_TMR_EXP
+Sets the amount of time in seconds to wait for an acknowledgement from the remote SAP.
+
+.TP
+.B LLC_OPT_P_TMR_EXP
+Sets the amount of time in seconds for the P/F cycle timer.
+
+.TP
+.B LLC_OPT_REJ_TMR_EXP
+Sets the amount of time in seconds to wait after the tranmission of a REJ frame.
+
+.TP
+.B LLC_OPT_BUSY_TMR_EXP
+Sets the amount of time in seconds to wait when the remote SAP has entered a BUSY state.
+
+.TP
+.B LLC_OPT_TX_WIN
+Sets the transmission window size.
+
+.TP
+.B LLC_OPT_RX_WIN
+Sets the receive window size.
+
+.SH SYSCTLS
+None are defined at this time.
+
+.SH IOCTLS
+Ioctls to configure generic device parameters are described in 
+.BR netdevice (7) .
+
+.SH NOTES
+No notes at this time.
+
+.SH ERRORS
+.TP
+.B ESOCKTNOSUPPORT
+Socket type is not support.
+
+.TP
+.B ENETUNREACH
+Source MAC address specified in not available on the local system.
+
+.TP
+.B EUSERS
+The SAP requested is already in use by another PF_LLC socket.
+
+.TP
+.B EBUSY
+The SAP is in use by a Linux kernel networking layer.
+
+.TP
+.B EADDRINUSE
+The request MAC + SAP combination is already in use.
+
+.TP
+.B ENOTCONN
+The SAP is not type llc2 or the llc2 SAP is not connect to a remote SAP.
+
+.TP
+.B EINVAL
+The requested action is not permitted due to some data or sequence of actions
+from by the socket user.
+
+.TP
+.B EOPNOTSUPP
+The requested operation is not supported on the specified socket.
+
+.TP
+.B EWOULDBLOCK
+The requested action would block and the user specified the socket should not block.
+
+.TP
+.B ENOPROTOOPT
+The specified socket option is not available.
+
+.SH COMPATIBILITY
+There are no compatibility issues.
+
+.SH VERSIONS
+.BR PF_LLC
+is a new feature in Linux 2.5. Earlier Linux versions did not support llc sockets.
+
+.SH BUGS
+glibc 2.2.2 does not have a define for 
+.BR PF_LLC .
+The suggested workaround is to use
+.RS
+.nf 
+#ifndef PF_LLC
+#define PF_LLC 26
+#endif
+.fi
+.RE
+This will be fixed in later glibc versions.
+
+Loopback LLC data and connections are not supported.
+
+.SH CREDITS
+This man page and PF_LLC was writen by Jay Schulist. LLC core code was made
+available by Procomm, Inc. which was then ported to the Linux kernel and generally
+made useful for others by Arnaldo Carvalho de Melo.
+
+.SH SEE ALSO
+.BR socket (7)
+.BR socket (2)
+.BR llcping (8)
+
+ANSI/IEEE Std 802.2, 1998 edition. Part 2: Logical Link Control
+
+.BR linux/llc.h
+include file for llc specific structures and defintions.

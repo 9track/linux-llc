@@ -1,7 +1,7 @@
 /* lar_unix.c: generic unix functions to access the lar daemon.
  *
- * Author:
- * Jay Schulist         <jschlst@samba.org>
+ * Written by Jay Schulist <jschlst@samba.org>
+ * Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,96 +38,168 @@
 /* out stuff. */
 #include "lar.h"
 #include "lar_list.h"
-#include "lar_unix.h"
+#include "lard_load.h"
 #include "lard.h"
+#include "lar_unix.h"
 
 #ifndef UNIX_PATH_MAX
 #define UNIX_PATH_MAX    108
 #endif
 
-static char *pr_ether(char *ptr)
+int lar_unix_cnt_snpa(struct larattr *la, void *data, int *cnt)
 {
-        static char buff[64];
-
-        snprintf(buff, sizeof(buff), "%02X:%02X:%02X:%02X:%02X:%02X",
-        	(ptr[0] & 0377), (ptr[1] & 0377), (ptr[2] & 0377),
-                (ptr[3] & 0377), (ptr[4] & 0377), (ptr[5] & 0377));
-        return(buff);
+	if (la->lara_type == LARA_SNPA)
+		(*cnt)++;
+	return 0;
 }
 
-int lar_attr_print(struct larattr *la, void *data)
+int lar_unix_cnt_member(struct larattr *la, void *data, int *cnt)
 {
-        printf("type: %d len: %d\n", la->lara_type, la->lara_len);
+	if (la->lara_type == LARA_MEMBER)
+		(*cnt)++;
+	return 0;
+}
+
+int lar_unix_xtract_snpa(struct larattr *la, void *data, lar_snpa_t **snpa, int *cnt)
+{
+	if (la->lara_type == LARA_SNPA) {
+		snpa[*cnt] = calloc(1, sizeof(lar_snpa_t));
+		memcpy(snpa[*cnt], data, sizeof(lar_snpa_t));
+		(*cnt)++;
+	}
+	return 0;
+}
+
+int lar_unix_xtract_member(struct larattr *la, void *data, lar_member_t **members, int *cnt)
+{
+	if (la->lara_type == LARA_MEMBER) {
+		members[*cnt] = calloc(1, sizeof(lar_member_t));
+		memcpy(members[*cnt], data, sizeof(lar_member_t));
+		(*cnt)++;
+	}
+	return 0;
+}
+
+int lar_unix_xtract_errno(struct larattr *la, void *data, int *err)
+{
+	if(la->lara_type == LARA_ERR)
+		memcpy(err, data, sizeof(int));
+	return 0;
+}
+
+int lar_unix_rx_record(struct larattr *la, void *data, lar_record_usr_t *recd)
+{
+	int i;
+ 
+        if (!recd)
+                return EINVAL;
+        switch (la->lara_type) {
+                case LARA_RTCAP:
+                        memcpy(&recd->rtcap, data, sizeof(lar_rtcap_t));
+                        break;
                         
-        switch(la->lara_type) {
-                case (LARA_CORRELATOR): {
-                        lar_correlator_t *c = LARA_DATA(la);
-                        printf("correlator: %d\n", *c);
+                case LARA_NETID:
+                        memcpy(recd->netid, data, sizeof(lar_netid_t));
                         break;
-                }
 
-                case (LARA_RTCAP): {
-                        lar_rtcap_t *r = LARA_DATA(la);
-                        printf("rtcap: %d\n", *r);
+                case LARA_NAME:
+                        memcpy(recd->name, data, sizeof(lar_name_t));
                         break;
-                }
 
-                case (LARA_MAC): {
-                        lar_mac_t *m = LARA_DATA(la);
-                        printf("mac: %s\n", pr_ether((char *)m));
+                case LARA_GROUP:
+                        for(i = 0; recd->groups[i] != NULL; i++);
+                        recd->groups[i] = new_s(sizeof(lar_group_t));
+                        memcpy(recd->groups[i], data, sizeof(lar_group_t));
+			recd->groups[i + 1] = NULL;
                         break;
-                }
 
-                case (LARA_LSAP): {
-                        lar_lsap_t *l = LARA_DATA(la);
-                        printf("lsap: 0x%02X\n", *l);
+                case (LARA_SNPA):
+			for(i = 0; recd->snpas[i] != NULL; i++);
+                        recd->snpas[i] = new_s(sizeof(lar_snpa_t));
+                        memcpy(recd->snpas[i], data, sizeof(lar_snpa_t));
+                        recd->snpas[i + 1] = NULL;
                         break;
-                }
 
-                case (LARA_NETID): {
-                        lar_netid_t *n = LARA_DATA(la);
-                        printf("netid: %s\n", (char *)n);
-                        break;
-                }
-
-                case (LARA_NAME): {
-                        lar_name_t *n = LARA_DATA(la);
-                        printf("name: %s\n", (char *)n);
-                        break;
-                }
-
-                case (LARA_GROUP): {
-                        lar_group_t *g = LARA_DATA(la);
-                        printf("group: %s\n", (char *)g);
-                        break;
-                }
-
-                case (LARA_SNPA): {
-                        lar_snpa_t *s = LARA_DATA(la);
-                        printf("snpa: %s@0x%02X\n", pr_ether(s->mac), s->lsap);
-                        break;
-                }
-
-                case (LARA_SOLICIT):
                 default:
                         printf("Unknown %d of len %d\n", la->lara_type, la->lara_len);
         }
-
-	return (0);
+        return 0;
 }
 
-struct larmsg *larmsg_put(int type, int seq, int len)
+int lar_unix_rx_erase(struct larattr *la, void *data, lar_erase_usr_t *erase)
+{
+        if (!erase)
+                return EINVAL;
+        switch (la->lara_type) {
+                case LARA_NETID:
+                        memcpy(erase->netid, data, sizeof(lar_netid_t));
+                        break;
+                
+                case LARA_NAME:
+                        memcpy(erase->name, data, sizeof(lar_name_t));
+                        break;
+
+                default:
+                        printf("Unknown %d of len %d\n", la->lara_type, la->lara_len);
+        }
+        return 0;
+}
+
+int lar_unix_rx_search(struct larattr *la, void *data, lar_search_usr_t *srch)
+{
+        if (!srch)
+                return -EINVAL;
+        switch (la->lara_type) {
+                case LARA_NETID:
+                        memcpy(srch->netid, data, LARA_PAYLOAD(la));
+                        break;
+
+                case LARA_GROUP:
+                        memcpy(srch->group, data, LARA_PAYLOAD(la));
+                        break;
+
+                case LARA_RTCAP:
+                        memcpy(&srch->rtcap, data, LARA_PAYLOAD(la));
+                        break;
+
+                default:
+                        printf("build_search invalid attr %d\n", la->lara_type);
+                        break;
+        }
+        return 0;
+}
+
+int lar_unix_rx_find(struct larattr *la, void *data, lar_find_usr_t *find)
+{               
+        if (!find)
+                return -EINVAL;
+        switch (la->lara_type) {
+                case LARA_NETID:
+                        memcpy(find->netid, data, LARA_PAYLOAD(la));
+                        break;
+
+                case LARA_NAME:
+                        memcpy(find->name, data, LARA_PAYLOAD(la));
+                        break;
+                
+                default:
+                        printf("build_find invalid attr %d\n", la->lara_type);
+                        break;
+        }
+        return 0;
+}
+
+struct larmsg *larmsg_put(int type, int len)
 {
         struct larmsg *lh;
 
         lh = (struct larmsg *)calloc(1, len);
         lh->type        = type;
         lh->len         = len;
-        lh->seq         = seq;
         return (lh);
 }
 
-void lara_put(struct larmsg *lh, int attrtype, int attrlen, const void *attrdata)
+struct larmsg *lara_put(struct larmsg *lh, int attrtype, int attrlen, const void *attrdata)
 {
         struct larattr *lara;
         int size = LARA_LENGTH(attrlen);
@@ -138,6 +210,7 @@ void lara_put(struct larmsg *lh, int attrtype, int attrlen, const void *attrdata
         lara->lara_len  = size;
         memcpy(LARA_DATA(lara), attrdata, attrlen);
         lh->len += LARA_ALIGN(size);
+	return (lh);
 }
 
 int lar_unix_init(void)
@@ -146,32 +219,41 @@ int lar_unix_init(void)
         int fd, err;
 
         fd = socket(PF_UNIX, SOCK_STREAM, 0);
-        if(fd < 0)
-                return (fd);
-
+        if (fd < 0)
+                return fd;
         memset(&un, 0, sizeof(struct sockaddr_un));
         un.sun_family = AF_UNIX;
 	memcpy(&un.sun_path[1], _PATH_LAR_UDS, strlen(_PATH_LAR_UDS));
 	err = connect(fd, (struct sockaddr *)&un, sizeof(un));
-	if(err < 0) {
+	if (err < 0) {
 		close(fd);
-		return (err);
+		return err;
 	}
-
-	return (fd);
+	return fd;
 }
 
 int lar_unix_fini(int sk)
 {
-	return (close(sk));
+	return close(sk);
 }
 
 int lar_unix_send(int skfd, void *data, int len)
 {
-	return (send(skfd, data, len, 0));
+	return send(skfd, data, len, 0);
 }
 
-int lar_unix_recv(int skfd, void *data, int *len)
+int lar_unix_recv(int skfd, void *data, int len)
 {
-        return (recv(skfd, data, *len, 0));
+        return recv(skfd, data, len, 0);
+}
+
+int lar_unix_send_errno(int skfd, int32_t err)
+{
+        struct larmsg *lh;
+	int rc;
+        lh = larmsg_put(LAR_OP_ERRNO, sizeof(*lh));
+        lh = lara_put(lh, LARA_ERR, sizeof(err), &err);
+	rc = lar_unix_send(skfd, lh, lh->len);
+	free(lh);
+	return rc;
 }

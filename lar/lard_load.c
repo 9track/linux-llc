@@ -1,7 +1,7 @@
 /* lard_load.c: load an lar server configuration file.
  *
- * Author:
- * Jay Schulist         <jschlst@samba.org>
+ * Written by Jay Schulist <jschlst@samba.org>
+ * Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,8 +38,8 @@
 /* our stuff. */
 #include "lar.h"
 #include "lar_list.h"
-#include "lard.h"
 #include "lard_load.h"
+#include "lard.h"
 
 #include <gnome-xml/xmlmemory.h>
 #include <gnome-xml/parser.h>
@@ -54,159 +54,13 @@ struct wordmap on_types[] = {
         { NULL,         -1              }
 };
 
-char     *altarg;
-char     *stringbase;
-char     argbuf[200];    /* argument storage buffer */
-char     *argbase;
-int slrflag;
-
-char *slurpstring(void)
-{
-        static char excl[] = "!", dols[] = "$";
-
-        int got_one = 0;
-        register char *sb = stringbase;
-        register char *ap = argbase;
-        char *tmp = argbase;            /* will return this if token found */
-
-        if(*sb == '!' || *sb == '$') { 	/* recognize ! as a token for shell */
-                switch(slrflag) {      /* and $ as token for macro invoke */
-                        case 0:
-                                slrflag++;
-                                stringbase++;
-                                return ((*sb == '!') ? excl : dols);
-
-                        case 1:
-                                slrflag++;
-                                altarg = stringbase;
-                                break;
-
-                        default:
-                                break;
-                }
-        }
-
-S0:
-        switch(*sb) {
-
-        case '\0':
-                goto OUT;
-
-        case ' ':
-        case '\t':
-                sb++; goto S0;
-
-        default:
-                switch (slrflag) {
-                        case 0:
-                                slrflag++;
-                                break;
-                        case 1:
-                                slrflag++;
-                                altarg = sb;
-                                break;
-                        default:
-                                break;
-                }
-                goto S1;
-        }
-
-S1:
-        switch (*sb) {
-
-        case ' ':
-        case '\t':
-        case '\0':
-                goto OUT;       /* end of token */
-
-        case '\\':
-                sb++; goto S2;  /* slurp next character */
-
-        case '"':
-                sb++; goto S3;  /* slurp quoted string */
-
-        default:
-                *ap++ = *sb++;  /* add character to token */
-                got_one = 1;
-                goto S1;
-        }
-
-S2:
-        switch (*sb) {
-
-        case '\0':
-                goto OUT;
-
-        default:
-                *ap++ = *sb++;
-                got_one = 1;
-                goto S1;
-        }
-
-S3:
-        switch (*sb) {
-
-        case '\0':
-                goto OUT;
-
-        case '"':
-                sb++; goto S1;
-
-        default:
-                *ap++ = *sb++;
-                got_one = 1;
-                goto S3;
-        }
-
-OUT:
-        if (got_one)
-                *ap++ = '\0';
-        argbase = ap;                   /* update storage pointer */
-        stringbase = sb;                /* update scan pointer */
-        if (got_one) {
-                return(tmp);
-        }
-        switch (slrflag) {
-                case 0:
-                        slrflag++;
-                        break;
-                case 1:
-                        slrflag++;
-                        altarg = NULL;
-                        break;
-                default:
-                        break;
-        }
-        return NULL;
-}
-
-char **makeargv(char *line, int *pargc, char **parg)
-{
-        static char *rargv[20];
-        int rargc = 0;
-        char **argp;
-
-        argp = rargv;
-        stringbase = line;              /* scan from first of buffer */
-        argbase = argbuf;               /* store from first of buffer */
-        slrflag = 0;
-        while((*argp++ = slurpstring())!=NULL)
-                rargc++;
-
-        *pargc = rargc;
-        if(parg)
-                *parg = altarg;
-        return (rargv);
-}
-
-int map_word(struct wordmap *wm, const char *word)
+static int map_word(struct wordmap *wm, const char *word)
 {
         int i;
-        for(i = 0; wm[i].word != NULL; i++)
-                if(!strcmp(wm[i].word, word))
-                        return (wm[i].val);
-
-        return (-1);
+        for (i = 0; wm[i].word != NULL; i++)
+                if (!strcmp(wm[i].word, word))
+                        return wm[i].val;
+        return -1;
 }
 
 int lard_print_global(global *g)
@@ -216,84 +70,82 @@ int lard_print_global(global *g)
 
         printf("\n================ Global Input Structure ================\n");
 
-        if(!g) {
+        if (!g) {
                 printf("Global data is NULL!\n");
                 goto pr_done;
         }
 
         printf("debug_level: %d\n", g->debug_level);
 	printf("lsap: 0x%02X\n", g->lsap);
+	printf("timetolive: %d\n", g->timetolive);
 
 	printf("------------listen-------------\n");
-	for(l = g->ll; l != NULL; l = l->next)
+	for (l = g->ll; l != NULL; l = l->next)
 		printf("iface (%s) igivname (%d)\n",
 			l->ifname, l->igivname);
 
         printf("-------------timer-------------\n");
-        for(t = g->tl; t != NULL; t = t->next)
+        for (t = g->tl; t != NULL; t = t->next)
 		printf("name (%s) secs (%d) count (%d)\n",
 			t->name, t->secs, t->count);
 
 pr_done:
         printf("=========================================================\n");
-        return (0);
+        return 0;
 }
 
 static struct lar_tinfo *parse_timer(xmlDocPtr doc, xmlNsPtr ns, xmlNodePtr cur)
 {
 	struct lar_tinfo *t;
-        if(!new(t))
-                return (NULL);
-
-        for(cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
-                if((!strcmp(cur->name, "name")) && (cur->ns == ns))
+        if (!new(t))
+                return NULL;
+        for (cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
+                if ((!strcmp(cur->name, "name")) && (cur->ns == ns))
 			strncpy(t->name, xmlNodeListGetString(doc,
                                 cur->xmlChildrenNode, 1), 30);
-		if((!strcmp(cur->name, "secs")) && (cur->ns == ns))
+		if ((!strcmp(cur->name, "secs")) && (cur->ns == ns))
 			t->secs = atoi(xmlNodeListGetString(doc,
 				cur->xmlChildrenNode, 1));
-		if((!strcmp(cur->name, "count")) && (cur->ns == ns))
+		if ((!strcmp(cur->name, "count")) && (cur->ns == ns))
 			t->count = atoi(xmlNodeListGetString(doc,
 				cur->xmlChildrenNode, 1));
 	}
-
-	return (t);
+	return t;
 }
 
 static struct lar_linfo *parse_listen(xmlDocPtr doc, xmlNsPtr ns, xmlNodePtr cur)
 {
         struct lar_linfo *l;
-        if(!new(l))
-                return (NULL);
-                
-        for(cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
-		if((!strcmp(cur->name, "igivname")) && (cur->ns == ns))
+        if (!new(l))
+                return NULL;
+        for (cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
+		if ((!strcmp(cur->name, "igivname")) && (cur->ns == ns))
                         l->igivname = map_word(on_types, xmlNodeListGetString(doc,
                                 cur->xmlChildrenNode, 1));
-		if((!strcmp(cur->name, "iface")) && (cur->ns == ns))
+		if ((!strcmp(cur->name, "iface")) && (cur->ns == ns))
 			strcpy(l->ifname, xmlNodeListGetString(doc,
                                 cur->xmlChildrenNode, 1));
 	}
-
-	return (l);
+	return l;
 }
 
 static global *parse_global(xmlDocPtr doc, xmlNsPtr ns, xmlNodePtr cur)
 {
 	global *gi;
-	if(!new(gi))
-		return (NULL);
-
-	for(cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
-		if((!strcmp(cur->name, "debuglevel")) && (cur->ns == ns))
+	if (!new(gi))
+		return NULL;
+	for (cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
+		if ((!strcmp(cur->name, "debuglevel")) && (cur->ns == ns))
                         gi->debug_level = atoi(xmlNodeListGetString(doc,
                                 cur->xmlChildrenNode, 1));
-		if((!strcmp(cur->name, "lsap")) && (cur->ns == ns))
+		if ((!strcmp(cur->name, "lsap")) && (cur->ns == ns))
 			gi->lsap = strtol(xmlNodeListGetString(doc,
                                 cur->xmlChildrenNode, 1), (char **)NULL, 0);
+		if ((!strcmp(cur->name, "timetolive")) && (cur->ns == ns))
+                        gi->timetolive = atoi(xmlNodeListGetString(doc,
+                                cur->xmlChildrenNode, 1));
 	}
-
-	return (gi);
+	return gi;
 }
 
 /* entrance for loading the standard lard.xml file. */
@@ -309,71 +161,71 @@ int load_config_file(char *cfile)
 
         /* build an XML tree from the file. */
         doc = xmlParseFile(cfile);
-        if(!doc)
-                return (-1);
+        if (!doc)
+                return -1;
 
 	/* check the document is of the right kind. */
         cur = xmlDocGetRootElement(doc);
-        if(!cur) {
+        if (!cur) {
                 fprintf(stderr, "file (%s) is an empty document.\n", cfile);
                 xmlFreeDoc(doc);
-                return (-1);
+                return -1;
         }
         ns = xmlSearchNsByHref(doc, cur, _PATH_LARD_XML_HREF);
-        if(!ns) {
+        if (!ns) {
                 fprintf(stderr, "file (%s) is of the wrong type,"
                         " lard namespace not found.\n", cfile);
                 xmlFreeDoc(doc);
-                return (-1);
+                return -1;
         }
-	if(strcmp(cur->name, "Helping")) {
+	if (strcmp(cur->name, "Helping")) {
                 fprintf(stderr, "file (%s) is of the wrong type,"
                         " root node != Helping.\n", cfile);
                 xmlFreeDoc(doc);
-                return (-1);
+                return -1;
         }
 
 	/* now we walk the xml tree. */
         cur = cur->xmlChildrenNode;
-        while(cur && xmlIsBlankNode(cur))
+        while (cur && xmlIsBlankNode(cur))
                 cur = cur->next;
-        if(!cur)
-                return (-1);
+        if (!cur)
+                return -1;
 
 	/* first level is just 'lard' */
-        if((strcmp(cur->name, "lard")) || (cur->ns != ns)) {
+        if ((strcmp(cur->name, "lard")) || (cur->ns != ns)) {
                 fprintf(stderr, "file (%s) is of the wrong type, was '%s',"
                         " lard expected", cfile, cur->name);
                 fprintf(stderr, "xmlDocDump follows.\n");
                 xmlDocDump(stderr, doc);
                 fprintf(stderr, "xmlDocDump finished.\n");
                 xmlFreeDoc(doc);
-                return (-1);
+                return -1;
         }
 
 	/* now we walk the xml tree. */
-	for(cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
-		if((!strcmp(cur->name, "global")) && (cur->ns == ns)) {
+	for (cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
+		if ((!strcmp(cur->name, "global")) && (cur->ns == ns)) {
 			ginfo = parse_global(doc, ns, cur);
-			if(!ginfo)
-				return (-EINVAL);
+			if (!ginfo)
+				return -EINVAL;
 			continue;
 		}
 
-		if((!strcmp(cur->name, "listen")) && (cur->ns == ns)) {
+		if ((!strcmp(cur->name, "listen")) && (cur->ns == ns)) {
 			struct lar_linfo *l;
 			l = parse_listen(doc, ns, cur);
-			if(!l)
+			if (!l)
 				continue;
 			l->next = ginfo->ll;
 			ginfo->ll = l;
 			continue;
 		}
 
-		if((!strcmp(cur->name, "timer")) && (cur->ns == ns)) {
+		if ((!strcmp(cur->name, "timer")) && (cur->ns == ns)) {
 			struct lar_tinfo *t;
 			t = parse_timer(doc, ns, cur);
-			if(!t)
+			if (!t)
 				continue;
 			t->next = ginfo->tl;
                         ginfo->tl = t;
@@ -382,7 +234,7 @@ int load_config_file(char *cfile)
 	}
 
 	lar_config_info = ginfo;
-        return (0);
+        return 0;
 }
 
 /* Now we actually do something with all the data we have gathered. */
@@ -392,30 +244,25 @@ int load_config(global *ginfo)
 	struct lar_linfo *l;
         int err = 0;
 
-        if(lar_stats->debug > 5)
+        if (lar_stats->debug > 5)
                 lard_print_global(ginfo);
-
-        if(!ginfo)
-                return (-ENOENT);
-
-	if(ginfo->debug_level)
+        if (!ginfo)
+                return -ENOENT;
+	if (ginfo->debug_level)
                 lar_stats->debug = ginfo->debug_level;
-
-        for(t = ginfo->tl; t != NULL; t = t->next) {
-                err = lar_load_timer();
-		if(err < 0)
-			return (err);
+	lar_stats->garbage_ttl = ginfo->timetolive;
+        for (t = ginfo->tl; t != NULL; t = t->next) {
+                err = lar_load_timer(t);
+		if (err < 0)
+			return err;
 	}
-
 	err = lar_load_unix();
-        if(err < 0)
-                return (err);
-
-	for(l = ginfo->ll; l != NULL; l = l->next) {
+        if (err < 0)
+                return err;
+	for (l = ginfo->ll; l != NULL; l = l->next) {
 		err = lar_load_listen(l);
-		if(err < 0)
-			return (err);
+		if (err < 0)
+			return err;
 	}
-
-        return (err);
+        return err;
 }

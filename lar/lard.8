@@ -1,0 +1,58 @@
+.\" Written by Jay Schulist <jschlst@samba.org>
+.\" Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
+.\"
+.\" This program can be redistributed or modified under the terms of the
+.\" GNU General Public License as published by the Free Software Foundation.
+.\" This program is distributed without any warranty or implied warranty
+.\" of merchantability or fitness for a particular purpose.
+.\"
+.\" See the GNU General Public License for more details.
+.Dd November 22, 2001
+.Dt LARD 8
+.Os "Linux-SNA Project"
+.Sh NAME
+.Nm lard
+.Tn Lan address resolution protocol and caching daemon.
+.Sh SYNOPSIS
+.Nm lard
+.Op Fl hv
+.Op Fl d Ar level
+.Op Fl f Ar config
+.Sh DESCRIPTION
+.Nm lard
+uses the Lan Address Resolution protocol to provide name service for LLC HW MAC
+addresses in APPN and Sub-Area SNA networks.
+.Nm Lard
+is required for the localhost to perforam Lan Address Resolution queries and various
+other lar related functions.
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl h
+Useless help information.
+.It Fl v 
+Displays the current maintainer and version of
+.Nm lard .
+.It Fl d Ar level
+Set the debug output level for
+.Nm lard .
+If no debug level is specified the
+.Nm lard 
+program will turn into a daemon process. The level of 1 - 10 is supported.
+Level 5 will display information for each packet recevied and transmitted.
+Level 10 includes all the display of level 5.
+.It Fl f Ar config
+Specify the location of the
+.Nm lard
+XML configuration file to use.
+.Nm lard
+will not function unless a valid configuration file is present in /etc/lard.xml or
+the specified location using this option.
+.Sh BUGS
+Please report bugs to Jay Schulist <jschlst@samba.org>
+.Sh CREDITS
+This man page was written by Jay Schulist. The LAN address resolution protocl suite
+for Linux was written by Jay Schulist.
+.Sh SEE ALSO
+.Xr lar 3
+.Xr llookup 8
+

@@ -1,0 +1,92 @@
+.\" Written by Jay Schulist <jschlst@samba.org>
+.\" Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
+.\"
+.\" This program can be redistributed or modified under the terms of the
+.\" GNU General Public License as published by the Free Software Foundation.
+.\" This program is distributed without any warranty or implied warranty
+.\" of merchantability or fitness for a particular purpose.
+.\"
+.\" See the GNU General Public License for more details.
+.Dd November 22, 2001
+.Dt LLOOKUP 8
+.Os "Linux-SNA Project"
+.Sh NAME
+.Nm llookup
+.Tn Lan address resolution Lookup client.
+.Sh SYNOPSIS
+.Nm llookup
+.Op Fl hv
+.Op Fl adfms
+.Op Fl r Ar subarea|appn|name
+.Op Fl g Ar group
+.Op Fl n Ar dev@sap
+.Op netid.name
+
+.Sh DESCRIPTION
+The
+.Nm llookup
+utility provides the user the ability to add or delete local Lan address resolution (LAR)
+network entity records, search for unknown network entities or find detailed information
+about other network entities. The options are as follows:
+.Bl -tag -width Ds
+.It Fl h
+Useless help information.
+.It Fl v
+Displays the current maintainer and version of
+.Nm llookup .
+.It Fl a
+Add a record to the local LAR network entity database.
+.It Fl d
+Delete a record from the local LAR network entity database.
+.It Fl f
+Find the SNPA (MAC + SAP) of a specific network entity.
+.It Fl m
+Find the SNPA of multiple specified network entities.
+.It Fl s
+Search for LAR entities using general search parameters. 
+.It Fl r
+Routing capabilities of the node(s) in this request. The possible values or
+subarea, appn or name.
+.It Fl g
+Group fo the node(s) in this request. Multiple `-g` options may be specified.
+.It Fl n
+The local network device and SAP for the specified operation. Multiple `-n` options may
+be specified.
+.El
+.Pp
+
+.Sh EXAMPLES
+.Nm llookup -a -r appn -g iroutsna -n eth0@0x04 lnxsna.life
+.br
+This example adds the node
+.Nm lnxsna.life
+to the local LAR network entity database, specifiying that it has APPN routing
+capabilities on device eth0 at SAP 0x04 and it member of the group iroutsna.
+.Pp
+.Nm llookup -d lnxsna.life
+.br
+This example removes the node
+.Nm lnxsna.life
+from the local LAR network entity database.
+.Pp
+.Nm llookup -f lnxsna.life
+.br
+This example returns the SNPA (MAC + SAP) of the node
+.Nm lnxsna.life
+.Pp
+.Nm llookup -s -r appn -g iroutsna lnxsna
+.br
+This example searches all configured LAR networks for nodes which are on the
+.Nm lnxsna
+network and have APPN routing capabilities and are part of the
+.Nm iroutsna
+group.
+
+.Sh BUGS
+Please report bugs to Jay Schulist <jschlst@samba.org>
+.Sh CREDITS
+This man page was written by Jay Schulist. The LAN address resolution protocl suite
+for Linux was written by Jay Schulist.
+.Sh SEE ALSO
+.Xr lar 3
+.Xr lard 8

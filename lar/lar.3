@@ -1,0 +1,131 @@
+.\" Written by Jay Schulist <jschlst@samba.org>
+.\" Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
+.\"
+.\" This program can be redistributed or modified under the terms of the
+.\" GNU General Public License as published by the Free Software Foundation.
+.\" This program is distributed without any warranty or implied warranty
+.\" of merchantability or fitness for a particular purpose.
+.\"
+.\" See the GNU General Public License for more details.
+.TH LAR 3 "November 22, 2001" "Linux Man Page" "Linux Programmer's Manual"
+.SH NAME
+lar_find_member, lar_find, lar_search, lar_record, lar_erase
+.SH SYNOPSIS
+.nr
+.B #include <sys/types.h>
+.br
+.B #include <lar.h>
+.sp
+.BI "int32_t lar_erase(const u_int8_t *" netid ", const u_int8_t *" name );
+.sp
+.BI "int32_t lar_record(const u_int8_t *" netid ", const u_int8_t *" name ", const u_int32_t " rtcap ", lar_snpa_t **" snpa_list ", u_int8_t **" groups );
+.sp
+.BI "lar_snpa_t **lar_find(const u_int8_t *" netid ", const u_int8_t *" name ", int32_t *" rc );
+.sp
+.BI "lar_member_t **lar_find_member(const u_int8_t " fflag ", const u_int8_t *" netid ", const u_int8_t *" group ", const u_in32_t " rtmask ", int32_t *" rc );
+.sp
+.BI "lar_member_t **lar_search(const u_int8_t *" netid ", const u_int8_t *" group ", const u_int32_t " rtcap ", int32_t *" rc );
+
+.SH DESCRIPTION
+The
+.B lar_erase()
+function request the CCE to remove the resource identified by
+.I netid
+and
+.I name
+from the list of network entries recorded at this station.
+
+The
+.B lar_record()
+function requests the CCE to record a resource identified by
+.I netid
+and
+.I name
+as available, addressable through each of the SNPAs in
+.I snpa_list,
+having the specified
+.I rtcap
+routing capabilities, belonging to each group in the list of
+.I groups
+and to the specified connection network.
+
+The
+.B lar_find()
+function request the CCE to determine the SNPA of a network entity with
+the specified
+.I netid
+and
+.I name.
+
+The
+.B lar_find_member()
+funciton requests the CCE to determine the name of one (or more) members of
+the specified
+.I group
+and with the specified
+.I rtcap
+routing capabilities and
+.I netid.
+
+The
+.B lar_search()
+function request the CCE to determine all network entities that are of the specified
+.I group
+and that have the specified
+.I rtcap
+routing capabilities and
+.I netid.
+
+.SH RETURN VALUE
+The
+.B "lar_find(), lar_find_member()"
+and
+.B lar_search()"
+functions return NON-NULL lar_member_t or lar_snpa_t structure(s) upon
+success and a NULL lar_member_t or lar_snpa_t structure upon failure with errno set.
+.B lar_record()
+and
+.B lar_erase()
+functions return 0 upon success and a negative value upon failure with errno set.
+
+.SH ERRORS
+.TP
+.B ENOENT
+No entry was found using the specified find/search parameters.
+
+.TP
+.B EEXIST
+An entry already exists in the network entity table.
+
+.TP
+.B ENOTCONN
+A connection to the
+.BR lard (8)
+server was not successfully established.
+
+.TP
+.B EAGAIN
+A communication error occured, try request again.
+
+.TP
+.B EINVAL
+A user specified parameter was rejected by the LAR server.
+
+.TP
+.B ENOMEM
+Adaquate memory was not able to be allocated to perform the request or store the record.
+
+.TP
+.B EOPNOTSUPP
+The request operation is not supported.
+
+.SH CREDITS
+This man page was written by Jay Schulist. Lan address resolution protocol suite for Linux
+was written by Jay Schulist.
+
+.SH SEE ALSO
+.BR llc (7)
+.BR llookup (8)
+.br
+.BR include/lar.h
+file for lar specific structures and definitions.

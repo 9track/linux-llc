@@ -17,7 +17,7 @@ diff -u kernel-acme/Documentation/Configure.help:1.1.1.9 kernel-acme/Documentati
    The Frame Diverter allows you to divert packets from the
 Index: kernel-acme/include/linux/af_netb.h
 diff -u /dev/null kernel-acme/include/linux/af_netb.h:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:25 2001
+--- /dev/null	Thu Nov 22 23:54:49 2001
 +++ kernel-acme/include/linux/af_netb.h	Tue Nov  6 20:13:47 2001
 @@ -0,0 +1,192 @@
 +#ifndef _LINUX_AF_NETB_H
@@ -235,7 +235,7 @@ diff -u kernel-acme/include/linux/brlock.h:1.1.1.2 kernel-acme/include/linux/brl
  
 Index: kernel-acme/include/linux/dextab.h
 diff -u /dev/null kernel-acme/include/linux/dextab.h:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:26 2001
+--- /dev/null	Thu Nov 22 23:54:49 2001
 +++ kernel-acme/include/linux/dextab.h	Tue Nov  6 20:13:47 2001
 @@ -0,0 +1,58 @@
 +#ifndef __LINUX_DEXTAB_H
@@ -297,10 +297,10 @@ diff -u /dev/null kernel-acme/include/linux/dextab.h:1.1.8.1
 +extern void dextab_destruct(dextab_t *tbl);
 +#endif __LINUX_DEXTAB_H
 Index: kernel-acme/include/linux/llc.h
-diff -u /dev/null kernel-acme/include/linux/llc.h:1.1.4.4
---- /dev/null	Mon Nov 12 00:14:26 2001
-+++ kernel-acme/include/linux/llc.h	Mon Nov 12 00:11:55 2001
-@@ -0,0 +1,95 @@
+diff -u /dev/null kernel-acme/include/linux/llc.h:1.1.4.6
+--- /dev/null	Thu Nov 22 23:54:49 2001
++++ kernel-acme/include/linux/llc.h	Wed Nov 21 00:19:20 2001
+@@ -0,0 +1,96 @@
 +#ifndef __LINUX_LLC_H
 +#define __LINUX_LLC_H
 +/*
@@ -315,7 +315,7 @@ diff -u /dev/null kernel-acme/include/linux/llc.h:1.1.4.4
 + *
 + * See the GNU General Public License for more details.
 + */
-+#define __LLC_SOCK_SIZE__ 24	/* sizeof(sockaddr_llc), word align. */
++#define __LLC_SOCK_SIZE__ 28	/* sizeof(sockaddr_llc), word align. */
 +struct sockaddr_llc {
 +	sa_family_t     sllc_family;	/* AF_LLC */
 +	sa_family_t	sllc_arphrd;	/* ARPHRD_ETHER */
@@ -326,8 +326,9 @@ diff -u /dev/null kernel-acme/include/linux/llc.h:1.1.4.4
 +	unsigned char   sllc_ssap;
 +	unsigned char   sllc_dmac[IFHWADDRLEN];
 +	unsigned char   sllc_smac[IFHWADDRLEN];
++	unsigned char   sllc_mmac[IFHWADDRLEN];
 +	unsigned char   __pad[__LLC_SOCK_SIZE__ - sizeof(sa_family_t) * 2 -
-+			      sizeof(unsigned char) * 5 - IFHWADDRLEN * 2];
++			      sizeof(unsigned char) * 5 - IFHWADDRLEN * 3];
 +};
 +
 +/* sockopt definitions. */
@@ -383,11 +384,11 @@ diff -u /dev/null kernel-acme/include/linux/llc.h:1.1.4.4
 +struct sock;
 +
 +struct llc_ui_opt {
-+	u16		    link;	/* network layer link number */
-+	struct llc_sap	   *sap;		/* pointer to parent SAP */
-+	struct sock	   *core_sk;
-+	struct net_device  *dev;		/* device to send to remote */
-+	struct sockaddr_llc addr;
++	u16		     link;	/* network layer link number */
++	struct llc_sap	    *sap;	/* pointer to parent SAP */
++	struct sock	    *core_sk;
++	struct net_device   *dev;	/* device to send to remote */
++	struct sockaddr_llc  addr;	/* address sock is bound to */
 +};
 +
 +#define LLC_UI_SK(sk) (&sk->protinfo.af_llc)
@@ -999,28 +1000,26 @@ diff -u kernel-acme/include/linux/netbeui.h:1.1.1.1 kernel-acme/include/linux/ne
 +extern int nbcs_ioctl(unsigned int cmd, void *arg);
 +#endif /* _LINUX_NETBEUI_H */
 Index: kernel-acme/include/linux/socket.h
-diff -u kernel-acme/include/linux/socket.h:1.1.1.2 kernel-acme/include/linux/socket.h:1.1.1.2.6.1
+diff -u kernel-acme/include/linux/socket.h:1.1.1.2 kernel-acme/include/linux/socket.h:1.1.1.2.6.2
 --- kernel-acme/include/linux/socket.h:1.1.1.2	Thu Aug 16 15:49:55 2001
-+++ kernel-acme/include/linux/socket.h	Tue Nov  6 20:13:47 2001
-@@ -152,7 +152,7 @@
- #define AF_ASH		18	/* Ash				*/
- #define AF_ECONET	19	/* Acorn Econet			*/
- #define AF_ATMSVC	20	/* ATM SVCs			*/
--#define AF_SNA		22	/* Linux SNA Project (nutters!) */
-+#define AF_LLC		22	/* Linux LLC			*/
++++ kernel-acme/include/linux/socket.h	Thu Nov 22 19:51:49 2001
+@@ -156,6 +156,7 @@
  #define AF_IRDA		23	/* IRDA sockets			*/
  #define AF_PPPOX	24	/* PPPoX sockets		*/
  #define AF_WANPIPE	25	/* Wanpipe API Sockets */
-@@ -183,7 +183,7 @@
- #define PF_ASH		AF_ASH
- #define PF_ECONET	AF_ECONET
- #define PF_ATMSVC	AF_ATMSVC
--#define PF_SNA		AF_SNA
-+#define PF_LLC		AF_LLC
++#define AF_LLC		26	/* Linux LLC			*/
+ #define AF_BLUETOOTH	31	/* Bluetooth sockets 		*/
+ #define AF_MAX		32	/* For now.. */
+ 
+@@ -187,6 +188,7 @@
  #define PF_IRDA		AF_IRDA
  #define PF_PPPOX	AF_PPPOX
  #define PF_WANPIPE	AF_WANPIPE
-@@ -237,6 +237,8 @@
++#define PF_LLC		AF_LLC
+ #define PF_BLUETOOTH	AF_BLUETOOTH
+ #define PF_MAX		AF_MAX
+ 
+@@ -237,6 +239,8 @@
  #define SOL_ATM		264	/* ATM layer (cell level) */
  #define SOL_AAL		265	/* ATM Adaption Layer (packet level) */
  #define SOL_IRDA        266
@@ -1083,7 +1082,7 @@ diff -u kernel-acme/include/net/datalink.h:1.1.1.1 kernel-acme/include/net/datal
  #endif
 Index: kernel-acme/include/net/llc_actn.h
 diff -u /dev/null kernel-acme/include/net/llc_actn.h:1.1.8.4
---- /dev/null	Mon Nov 12 00:14:28 2001
+--- /dev/null	Thu Nov 22 23:54:51 2001
 +++ kernel-acme/include/net/llc_actn.h	Sun Nov 11 15:29:45 2001
 @@ -0,0 +1,48 @@
 +#ifndef LLC_ACTN_H
@@ -1135,9 +1134,9 @@ diff -u /dev/null kernel-acme/include/net/llc_actn.h:1.1.8.4
 +                                   struct llc_station_state_ev *ev);
 +#endif /* LLC_ACTN_H */
 Index: kernel-acme/include/net/llc_c_ac.h
-diff -u /dev/null kernel-acme/include/net/llc_c_ac.h:1.1.8.3
---- /dev/null	Mon Nov 12 00:14:28 2001
-+++ kernel-acme/include/net/llc_c_ac.h	Sun Nov 11 15:29:45 2001
+diff -u /dev/null kernel-acme/include/net/llc_c_ac.h:1.1.8.5
+--- /dev/null	Thu Nov 22 23:54:51 2001
++++ kernel-acme/include/net/llc_c_ac.h	Thu Nov 15 00:26:02 2001
 @@ -0,0 +1,254 @@
 +#ifndef LLC_C_AC_H
 +#define LLC_C_AC_H
@@ -1370,10 +1369,10 @@ diff -u /dev/null kernel-acme/include/net/llc_c_ac.h:1.1.8.3
 +extern int llc_conn_ac_upd_vs(struct sock* sk, struct llc_conn_state_ev *ev);
 +extern int llc_conn_ac_set_f_flag_p(struct sock* sk,
 +				    struct llc_conn_state_ev *ev);
-+extern int llc_conn_disconnect(struct sock* sk, struct llc_conn_state_ev *ev);
++extern int llc_conn_disc(struct sock* sk, struct llc_conn_state_ev *ev);
 +extern int llc_conn_reset(struct sock* sk, struct llc_conn_state_ev *ev);
 +extern int llc_conn_ac_disc_confirm(struct sock* sk, struct llc_conn_state_ev *ev);
-+extern u8 circular_between(u8 a, u8 b, u8 c);
++extern u8 llc_circular_between(u8 a, u8 b, u8 c);
 +extern int llc_conn_ac_send_ack_if_needed(struct sock* sk,
 +					  struct llc_conn_state_ev *ev);
 +extern int llc_conn_ac_inc_npta_value(struct sock* sk,
@@ -1394,9 +1393,9 @@ diff -u /dev/null kernel-acme/include/net/llc_c_ac.h:1.1.8.3
 +				     struct llc_conn_state_ev *ev);
 +#endif /* LLC_C_AC_H */
 Index: kernel-acme/include/net/llc_c_ev.h
-diff -u /dev/null kernel-acme/include/net/llc_c_ev.h:1.1.8.3
---- /dev/null	Mon Nov 12 00:14:28 2001
-+++ kernel-acme/include/net/llc_c_ev.h	Sun Nov 11 15:29:45 2001
+diff -u /dev/null kernel-acme/include/net/llc_c_ev.h:1.1.8.4
+--- /dev/null	Thu Nov 22 23:54:51 2001
++++ kernel-acme/include/net/llc_c_ev.h	Thu Nov 15 00:26:02 2001
 @@ -0,0 +1,323 @@
 +#ifndef LLC_C_EV_H
 +#define LLC_C_EV_H
@@ -1702,10 +1701,10 @@ diff -u /dev/null kernel-acme/include/net/llc_c_ev.h:1.1.8.3
 +					    struct llc_conn_state_ev *ev);
 +extern int llc_conn_ev_qlfy_init_p_f_cycle(struct sock *sk,
 +					   struct llc_conn_state_ev *ev);
-+extern int llc_conn_ev_qlfy_set_status_connect(struct sock *sk,
-+					       struct llc_conn_state_ev *ev);
-+extern int llc_conn_ev_qlfy_set_status_disconnect(struct sock *sk,
-+						  struct llc_conn_state_ev *ev);
++extern int llc_conn_ev_qlfy_set_status_conn(struct sock *sk,
++					    struct llc_conn_state_ev *ev);
++extern int llc_conn_ev_qlfy_set_status_disc(struct sock *sk,
++					    struct llc_conn_state_ev *ev);
 +extern int llc_conn_ev_qlfy_set_status_failed(struct sock *sk,
 +					      struct llc_conn_state_ev *ev);
 +extern int llc_conn_ev_qlfy_set_status_impossible(struct sock *sk,
@@ -1723,7 +1722,7 @@ diff -u /dev/null kernel-acme/include/net/llc_c_ev.h:1.1.8.3
 +#endif /* LLC_C_EV_H */
 Index: kernel-acme/include/net/llc_c_st.h
 diff -u /dev/null kernel-acme/include/net/llc_c_st.h:1.1.8.2
---- /dev/null	Mon Nov 12 00:14:28 2001
+--- /dev/null	Thu Nov 22 23:54:51 2001
 +++ kernel-acme/include/net/llc_c_st.h	Wed Nov  7 14:38:54 2001
 @@ -0,0 +1,48 @@
 +#ifndef LLC_C_ST_H
@@ -1775,10 +1774,10 @@ diff -u /dev/null kernel-acme/include/net/llc_c_st.h:1.1.8.2
 +extern struct llc_conn_state llc_conn_state_table[];
 +#endif /* LLC_C_ST_H */
 Index: kernel-acme/include/net/llc_conn.h
-diff -u /dev/null kernel-acme/include/net/llc_conn.h:1.1.8.3
---- /dev/null	Mon Nov 12 00:14:28 2001
-+++ kernel-acme/include/net/llc_conn.h	Sun Nov 11 15:29:45 2001
-@@ -0,0 +1,159 @@
+diff -u /dev/null kernel-acme/include/net/llc_conn.h:1.1.8.6
+--- /dev/null	Thu Nov 22 23:54:51 2001
++++ kernel-acme/include/net/llc_conn.h	Wed Nov 21 19:42:23 2001
+@@ -0,0 +1,157 @@
 +#ifndef LLC_CONN_H
 +#define LLC_CONN_H
 +/*
@@ -1806,8 +1805,8 @@ diff -u /dev/null kernel-acme/include/net/llc_conn.h:1.1.8.3
 +	struct list_head    node;		/* entry in sap->sk_list.list */
 +	u8		    state;		/* state of connection */
 +	struct llc_sap	   *sap;		/* pointer to parent SAP */
-+	struct llc_addr	    local_dl_addr;	/* lsap/mac pair */
-+	struct llc_addr	    remote_dl_addr;	/* lsap/mac pair */
++	struct llc_addr	    laddr;		/* lsap/mac pair */
++	struct llc_addr	    daddr;		/* dsap/mac pair */
 +	struct net_device  *dev;		/* device to send to remote */
 +	u8                  retry_count;	/* number of retries */
 +	u8		    ack_must_be_send;
@@ -1843,8 +1842,6 @@ diff -u /dev/null kernel-acme/include/net/llc_conn.h:1.1.8.3
 +	u8		    dec_cntr;
 +	u8		    connect_step;
 +	u8		    last_nr;	   /* NR of last pdu recieved */
-+	int		    data_ret_val;  /* return value of data_req_handler
-+					      function (defined in llc_if.h) */
 +	u32		    rx_pdu_hdr;	   /* used for saving header of last pdu
 +					      received and caused sending FRMR.
 +					      Used for resending FRMR */
@@ -1911,9 +1908,9 @@ diff -u /dev/null kernel-acme/include/net/llc_conn.h:1.1.8.3
 +}
 +#else /* DEBUG_LLC_CONN_ALLOC */
 +#define llc_sock_alloc() __llc_sock_alloc()
-+#define llc_sock_free(__connection) __llc_sock_free(__connection, 1)
-+#define llc_sock_assert(__connection)
-+#define llc_sock_assert_ret(__connection)
++#define llc_sock_free(__sk) __llc_sock_free(__sk, 1)
++#define llc_sock_assert(__sk)
++#define llc_sock_assert_ret(__sk)
 +#endif /* DEBUG_LLC_CONN_ALLOC */
 +
 +extern void llc_sock_reset(struct sock *sk);
@@ -1940,7 +1937,7 @@ diff -u /dev/null kernel-acme/include/net/llc_conn.h:1.1.8.3
 +#endif /* LLC_CONN_H */
 Index: kernel-acme/include/net/llc_evnt.h
 diff -u /dev/null kernel-acme/include/net/llc_evnt.h:1.1.8.4
---- /dev/null	Mon Nov 12 00:14:28 2001
+--- /dev/null	Thu Nov 22 23:54:51 2001
 +++ kernel-acme/include/net/llc_evnt.h	Sun Nov 11 15:29:45 2001
 @@ -0,0 +1,93 @@
 +#ifndef LLC_EVNT_H
@@ -2037,10 +2034,10 @@ diff -u /dev/null kernel-acme/include/net/llc_evnt.h:1.1.8.4
 +				       struct llc_station_state_ev *ev);
 +#endif /* LLC_EVNT_H */
 Index: kernel-acme/include/net/llc_if.h
-diff -u /dev/null kernel-acme/include/net/llc_if.h:1.1.8.2
---- /dev/null	Mon Nov 12 00:14:28 2001
-+++ kernel-acme/include/net/llc_if.h	Sun Nov 11 15:29:45 2001
-@@ -0,0 +1,151 @@
+diff -u /dev/null kernel-acme/include/net/llc_if.h:1.1.8.4
+--- /dev/null	Thu Nov 22 23:54:52 2001
++++ kernel-acme/include/net/llc_if.h	Wed Nov 21 00:19:21 2001
+@@ -0,0 +1,152 @@
 +#ifndef LLC_IF_H
 +#define LLC_IF_H
 +/*
@@ -2107,7 +2104,7 @@ diff -u /dev/null kernel-acme/include/net/llc_if.h:1.1.8.2
 +};
 +
 +/* Primitive-specific data */
-+struct llc_prim_connect {
++struct llc_prim_conn {
 +	struct llc_addr	   saddr;	/* used by request only */
 +	struct llc_addr	   daddr;	/* used by request only */
 +	u8		   status;	/* reason for failure */	
@@ -2118,7 +2115,7 @@ diff -u /dev/null kernel-acme/include/net/llc_if.h:1.1.8.2
 +	struct sk_buff	  *skb;		/* received SABME  */
 +};
 +
-+struct llc_prim_disconnect {
++struct llc_prim_disc {
 +	struct sock *sk;
 +	u16	     link;
 +	u8	     reason;		/* not used by request */
@@ -2157,6 +2154,7 @@ diff -u /dev/null kernel-acme/include/net/llc_if.h:1.1.8.2
 +	struct llc_addr saddr;
 +	struct llc_addr daddr;
 +	u8		pri;
++	struct sk_buff *skb;
 +};
 +
 +struct llc_prim_test {
@@ -2167,14 +2165,14 @@ diff -u /dev/null kernel-acme/include/net/llc_if.h:1.1.8.2
 +};
 +                       
 +union llc_u_prim_data {
-+	struct llc_prim_connect	   conn;
-+	struct llc_prim_disconnect disc;
-+	struct llc_prim_reset	   res;
-+	struct llc_prim_flow_ctrl  fc;
-+	struct llc_prim_data	   data;           /* data */
-+	struct llc_prim_unit_data  udata;          /* unit data */
-+	struct llc_prim_xid	   xid;
-+	struct llc_prim_test	   test;
++	struct llc_prim_conn	  conn;
++	struct llc_prim_disc	  disc;
++	struct llc_prim_reset	  res;
++	struct llc_prim_flow_ctrl fc;
++	struct llc_prim_data	  data;           /* data */
++	struct llc_prim_unit_data udata;          /* unit data */
++	struct llc_prim_xid	  xid;
++	struct llc_prim_test	  test;
 +};
 +
 +struct llc_sap;
@@ -2194,7 +2192,7 @@ diff -u /dev/null kernel-acme/include/net/llc_if.h:1.1.8.2
 +#endif /* LLC_IF_H */
 Index: kernel-acme/include/net/llc_mac.h
 diff -u /dev/null kernel-acme/include/net/llc_mac.h:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:28 2001
+--- /dev/null	Thu Nov 22 23:54:52 2001
 +++ kernel-acme/include/net/llc_mac.h	Tue Nov  6 20:13:48 2001
 @@ -0,0 +1,40 @@
 +#ifndef LLC_MAC_H
@@ -2239,7 +2237,7 @@ diff -u /dev/null kernel-acme/include/net/llc_mac.h:1.1.8.1
 +#endif /* LLC_MAC_H */
 Index: kernel-acme/include/net/llc_main.h
 diff -u /dev/null kernel-acme/include/net/llc_main.h:1.1.8.3
---- /dev/null	Mon Nov 12 00:14:28 2001
+--- /dev/null	Thu Nov 22 23:54:52 2001
 +++ kernel-acme/include/net/llc_main.h	Wed Nov  7 14:38:54 2001
 @@ -0,0 +1,69 @@
 +#ifndef LLC_MAIN_H
@@ -2312,9 +2310,9 @@ diff -u /dev/null kernel-acme/include/net/llc_main.h:1.1.8.3
 +extern struct sk_buff *llc_alloc_frame(void);
 +#endif /* LLC_MAIN_H */
 Index: kernel-acme/include/net/llc_pdu.h
-diff -u /dev/null kernel-acme/include/net/llc_pdu.h:1.1.8.3
---- /dev/null	Mon Nov 12 00:14:28 2001
-+++ kernel-acme/include/net/llc_pdu.h	Sun Nov 11 15:29:45 2001
+diff -u /dev/null kernel-acme/include/net/llc_pdu.h:1.1.8.4
+--- /dev/null	Thu Nov 22 23:54:52 2001
++++ kernel-acme/include/net/llc_pdu.h	Thu Nov 22 20:58:31 2001
 @@ -0,0 +1,257 @@
 +#ifndef LLC_PDU_H
 +#define LLC_PDU_H
@@ -2541,8 +2539,8 @@ diff -u /dev/null kernel-acme/include/net/llc_pdu.h:1.1.8.3
 +	u8  ind_bits;           /* indicator bits set with macro */
 +} frmr_info_t;
 +
-+extern int llc_pdu_set_cmd_rsp(struct sk_buff *skb, u8 type);
-+extern int llc_pdu_set_pf_bit(struct sk_buff *skb, u8 bit_value);
++extern void llc_pdu_set_cmd_rsp(struct sk_buff *skb, u8 type);
++extern void llc_pdu_set_pf_bit(struct sk_buff *skb, u8 bit_value);
 +extern int llc_pdu_decode_pf_bit(struct sk_buff *skb, u8 *pf_bit);
 +extern int llc_pdu_decode_cr_bit(struct sk_buff *skb, u8 *cr_bit);
 +extern int llc_pdu_decode_sa(struct sk_buff *skb, u8 *sa);
@@ -2575,7 +2573,7 @@ diff -u /dev/null kernel-acme/include/net/llc_pdu.h:1.1.8.3
 +#endif /* LLC_PDU_H */
 Index: kernel-acme/include/net/llc_s_ac.h
 diff -u /dev/null kernel-acme/include/net/llc_s_ac.h:1.1.8.3
---- /dev/null	Mon Nov 12 00:14:28 2001
+--- /dev/null	Thu Nov 22 23:54:52 2001
 +++ kernel-acme/include/net/llc_s_ac.h	Sun Nov 11 15:29:45 2001
 @@ -0,0 +1,47 @@
 +#ifndef LLC_S_AC_H
@@ -2627,7 +2625,7 @@ diff -u /dev/null kernel-acme/include/net/llc_s_ac.h:1.1.8.3
 +#endif /* LLC_S_AC_H */
 Index: kernel-acme/include/net/llc_s_ev.h
 diff -u /dev/null kernel-acme/include/net/llc_s_ev.h:1.1.8.3
---- /dev/null	Mon Nov 12 00:14:28 2001
+--- /dev/null	Thu Nov 22 23:54:52 2001
 +++ kernel-acme/include/net/llc_s_ev.h	Sun Nov 11 15:29:45 2001
 @@ -0,0 +1,101 @@
 +#ifndef LLC_S_EV_H
@@ -2733,7 +2731,7 @@ diff -u /dev/null kernel-acme/include/net/llc_s_ev.h:1.1.8.3
 +#endif /* LLC_S_EV_H */
 Index: kernel-acme/include/net/llc_s_st.h
 diff -u /dev/null kernel-acme/include/net/llc_s_st.h:1.1.8.2
---- /dev/null	Mon Nov 12 00:14:28 2001
+--- /dev/null	Thu Nov 22 23:54:52 2001
 +++ kernel-acme/include/net/llc_s_st.h	Wed Nov  7 14:38:54 2001
 @@ -0,0 +1,34 @@
 +#ifndef LLC_S_ST_H
@@ -2771,9 +2769,9 @@ diff -u /dev/null kernel-acme/include/net/llc_s_st.h:1.1.8.2
 +extern struct llc_sap_state llc_sap_state_table[LLC_NBR_SAP_STATES];
 +#endif /* LLC_S_ST_H */
 Index: kernel-acme/include/net/llc_sap.h
-diff -u /dev/null kernel-acme/include/net/llc_sap.h:1.1.8.2
---- /dev/null	Mon Nov 12 00:14:28 2001
-+++ kernel-acme/include/net/llc_sap.h	Wed Nov  7 14:38:54 2001
+diff -u /dev/null kernel-acme/include/net/llc_sap.h:1.1.8.3
+--- /dev/null	Thu Nov 22 23:54:52 2001
++++ kernel-acme/include/net/llc_sap.h	Sat Nov 17 16:19:36 2001
 @@ -0,0 +1,42 @@
 +#ifndef LLC_SAP_H
 +#define LLC_SAP_H
@@ -2799,7 +2797,7 @@ diff -u /dev/null kernel-acme/include/net/llc_sap.h:1.1.8.2
 +	llc_prim_call_t	    resp;		/* provided by LLC layer */
 +	llc_prim_call_t	    ind;		/* provided by network layer */
 +	llc_prim_call_t	    conf;		/* provided by network layer */
-+	struct llc_addr	    local_dl_addr;	/* SAP value in this 'lsap' */
++	struct llc_addr	    laddr;		/* SAP value in this 'lsap' */
 +	struct list_head    node;		/* entry in station sap_list */
 +	struct {
 +		spinlock_t	 lock;
@@ -2819,7 +2817,7 @@ diff -u /dev/null kernel-acme/include/net/llc_sap.h:1.1.8.2
 +#endif /* LLC_SAP_H */
 Index: kernel-acme/include/net/llc_stat.h
 diff -u /dev/null kernel-acme/include/net/llc_stat.h:1.1.8.3
---- /dev/null	Mon Nov 12 00:14:28 2001
+--- /dev/null	Thu Nov 22 23:54:52 2001
 +++ kernel-acme/include/net/llc_stat.h	Wed Nov  7 14:38:54 2001
 @@ -0,0 +1,35 @@
 +#ifndef LLC_STAT_H
@@ -2875,45 +2873,59 @@ diff -u kernel-acme/include/net/p8022.h:1.1.1.1 kernel-acme/include/net/p8022.h:
 -
  #endif
 Index: kernel-acme/include/net/sock.h
-diff -u kernel-acme/include/net/sock.h:1.1.1.4 kernel-acme/include/net/sock.h:1.1.1.4.2.2
+diff -u kernel-acme/include/net/sock.h:1.1.1.4 kernel-acme/include/net/sock.h:1.1.1.4.2.3
 --- kernel-acme/include/net/sock.h:1.1.1.4	Tue Nov  6 18:35:05 2001
-+++ kernel-acme/include/net/sock.h	Sun Nov 11 15:29:45 2001
-@@ -24,6 +24,7 @@
++++ kernel-acme/include/net/sock.h	Sat Nov 17 16:19:36 2001
+@@ -24,6 +24,8 @@
   *		Alan Cox	:	Eliminate low level recv/recvfrom
   *		David S. Miller	:	New socket lookup architecture.
   *              Steve Whitehouse:       Default routines for sock_ops
-+ *              Arnaldo C. Melo :	include netbeui_opt in sock->tp_pinfo
++ *              Arnaldo C. Melo :	include netbeui_opt in sock->tp_pinfo,
++ *              			llc_opt and llc_ui_opt in sock->protinfo
   *
   *		This program is free software; you can redistribute it and/or
   *		modify it under the terms of the GNU General Public License
-@@ -94,6 +95,9 @@
+@@ -94,7 +96,15 @@
  #if defined(CONFIG_IRDA) || defined(CONFIG_IRDA_MODULE)
  #include <net/irda/irda.h>
  #endif
+-
++#if defined(CONFIG_NETBEUI) || defined(CONFIG_NETBEUI_MODULE)
 +#include <linux/netbeui.h>	/* struct netbeui_opt */
++#endif
++#if defined(CONFIG_LLC) || defined(CONFIG_LLC_MODULE)
 +#include <net/llc_conn.h>	/* struct llc_opt */
++#if defined(CONFIG_LLC_UI)
 +#include <linux/llc.h>		/* struct llc_ui_opt */
- 
++#endif
++#endif
  #if defined(CONFIG_ATM) || defined(CONFIG_ATM_MODULE)
  struct atm_vcc;
-@@ -584,7 +588,7 @@
+ #endif
+@@ -584,7 +594,9 @@
  #if defined(CONFIG_SPX) || defined (CONFIG_SPX_MODULE)
  		struct spx_opt		af_spx;
  #endif /* CONFIG_SPX */
 -
++#if defined(CONFIG_NETBEUI) || defined(CONFIG_NETBEUI_MODULE)
 +		struct netbeui_opt      af_netbeui;
++#endif
  	} tp_pinfo;
  
  	int			err, err_soft;	/* Soft holds errors that don't
-@@ -655,6 +659,8 @@
+@@ -654,6 +666,12 @@
+ #endif
  #if defined(CONFIG_IRDA) || defined(CONFIG_IRDA_MODULE)
  		struct irda_sock        *irda;
- #endif
++#endif
++#if defined(CONFIG_LLC) || defined(CONFIG_LLC_MODULE)
 +		struct llc_opt		core_llc;
++#endif
++#if defined(CONFIG_LLC_UI)
 +		struct llc_ui_opt	af_llc;
+ #endif
  #if defined(CONFIG_WAN_ROUTER) || defined(CONFIG_WAN_ROUTER_MODULE)
                 struct wanpipe_opt      *af_wanpipe;
- #endif
 Index: kernel-acme/net/Config.in
 diff -u kernel-acme/net/Config.in:1.1.1.2 kernel-acme/net/Config.in:1.1.1.2.2.1
 --- kernel-acme/net/Config.in:1.1.1.2	Tue Nov  6 18:30:30 2001
@@ -2959,10 +2971,18 @@ diff -u kernel-acme/net/Makefile:1.1.1.3 kernel-acme/net/Makefile:1.1.1.3.2.1
  obj-y	:= socket.o $(join $(subdir-y), $(patsubst %,/%.o,$(notdir $(subdir-y))))
  ifeq ($(CONFIG_NET),y)
 Index: kernel-acme/net/netsyms.c
-diff -u kernel-acme/net/netsyms.c:1.1.1.6 kernel-acme/net/netsyms.c:1.1.1.6.2.1
+diff -u kernel-acme/net/netsyms.c:1.1.1.6 kernel-acme/net/netsyms.c:1.1.1.6.2.2
 --- kernel-acme/net/netsyms.c:1.1.1.6	Tue Nov  6 18:30:30 2001
-+++ kernel-acme/net/netsyms.c	Tue Nov  6 20:13:48 2001
-@@ -477,6 +477,7 @@
++++ kernel-acme/net/netsyms.c	Fri Nov 16 13:11:50 2001
+@@ -459,6 +459,7 @@
+ #endif  /* CONFIG_INET */
+ 
+ #ifdef CONFIG_TR
++EXPORT_SYMBOL(tr_source_route);
+ EXPORT_SYMBOL(tr_type_trans);
+ #endif
+ 
+@@ -477,6 +478,7 @@
  EXPORT_SYMBOL(__dev_get_by_index);
  EXPORT_SYMBOL(dev_get_by_name);
  EXPORT_SYMBOL(__dev_get_by_name);
@@ -3221,7 +3241,7 @@ diff -u kernel-acme/net/core/Makefile:1.1.1.2 kernel-acme/net/core/Makefile:1.1.
  obj-$(CONFIG_NET_DIVERT) += dv.o
 Index: kernel-acme/net/core/ext8022.c
 diff -u /dev/null kernel-acme/net/core/ext8022.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:32 2001
+--- /dev/null	Thu Nov 22 23:54:54 2001
 +++ kernel-acme/net/core/ext8022.c	Tue Nov  6 20:13:48 2001
 @@ -0,0 +1,76 @@
 +/*
@@ -3302,7 +3322,7 @@ diff -u /dev/null kernel-acme/net/core/ext8022.c:1.1.8.1
 +EXPORT_SYMBOL(llc_unregister_sap);
 Index: kernel-acme/net/llc/Makefile
 diff -u /dev/null kernel-acme/net/llc/Makefile:1.1.2.1
---- /dev/null	Mon Nov 12 00:14:33 2001
+--- /dev/null	Thu Nov 22 23:54:56 2001
 +++ kernel-acme/net/llc/Makefile	Tue Nov  6 20:13:48 2001
 @@ -0,0 +1,38 @@
 +###########################################################################
@@ -3345,7 +3365,7 @@ diff -u /dev/null kernel-acme/net/llc/Makefile:1.1.2.1
 +include $(TOPDIR)/Rules.make
 Index: kernel-acme/net/llc/llc_actn.c
 diff -u /dev/null kernel-acme/net/llc/llc_actn.c:1.1.2.4
---- /dev/null	Mon Nov 12 00:14:33 2001
+--- /dev/null	Thu Nov 22 23:54:56 2001
 +++ kernel-acme/net/llc/llc_actn.c	Sun Nov 11 15:29:45 2001
 @@ -0,0 +1,147 @@
 +/*
@@ -3496,10 +3516,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_actn.c:1.1.2.4
 +	}
 +}
 Index: kernel-acme/net/llc/llc_c_ac.c
-diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
---- /dev/null	Mon Nov 12 00:14:33 2001
-+++ kernel-acme/net/llc/llc_c_ac.c	Sun Nov 11 15:29:45 2001
-@@ -0,0 +1,1672 @@
+diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.8
+--- /dev/null	Thu Nov 22 23:54:56 2001
++++ kernel-acme/net/llc/llc_c_ac.c	Thu Nov 22 23:49:28 2001
+@@ -0,0 +1,1639 @@
 +/*
 + * llc_c_ac.c - actions performed during connection state transition.
 + *
@@ -3530,12 +3550,12 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +#include <net/llc_pdu.h>
 +#include <net/llc_mac.h>
 +
-+static void llc_conn_pf_cycle_tmr_callback(unsigned long timeout_data);
-+static void llc_conn_ack_tmr_callback(unsigned long timeout_data);
-+static void llc_conn_rej_tmr_callback(unsigned long timeout_data);
-+static void llc_conn_busy_tmr_callback(unsigned long timeout_data);
++static void llc_conn_pf_cycle_tmr_cb(unsigned long timeout_data);
++static void llc_conn_ack_tmr_cb(unsigned long timeout_data);
++static void llc_conn_rej_tmr_cb(unsigned long timeout_data);
++static void llc_conn_busy_tmr_cb(unsigned long timeout_data);
 +static int llc_conn_ac_inc_vs_by_1(struct sock *sk,
-+				     struct llc_conn_state_ev *ev);
++				   struct llc_conn_state_ev *ev);
 +static void llc_process_tmr_ev(struct sock *sk, struct llc_conn_state_ev *ev);
 +static int llc_conn_ac_data_confirm(struct sock *sk,
 +				    struct llc_conn_state_ev *ev);
@@ -3571,15 +3591,13 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	llc_pdu_decode_dsap(skb, &prim_data->conn.daddr.lsap);
 +	sap = llc_sap_find(prim_data->conn.daddr.lsap);
 +	if (sap) {
-+		llc_pdu_decode_sa(skb, llc->remote_dl_addr.mac);
-+		llc_pdu_decode_da(skb, llc->local_dl_addr.mac);
++		llc_pdu_decode_sa(skb, llc->daddr.mac);
++		llc_pdu_decode_da(skb, llc->laddr.mac);
 +		llc->dev = skb->dev;
 +		prim_data->conn.pri = 0;
 +		prim_data->conn.sk = sk;
-+		memcpy(&prim_data->conn.daddr,
-+		       &llc->local_dl_addr, sizeof(struct llc_addr));
-+		memcpy(&prim_data->conn.saddr,
-+		       &llc->remote_dl_addr, sizeof(struct llc_addr));
++		memcpy(&prim_data->conn.daddr, &llc->laddr, sizeof(llc->laddr));
++		memcpy(&prim_data->conn.saddr, &llc->daddr, sizeof(llc->daddr));
 +		prim->data = prim_data;
 +		prim_data->conn.dev = skb->dev;
 +		prim->prim = LLC_CONN_PRIM;
@@ -3600,7 +3618,6 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	struct llc_prim_if_block *prim = &llc_cfm_prim;
 +	struct llc_sap *sap = LLC_SK(sk)->sap;
 +
-+	printk(KERN_INFO __FUNCTION__ ": entry...\n");
 +	prim_data->conn.sk     = sk;
 +	prim_data->conn.pri    = 0;
 +	prim_data->conn.status = ev->status;
@@ -3804,12 +3821,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		struct llc_sap *sap = llc->sap;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_U,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_CMD);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_CMD);
 +		llc_pdu_init_as_disc_cmd(skb, p_bit);
-+		lan_hdrs_init(skb, llc->dev->dev_addr,
-+			      llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -3831,12 +3846,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +
 +		skb->dev = llc->dev;
 +		llc_pdu_decode_pf_bit(rx_skb, &f_bit);
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_U,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_dm_rsp(skb, f_bit);
-+		lan_hdrs_init(skb, llc->dev->dev_addr,
-+			      llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -3855,11 +3868,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 f_bit = 1;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_U,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_dm_rsp(skb, f_bit);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -3878,11 +3890,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 f_bit = llc->f_flag;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_U,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_dm_rsp(skb, f_bit);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -3908,12 +3919,11 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		struct llc_sap *sap = llc->sap;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_U,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_frmr_rsp(skb, rx_pdu, f_bit, llc->vS,
 +					 llc->vR, INCORRECT);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -3933,12 +3943,11 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 f_bit = 0;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_U,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_frmr_rsp(skb, rx_pdu, f_bit, llc->vS,
 +					 llc->vR, INCORRECT);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -3960,12 +3969,11 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		struct llc_sap *sap = llc->sap;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_U,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_frmr_rsp(skb, rx_pdu, f_bit, llc->vS,
 +					 llc->vR, INCORRECT);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -3980,10 +3988,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	struct llc_opt *llc = LLC_SK(sk);
 +	struct llc_sap *sap = llc->sap;
 +
-+	llc_pdu_header_init(skb, LLC_PDU_TYPE_I, sap->local_dl_addr.lsap,
-+			    llc->remote_dl_addr.lsap, LLC_PDU_CMD);
++	llc_pdu_header_init(skb, LLC_PDU_TYPE_I, sap->laddr.lsap,
++			    llc->daddr.lsap, LLC_PDU_CMD);
 +	llc_pdu_init_as_i_cmd(skb, p_bit, llc->vS, llc->vR);
-+	lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++	lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +	llc_conn_send_pdu(sk, skb);
 +	llc_conn_ac_inc_vs_by_1(sk, ev);
 +	return 0;
@@ -3997,10 +4005,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	struct llc_opt *llc = LLC_SK(sk);
 +	struct llc_sap *sap = llc->sap;
 +
-+	llc_pdu_header_init(skb, LLC_PDU_TYPE_I, sap->local_dl_addr.lsap,
-+			    llc->remote_dl_addr.lsap, LLC_PDU_CMD);
++	llc_pdu_header_init(skb, LLC_PDU_TYPE_I, sap->laddr.lsap,
++			    llc->daddr.lsap, LLC_PDU_CMD);
 +	llc_pdu_init_as_i_cmd(skb, p_bit, llc->vS, llc->vR);
-+	lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++	lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +	llc_conn_send_pdu(sk, skb);
 +	llc_conn_ac_inc_vs_by_1(sk, ev);
 +	return 0;
@@ -4036,10 +4044,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	struct llc_opt *llc = LLC_SK(sk);
 +	struct llc_sap *sap = llc->sap;
 +
-+	llc_pdu_header_init(skb, LLC_PDU_TYPE_I, sap->local_dl_addr.lsap,
-+			    llc->remote_dl_addr.lsap, LLC_PDU_CMD);
++	llc_pdu_header_init(skb, LLC_PDU_TYPE_I, sap->laddr.lsap,
++			    llc->daddr.lsap, LLC_PDU_CMD);
 +	llc_pdu_init_as_i_cmd(skb, p_bit, llc->vS, llc->vR);
-+	lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++	lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +	llc_conn_send_pdu(sk, skb);
 +	llc_conn_ac_inc_vs_by_1(sk, ev);
 +	return 0;
@@ -4069,11 +4077,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		struct llc_sap *sap = llc->sap;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_U,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_rr_rsp(skb, f_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4107,11 +4114,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 p_bit = 1;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_CMD);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_CMD);
 +		llc_pdu_init_as_rej_cmd(skb, p_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4130,11 +4136,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		struct llc_sap *sap = llc->sap;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_rej_rsp(skb, f_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4153,11 +4158,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 f_bit = 0;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_rej_rsp(skb, f_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4176,11 +4180,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 p_bit = 1;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_CMD);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_CMD);
 +		llc_pdu_init_as_rnr_cmd(skb, p_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4199,11 +4202,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 f_bit = 1;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_rnr_rsp(skb, f_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4222,11 +4224,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		struct llc_sap *sap = llc->sap;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_rnr_rsp(skb, f_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4241,9 +4242,8 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		llc->remote_busy_flag = 1;
 +		llc->busy_state_timer.timer.expires = jiffies +
 +					llc->busy_state_timer.expire * HZ;
-+		llc->busy_state_timer.timer.data	= (unsigned long)sk;
-+		llc->busy_state_timer.timer.function =
-+						llc_conn_busy_tmr_callback;
++		llc->busy_state_timer.timer.data     = (unsigned long)sk;
++		llc->busy_state_timer.timer.function = llc_conn_busy_tmr_cb;
 +		add_timer(&llc->busy_state_timer.timer);
 +		llc->busy_state_timer.running = 1;
 +	}
@@ -4262,11 +4262,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 f_bit = 0;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_rnr_rsp(skb, f_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4285,11 +4284,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		struct llc_sap *sap = llc->sap;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_CMD);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_CMD);
 +		llc_pdu_init_as_rr_cmd(skb, p_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4308,11 +4306,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		struct llc_sap *sap = llc->sap;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_CMD);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_CMD);
 +		llc_pdu_init_as_rr_cmd(skb, p_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4331,11 +4328,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 f_bit = 1;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_rr_rsp(skb, f_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4354,11 +4350,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 f_bit = 1;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_rr_rsp(skb, f_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4377,11 +4372,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 f_bit = 0;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_rr_rsp(skb, f_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4400,11 +4394,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 f_bit = 0;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_rr_rsp(skb, f_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4423,11 +4416,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		struct llc_sap *sap = llc->sap;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_U,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_CMD);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_CMD);
 +		llc_pdu_init_as_sabme_cmd(skb, p_bit);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4447,11 +4439,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 f_bit = llc->f_flag;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_U,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_ua_rsp(skb, f_bit);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4473,11 +4464,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		struct llc_sap *sap = llc->sap;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_U,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_ua_rsp(skb, f_bit);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4505,7 +4495,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	llc->pf_cycle_timer.timer.expires  = jiffies +
 +						llc->pf_cycle_timer.expire * HZ;
 +	llc->pf_cycle_timer.timer.data     = (unsigned long)sk;
-+	llc->pf_cycle_timer.timer.function = llc_conn_pf_cycle_tmr_callback;
++	llc->pf_cycle_timer.timer.function = llc_conn_pf_cycle_tmr_cb;
 +	add_timer(&llc->pf_cycle_timer.timer);
 +	llc->pf_cycle_timer.running = 1;
 +	return 0;
@@ -4578,10 +4568,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	u8 p_bit = llc->ack_pf;
 +	struct llc_sap *sap = llc->sap;
 +
-+	llc_pdu_header_init(skb, LLC_PDU_TYPE_I, sap->local_dl_addr.lsap,
-+			    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++	llc_pdu_header_init(skb, LLC_PDU_TYPE_I, sap->laddr.lsap,
++			    llc->daddr.lsap, LLC_PDU_RSP);
 +	llc_pdu_init_as_i_cmd(skb, p_bit, llc->vS, llc->vR);
-+	lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++	lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +	llc_conn_send_pdu(sk, skb);
 +	llc_conn_ac_inc_vs_by_1(sk, ev);
 +	return 0;
@@ -4632,11 +4622,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		u8 f_bit = llc->ack_pf;
 +
 +		skb->dev = llc->dev;
-+		llc_pdu_header_init(skb, LLC_PDU_TYPE_S,
-+				    sap->local_dl_addr.lsap,
-+				    llc->remote_dl_addr.lsap, LLC_PDU_RSP);
++		llc_pdu_header_init(skb, LLC_PDU_TYPE_S, sap->laddr.lsap,
++				    llc->daddr.lsap, LLC_PDU_RSP);
 +		llc_pdu_init_as_rr_rsp(skb, f_bit, llc->vR);
-+		lan_hdrs_init(skb, llc->dev->dev_addr, llc->remote_dl_addr.mac);
++		lan_hdrs_init(skb, llc->dev->dev_addr, llc->daddr.mac);
 +		rc = 0;
 +		llc_conn_send_pdu(sk, skb);
 +	}
@@ -4796,7 +4785,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	del_timer(&llc->ack_timer.timer);
 +	llc->ack_timer.timer.expires  = jiffies + llc->ack_timer.expire * HZ;
 +	llc->ack_timer.timer.data	 = (unsigned long)sk;
-+	llc->ack_timer.timer.function = llc_conn_ack_tmr_callback;
++	llc->ack_timer.timer.function = llc_conn_ack_tmr_cb;
 +	add_timer(&llc->ack_timer.timer);
 +	llc->ack_timer.running = 1;
 +	return 0;
@@ -4810,7 +4799,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	llc->rej_sent_timer.timer.expires = jiffies +
 +					    llc->rej_sent_timer.expire * HZ;
 +	llc->rej_sent_timer.timer.data     = (unsigned long)sk;
-+	llc->rej_sent_timer.timer.function = llc_conn_rej_tmr_callback;
++	llc->rej_sent_timer.timer.function = llc_conn_rej_tmr_cb;
 +	add_timer(&llc->rej_sent_timer.timer);
 +	llc->rej_sent_timer.running = 1;
 +	return 0;
@@ -4825,7 +4814,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +		llc->ack_timer.timer.expires  = jiffies +
 +						llc->ack_timer.expire * HZ;
 +		llc->ack_timer.timer.data     = (unsigned long)sk;
-+		llc->ack_timer.timer.function = llc_conn_ack_tmr_callback;
++		llc->ack_timer.timer.function = llc_conn_ack_tmr_cb;
 +		add_timer(&llc->ack_timer.timer);
 +		llc->ack_timer.running = 1;
 +	}
@@ -4858,18 +4847,17 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +
 +int llc_conn_ac_upd_nr_received(struct sock *sk, struct llc_conn_state_ev *ev)
 +{
-+	int nbr_acked;
-+	u16 nbr_unack_pdus = 0;
++	int acked;
++	u16 unacked = 0;
 +	u8 fbit;
 +	struct sk_buff *skb = ev->data.pdu.skb;
 +	pdu_sn_t *rx_pdu = (pdu_sn_t *)skb->nh.raw;
 +	struct llc_opt *llc = LLC_SK(sk);
 +
 +	llc->last_nr = PDU_SUPV_GET_Nr(rx_pdu);
-+	nbr_acked = llc_conn_remove_acked_pdus(sk, llc->last_nr,
-+					       &nbr_unack_pdus);
++	acked = llc_conn_remove_acked_pdus(sk, llc->last_nr, &unacked);
 +	/* On loopback we don't queue I frames in unack_pdu_q queue. */
-+	if (nbr_acked > 0 || (llc->dev->flags & IFF_LOOPBACK)) {
++	if (acked > 0 || (llc->dev->flags & IFF_LOOPBACK)) {
 +		llc->retry_count = 0;
 +		del_timer(&llc->ack_timer.timer);
 +		llc->ack_timer.running = 0;
@@ -4880,12 +4868,11 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +			llc->failed_data_req = 0;
 +			llc_conn_ac_data_confirm(sk, ev);
 +		}
-+		if (nbr_unack_pdus) {
++		if (unacked) {
 +			llc->ack_timer.timer.expires  = jiffies +
 +						   llc->ack_timer.expire * HZ;
 +			llc->ack_timer.timer.data     = (unsigned long)sk;
-+			llc->ack_timer.timer.function =
-+						llc_conn_ack_tmr_callback;
++			llc->ack_timer.timer.function = llc_conn_ack_tmr_cb;
 +			add_timer(&llc->ack_timer.timer);
 +			llc->ack_timer.running = 1;
 +	       }
@@ -5018,7 +5005,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	return 0;
 +}
 +
-+void llc_conn_pf_cycle_tmr_callback(unsigned long timeout_data)
++void llc_conn_pf_cycle_tmr_cb(unsigned long timeout_data)
 +{
 +	struct sock *sk = (struct sock *)timeout_data;
 +	struct llc_conn_state_ev *ev;
@@ -5032,7 +5019,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	}
 +}
 +
-+static void llc_conn_busy_tmr_callback(unsigned long timeout_data)
++static void llc_conn_busy_tmr_cb(unsigned long timeout_data)
 +{
 +	struct sock *sk = (struct sock *)timeout_data;
 +	struct llc_conn_state_ev *ev;
@@ -5046,7 +5033,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	}
 +}
 +
-+void llc_conn_ack_tmr_callback(unsigned long timeout_data)
++void llc_conn_ack_tmr_cb(unsigned long timeout_data)
 +{
 +	struct sock* sk = (struct sock *)timeout_data;
 +	struct llc_conn_state_ev *ev;
@@ -5060,7 +5047,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	}
 +}
 +
-+static void llc_conn_rej_tmr_callback(unsigned long timeout_data)
++static void llc_conn_rej_tmr_cb(unsigned long timeout_data)
 +{
 +	struct sock *sk = (struct sock *)timeout_data;
 +	struct llc_conn_state_ev *ev;
@@ -5086,7 +5073,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +	pdu_sn_t *rx_pdu = (pdu_sn_t *)ev->data.pdu.skb->nh.raw;
 +	u8 nr = PDU_SUPV_GET_Nr(rx_pdu);
 +
-+	if (circular_between(LLC_SK(sk)->vS, nr, LLC_SK(sk)->X))
++	if (llc_circular_between(LLC_SK(sk)->vS, nr, LLC_SK(sk)->X))
 +		llc_conn_ac_set_vs_nr(sk, ev);
 +	return 0;
 +}
@@ -5096,13 +5083,13 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 + * our own usage
 + */
 +/**
-+ *	llc_conn_disconnect - removes connection from SAP list and frees it
++ *	llc_conn_disc - removes connection from SAP list and frees it
 + *	@conn: closed connection
 + *	@ev: occurred event
 + *
 + *	Returns 2, to indicate the state machine that the connection was freed.
 + */
-+int llc_conn_disconnect(struct sock *sk, struct llc_conn_state_ev *ev)
++int llc_conn_disc(struct sock *sk, struct llc_conn_state_ev *ev)
 +{
 +	llc_sap_unassign_sock(LLC_SK(sk)->sap, sk);
 +	llc_sock_free(sk);
@@ -5123,7 +5110,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +}
 +
 +/**
-+ *	circular_between - designates that b is between a and c or not
++ *	llc_circular_between - designates that b is between a and c or not
 + *	@a: lower bound
 + *	@b: element to see if is between a and b
 + *	@c: upper bound
@@ -5132,7 +5119,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 + *	0 is between 127 and 1). Returns 1 if b is between a and c, 0
 + *	otherwise.
 + */
-+u8 circular_between(u8 a, u8 b, u8 c)
++u8 llc_circular_between(u8 a, u8 b, u8 c)
 +{
 +	b = b - a;
 +	c = c - a;
@@ -5173,10 +5160,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.3
 +out:	bh_unlock_sock(sk);
 +}
 Index: kernel-acme/net/llc/llc_c_ev.c
-diff -u /dev/null kernel-acme/net/llc/llc_c_ev.c:1.1.2.3
---- /dev/null	Mon Nov 12 00:14:34 2001
-+++ kernel-acme/net/llc/llc_c_ev.c	Sun Nov 11 15:29:45 2001
-@@ -0,0 +1,861 @@
+diff -u /dev/null kernel-acme/net/llc/llc_c_ev.c:1.1.2.6
+--- /dev/null	Thu Nov 22 23:54:56 2001
++++ kernel-acme/net/llc/llc_c_ev.c	Wed Nov 21 19:42:23 2001
+@@ -0,0 +1,868 @@
 +/*
 + * llc_c_ev.c - Connection component state transition event qualifiers
 + *
@@ -5219,7 +5206,13 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ev.c:1.1.2.3
 +#include <net/llc_c_ev.h>
 +#include <net/llc_pdu.h>
 +
-+extern u16 circular_between(u8 a, u8 b, u8 c);
++#if 0
++#define dprintk(args...) printk(KERN_DEBUG args)
++#else
++#define dprintk(args...)
++#endif
++
++extern u16 llc_circular_between(u8 a, u8 b, u8 c);
 +
 +/**
 + *	llc_util_ns_inside_rx_window - check if sequence number is in rx window
@@ -5232,7 +5225,8 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ev.c:1.1.2.3
 + */
 +static u16 llc_util_ns_inside_rx_window(u8 ns, u8 vr, u8 rw)
 +{
-+	return !circular_between(vr, ns, (vr + rw - 1) % LLC_2_SEQ_NBR_MODULO);
++	return !llc_circular_between(vr, ns,
++				     (vr + rw - 1) % LLC_2_SEQ_NBR_MODULO);
 +}
 +
 +/**
@@ -5261,7 +5255,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ev.c:1.1.2.3
 +	skb = skb_peek_tail(&LLC_SK(sk)->pdu_unack_q);
 +	pdu = (pdu_sn_t *)skb->nh.raw;
 +	nr2 = LLC_I_GET_NS(pdu);
-+	return !circular_between(nr1, nr, (nr2 + 1) % LLC_2_SEQ_NBR_MODULO);
++	return !llc_circular_between(nr1, nr, (nr2 + 1) % LLC_2_SEQ_NBR_MODULO);
 +}
 +
 +int llc_conn_ev_conn_req(struct sock *sk, struct llc_conn_state_ev *ev)
@@ -5399,9 +5393,9 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ev.c:1.1.2.3
 +	u16 rc = !LLC_PDU_IS_CMD(pdu) && !LLC_PDU_TYPE_IS_I(pdu) && ns != vr &&
 +		 llc_util_ns_inside_rx_window(ns, vr, LLC_SK(sk)->rw) ? 0 : 1;
 +	if (!rc)
-+		printk(KERN_WARNING "rx_i_cmd_p_bit_set_x_inval_ns matched,"
-+		       "state = %d, ns = %d, vr = %d\n",
-+		       LLC_SK(sk)->state, ns, vr);
++		dprintk(KERN_WARNING "rx_i_cmd_p_bit_set_x_inval_ns matched,"
++			"state = %d, ns = %d, vr = %d\n",
++			LLC_SK(sk)->state, ns, vr);
 +	return rc;
 +}
 +
@@ -5478,9 +5472,9 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ev.c:1.1.2.3
 +	u16 rc = !LLC_PDU_IS_RSP(pdu) && !LLC_PDU_TYPE_IS_I(pdu) && ns != vr &&
 +		 llc_util_ns_inside_rx_window(ns, vr, LLC_SK(sk)->rw) ? 0 : 1;
 +	if (!rc)
-+		printk(KERN_WARNING "conn_ev_rx_i_rsp_fbit_set_x_inval_ns "
-+		       "matched : state = %d, ns = %d, vr = %d\n",
-+		       LLC_SK(sk)->state, ns, vr);
++		dprintk(KERN_WARNING "conn_ev_rx_i_rsp_fbit_set_x_inval_ns "
++			"matched : state = %d, ns = %d, vr = %d\n",
++			LLC_SK(sk)->state, ns, vr);
 +	return rc;
 +}
 +
@@ -5766,9 +5760,9 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ev.c:1.1.2.3
 +		if (!LLC_PDU_TYPE_IS_I(pdu) || !LLC_PDU_TYPE_IS_S(pdu)) {
 +			if (nr != vs &&
 +			    llc_util_nr_inside_tx_window(sk, nr)) {
-+				printk(KERN_ERR "conn_ev_rx_zzz_cmd_inv_nr "
-+				       "matched,state = %d, vs = %d, nr = %d\n",
-+				       LLC_SK(sk)->state, vs, nr);
++				dprintk(KERN_ERR "conn_ev_rx_zzz_cmd_inv_nr "
++					"matched, state = %d, vs = %d, "
++					"nr = %d\n", LLC_SK(sk)->state, vs, nr);
 +				rc = 0;
 +			}
 +		}
@@ -5789,7 +5783,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ev.c:1.1.2.3
 +			if (nr != vs &&
 +			    llc_util_nr_inside_tx_window(sk, nr)) {
 +				rc = 0;
-+				printk(KERN_ERR "conn_ev_rx_zzz_fbit_set"
++				dprintk(KERN_ERR "conn_ev_rx_zzz_fbit_set"
 +					"_x_inval_nr matched, state = %d, "
 +					"vs = %d, nr = %d\n",
 +					LLC_SK(sk)->state, vs, nr);
@@ -5976,15 +5970,15 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ev.c:1.1.2.3
 +	return 0;
 +}
 +
-+int llc_conn_ev_qlfy_set_status_connect(struct sock *sk,
-+					struct llc_conn_state_ev *ev)
++int llc_conn_ev_qlfy_set_status_conn(struct sock *sk,
++				     struct llc_conn_state_ev *ev)
 +{
 +	ev->status = LLC_STATUS_CONN;
 +	return 0;
 +}
 +
-+int llc_conn_ev_qlfy_set_status_disconnect(struct sock *sk,
-+					   struct llc_conn_state_ev *ev)
++int llc_conn_ev_qlfy_set_status_disc(struct sock *sk,
++				     struct llc_conn_state_ev *ev)
 +{
 +	ev->status = LLC_STATUS_DISC;
 +	return 0;
@@ -6039,9 +6033,9 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ev.c:1.1.2.3
 +	return 0;
 +}
 Index: kernel-acme/net/llc/llc_c_st.c
-diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
---- /dev/null	Mon Nov 12 00:14:34 2001
-+++ kernel-acme/net/llc/llc_c_st.c	Sun Nov 11 15:29:45 2001
+diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.4
+--- /dev/null	Thu Nov 22 23:54:56 2001
++++ kernel-acme/net/llc/llc_c_st.c	Thu Nov 15 00:26:02 2001
 @@ -0,0 +1,4911 @@
 +/*
 + * llc_c_st.c - This module contains state transition of connection component.
@@ -6137,7 +6131,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +	llc_conn_ac_stop_all_timers,
 +	llc_conn_ac_send_ua_rsp_f_set_p,
 +	llc_conn_ac_disc_ind,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -6171,7 +6165,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +static llc_conn_action_t llc_common_actions_6[] = {
 +	llc_conn_ac_disc_ind,
 +	llc_conn_ac_stop_all_timers,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -6439,7 +6433,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +/* State transitions for LLC_CONN_EV_RX_DISC_CMD_Pbit_SET_X event */
 +static llc_conn_action_t llc_adm_actions_3[] = {
 +	llc_conn_ac_send_dm_rsp_f_set_p,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -6453,7 +6447,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +/* State transitions for LLC_CONN_EV_RX_XXX_CMD_Pbit_SET_1 event */
 +static llc_conn_action_t llc_adm_actions_4[] = {
 +	llc_conn_ac_send_dm_rsp_f_set_1,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -6466,7 +6460,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +
 +/* State transitions for LLC_CONN_EV_RX_XXX_YYY event */
 +static llc_conn_action_t llc_adm_actions_5[] = {
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -6514,7 +6508,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +/* State transitions for LLC_CONN_EV_RX_UA_RSP_Fbit_SET_X event */
 +static llc_conn_ev_qfyr_t llc_setup_ev_qfyrs_2[] = {
 +	llc_conn_ev_qlfy_p_flag_eq_f,
-+	llc_conn_ev_qlfy_set_status_connect,
++	llc_conn_ev_qlfy_set_status_conn,
 +	NULL
 +};
 +
@@ -6538,7 +6532,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +/* State transitions for LLC_CONN_EV_ACK_TMR_EXP event */
 +static llc_conn_ev_qfyr_t llc_setup_ev_qfyrs_3[] = {
 +	llc_conn_ev_qlfy_s_flag_eq_1,
-+	llc_conn_ev_qlfy_set_status_connect,
++	llc_conn_ev_qlfy_set_status_conn,
 +	NULL
 +};
 +
@@ -6558,7 +6552,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +
 +/* State transitions for LLC_CONN_EV_RX_DISC_CMD_Pbit_SET_X event */
 +static llc_conn_ev_qfyr_t llc_setup_ev_qfyrs_4[] = {
-+	llc_conn_ev_qlfy_set_status_disconnect,
++	llc_conn_ev_qlfy_set_status_disc,
 +	NULL
 +};
 +
@@ -6566,7 +6560,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +	llc_conn_ac_send_dm_rsp_f_set_p,
 +	llc_conn_ac_stop_ack_timer,
 +	llc_conn_ac_conn_confirm,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -6579,14 +6573,14 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +
 +/* State transitions for LLC_CONN_EV_RX_DM_RSP_Fbit_SET_X event */
 +static llc_conn_ev_qfyr_t llc_setup_ev_qfyrs_5[] = {
-+	llc_conn_ev_qlfy_set_status_disconnect,
++	llc_conn_ev_qlfy_set_status_disc,
 +	NULL
 +};
 +
 +static llc_conn_action_t llc_setup_actions_5[] = {
 +	llc_conn_ac_stop_ack_timer,
 +	llc_conn_ac_conn_confirm,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -6628,7 +6622,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +
 +static llc_conn_action_t llc_setup_actions_8[] = {
 +	llc_conn_ac_conn_confirm,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10222,7 +10216,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +	llc_conn_ac_send_dm_rsp_f_set_p,
 +	llc_conn_ac_stop_ack_timer,
 +	llc_conn_ac_disc_confirm,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10245,7 +10239,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +static llc_conn_action_t llc_d_conn_actions_1_1[] = {
 +	llc_conn_ac_send_dm_rsp_f_set_p,
 +	llc_conn_ac_stop_ack_timer,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10261,14 +10255,14 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +static llc_conn_ev_qfyr_t llc_d_conn_ev_qfyrs_2[] = {
 +	llc_conn_ev_qlfy_p_flag_eq_f,
 +	llc_conn_ev_qlfy_cause_flag_eq_1,
-+	llc_conn_ev_qlfy_set_status_disconnect,
++	llc_conn_ev_qlfy_set_status_disc,
 +	NULL
 +};
 +
 +static llc_conn_action_t llc_d_conn_actions_2[] = {
 +	llc_conn_ac_stop_ack_timer,
 +	llc_conn_ac_disc_confirm,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10284,13 +10278,13 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +static llc_conn_ev_qfyr_t llc_d_conn_ev_qfyrs_2_1[] = {
 +	llc_conn_ev_qlfy_p_flag_eq_f,
 +	llc_conn_ev_qlfy_cause_flag_eq_0,
-+	llc_conn_ev_qlfy_set_status_disconnect,
++	llc_conn_ev_qlfy_set_status_disc,
 +	NULL
 +};
 +
 +static llc_conn_action_t llc_d_conn_actions_2_1[] = {
 +	llc_conn_ac_stop_ack_timer,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10318,14 +10312,14 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 + * cause_flag = 1 */
 +static llc_conn_ev_qfyr_t llc_d_conn_ev_qfyrs_4[] = {
 +	llc_conn_ev_qlfy_cause_flag_eq_1,
-+	llc_conn_ev_qlfy_set_status_disconnect,
++	llc_conn_ev_qlfy_set_status_disc,
 +	NULL
 +};
 +
 +static llc_conn_action_t llc_d_conn_actions_4[] = {
 +	llc_conn_ac_stop_ack_timer,
 +	llc_conn_ac_disc_confirm,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10340,13 +10334,13 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 + * cause_flag = 0 */
 +static llc_conn_ev_qfyr_t llc_d_conn_ev_qfyrs_4_1[] = {
 +	llc_conn_ev_qlfy_cause_flag_eq_0,
-+	llc_conn_ev_qlfy_set_status_disconnect,
++	llc_conn_ev_qlfy_set_status_disc,
 +	NULL
 +};
 +
 +static llc_conn_action_t llc_d_conn_actions_4_1[] = {
 +	llc_conn_ac_stop_ack_timer,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10405,7 +10399,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +
 +static llc_conn_action_t llc_d_conn_actions_7[] = {
 +	llc_conn_ac_disc_confirm,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10425,7 +10419,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +};
 +
 +static llc_conn_action_t llc_d_conn_actions_8[] = {
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10481,7 +10475,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +static llc_conn_ev_qfyr_t llc_rst_ev_qfyrs_2[] = {
 +	llc_conn_ev_qlfy_p_flag_eq_f,
 +	llc_conn_ev_qlfy_cause_flag_eq_1,
-+	llc_conn_ev_qlfy_set_status_connect,
++	llc_conn_ev_qlfy_set_status_conn,
 +	NULL
 +};
 +
@@ -10554,14 +10548,14 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 + * cause_flag = 1 */
 +static llc_conn_ev_qfyr_t llc_rst_ev_qfyrs_4[] = {
 +	llc_conn_ev_qlfy_cause_flag_eq_1,
-+	llc_conn_ev_qlfy_set_status_disconnect,
++	llc_conn_ev_qlfy_set_status_disc,
 +	NULL
 +};
 +static llc_conn_action_t llc_rst_actions_4[] = {
 +	llc_conn_ac_send_dm_rsp_f_set_p,
 +	llc_conn_ac_disc_ind,
 +	llc_conn_ac_stop_ack_timer,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10583,7 +10577,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +static llc_conn_action_t llc_rst_actions_4_1[] = {
 +	llc_conn_ac_send_dm_rsp_f_set_p,
 +	llc_conn_ac_stop_ack_timer,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10598,14 +10592,14 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 + * cause_flag = 1 */
 +static llc_conn_ev_qfyr_t llc_rst_ev_qfyrs_5[] = {
 +	llc_conn_ev_qlfy_cause_flag_eq_1,
-+	llc_conn_ev_qlfy_set_status_disconnect,
++	llc_conn_ev_qlfy_set_status_disc,
 +	NULL
 +};
 +
 +static llc_conn_action_t llc_rst_actions_5[] = {
 +	llc_conn_ac_disc_ind,
 +	llc_conn_ac_stop_ack_timer,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10626,7 +10620,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +
 +static llc_conn_action_t llc_rst_actions_5_1[] = {
 +	llc_conn_ac_stop_ack_timer,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10685,7 +10679,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +};
 +static llc_conn_action_t llc_rst_actions_8[] = {
 +	llc_conn_ac_disc_ind,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10706,7 +10700,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +};
 +static llc_conn_action_t llc_rst_actions_8_1[] = {
 +	llc_conn_ac_disc_ind,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10767,7 +10761,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +	llc_conn_ac_send_ua_rsp_f_set_p,
 +	llc_conn_ac_disc_ind,
 +	llc_conn_ac_stop_ack_timer,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10782,7 +10776,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +static llc_conn_action_t llc_error_actions_3[] = {
 +	llc_conn_ac_disc_ind,
 +	llc_conn_ac_stop_ack_timer,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10915,7 +10909,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +static llc_conn_action_t llc_temp_actions_1[] = {
 +	llc_conn_ac_stop_all_timers,
 +	llc_conn_ac_send_disc_cmd_p_set_x,
-+	llc_conn_disconnect,
++	llc_conn_disc,
 +	NULL
 +};
 +
@@ -10955,15 +10949,15 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.3
 +	{ LLC_CONN_STATE_TEMP,		llc_temp_state_transitions }
 +};
 Index: kernel-acme/net/llc/llc_conn.c
-diff -u /dev/null kernel-acme/net/llc/llc_conn.c:1.1.2.3
---- /dev/null	Mon Nov 12 00:14:34 2001
-+++ kernel-acme/net/llc/llc_conn.c	Sun Nov 11 15:29:45 2001
-@@ -0,0 +1,522 @@
+diff -u /dev/null kernel-acme/net/llc/llc_conn.c:1.1.2.7
+--- /dev/null	Thu Nov 22 23:54:58 2001
++++ kernel-acme/net/llc/llc_conn.c	Wed Nov 21 19:42:23 2001
+@@ -0,0 +1,519 @@
 +/*
 + * llc_conn.c - Driver routines for connection component.
 + *
 + * Copyright (c) 1997 by Procom Technology, Inc.
-+ * 		 2001 by Arnaldo Carvalho de Melo <acme@conectiva.com.br>
++ *		 2001 by Arnaldo Carvalho de Melo <acme@conectiva.com.br>
 + *
 + * This program can be redistributed or modified under the terms of the
 + * GNU General Public License as published by the Free Software Foundation.
@@ -11033,6 +11027,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_conn.c:1.1.2.3
 +{
 +	/* sending event to state machine */
 +	int rc = llc_conn_service(sk, ev);
++	struct llc_opt *llc = LLC_SK(sk);
 +	u8 flag = ev->flag;
 +	struct llc_prim_if_block *ind_prim = ev->ind_prim;
 +	struct llc_prim_if_block *cfm_prim = ev->cfm_prim;
@@ -11040,7 +11035,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_conn.c:1.1.2.3
 +	llc_conn_free_ev(ev);
 +#ifdef THIS_BREAKS_DISCONNECT_NOTIFICATION_BADLY
 +	/* check if the connection was freed by the state machine by
-+	 * means of llc_conn_disconnect */
++	 * means of llc_conn_disc */
 +	if (rc == 2) {
 +		printk(KERN_INFO __FUNCTION__ ": rc == 2\n");
 +		rc = -ECONNABORTED;
@@ -11051,25 +11046,23 @@ diff -u /dev/null kernel-acme/net/llc/llc_conn.c:1.1.2.3
 +		goto out;
 +	rc = 0;
 +	if (ind_prim) /* indication required */
-+		LLC_SK(sk)->sap->ind(ind_prim);
++		llc->sap->ind(ind_prim);
 +	if (!cfm_prim)  /* confirmation not required */
 +		goto out;
 +	/* data confirm has preconditions */
-+	if (cfm_prim->prim != LLC_DATA_PRIM)
-+		LLC_SK(sk)->sap->conf(cfm_prim);
-+	else if (!llc_data_accept_state(LLC_SK(sk)->state)) {
++	if (cfm_prim->prim != LLC_DATA_PRIM) {
++		llc->sap->conf(cfm_prim);
++		goto out;
++	}
++	if (!llc_data_accept_state(llc->state)) {
 +		/* In this state, we can send I pdu */
 +		/* FIXME: check if we don't need to see if sk->lock.users != 0
 +		 * is needed here */
-+		if (LLC_SK(sk)->data_ret_val)
-+			LLC_SK(sk)->data_ret_val = -ERESTART;
-+		else {
-+			rc = LLC_SK(sk)->sap->conf(cfm_prim);
-+			if (rc) /* confirmation didn't accept by upper layer */
-+				LLC_SK(sk)->failed_data_req = 1;
-+		}
++		rc = llc->sap->conf(cfm_prim);
++		if (rc) /* confirmation didn't accept by upper layer */
++			llc->failed_data_req = 1;
 +	} else
-+		LLC_SK(sk)->failed_data_req = 1;
++		llc->failed_data_req = 1;
 +out:	return rc;
 +}
 +
@@ -11305,8 +11298,8 @@ diff -u /dev/null kernel-acme/net/llc/llc_conn.c:1.1.2.3
 +	struct llc_conn_state *curr_state =
 +				&llc_conn_state_table[LLC_SK(sk)->state - 1];
 +
-+       /* search thru events for this state until list exhausted or until
-+    	* no more */
++	/* search thru events for this state until list exhausted or until
++	   no more */
 +	for (next_trans = curr_state->transitions +
 +		llc_find_offset(LLC_SK(sk)->state - 1, ev->type);
 +	     (*next_trans)->ev; next_trans++) {
@@ -11339,7 +11332,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_conn.c:1.1.2.3
 + *
 + *	Executes actions that is related to happened event. Returns 0 for
 + *	success, 1 to indicate failure of at least one action or 2 if the
-+ *	connection was freed (sk_disconnect was called)
++ *	connection was freed (llc_conn_disc was called)
 + */
 +static int llc_exec_conn_trans_actions(struct sock *sk,
 +				       struct llc_conn_state_trans *trans,
@@ -11383,10 +11376,8 @@ diff -u /dev/null kernel-acme/net/llc/llc_conn.c:1.1.2.3
 +	list_for_each(entry, &sap->sk_list.list) {
 +		struct llc_opt *llc = list_entry(entry, struct llc_opt, node);
 +
-+		if (!memcmp(llc->local_dl_addr.mac, local_addr->mac,
-+			    MAC_ADDR_LEN) &&
-+		    !memcmp(llc->remote_dl_addr.mac, remote_addr->mac,
-+			    MAC_ADDR_LEN)) {
++		if (!memcmp(llc->laddr.mac, local_addr->mac, MAC_ADDR_LEN) &&
++		    !memcmp(llc->daddr.mac, remote_addr->mac, MAC_ADDR_LEN)) {
 +			rc = sock_list_entry(entry, struct llc_opt, node);
 +			break;
 +		}
@@ -11406,7 +11397,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_conn.c:1.1.2.3
 +u8 llc_data_accept_state(u8 state)
 +{
 +	if (state != LLC_CONN_STATE_NORMAL && state != LLC_CONN_STATE_BUSY &&
-+	    state != LLC_CONN_STATE_REJECT )
++	    state != LLC_CONN_STATE_REJECT)
 +		return 1; /* data_conn_refuse */
 +	return 0;
 +}
@@ -11483,7 +11474,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_conn.c:1.1.2.3
 +}
 Index: kernel-acme/net/llc/llc_evnt.c
 diff -u /dev/null kernel-acme/net/llc/llc_evnt.c:1.1.2.4
---- /dev/null	Mon Nov 12 00:14:34 2001
+--- /dev/null	Thu Nov 22 23:54:58 2001
 +++ kernel-acme/net/llc/llc_evnt.c	Sun Nov 11 15:29:45 2001
 @@ -0,0 +1,111 @@
 +/*
@@ -11598,10 +11589,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_evnt.c:1.1.2.4
 +	       ev->data.prim.type == LLC_PRIM_TYPE_REQ ? 0 : 1;
 +}
 Index: kernel-acme/net/llc/llc_if.c
-diff -u /dev/null kernel-acme/net/llc/llc_if.c:1.1.2.3
---- /dev/null	Mon Nov 12 00:14:34 2001
-+++ kernel-acme/net/llc/llc_if.c	Sun Nov 11 15:29:45 2001
-@@ -0,0 +1,488 @@
+diff -u /dev/null kernel-acme/net/llc/llc_if.c:1.1.2.8
+--- /dev/null	Thu Nov 22 23:54:58 2001
++++ kernel-acme/net/llc/llc_if.c	Thu Nov 22 23:49:28 2001
+@@ -0,0 +1,487 @@
 +/*
 + * llc_if.c - Defines LLC interface to upper layer
 + *
@@ -11702,7 +11693,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_if.c:1.1.2.3
 +	if (!sap)
 +		goto err;
 +	/* allocated a SAP; initialize it and clear out its memory pool */
-+	sap->local_dl_addr.lsap = local_sap;
++	sap->laddr.lsap = local_sap;
 +	sap->req = llc_sap_req;
 +	sap->resp = llc_sap_resp;
 +	sap->ind = nw_indicate;
@@ -11725,7 +11716,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_if.c:1.1.2.3
 + */
 +void llc_sap_close(struct llc_sap *sap)
 +{
-+	llc_unregister_sap(sap->local_dl_addr.lsap);
++	llc_unregister_sap(sap->laddr.lsap);
 +	llc_free_sap(sap);
 +	MOD_DEC_USE_COUNT;
 +}
@@ -11854,38 +11845,36 @@ diff -u /dev/null kernel-acme/net/llc/llc_if.c:1.1.2.3
 + */
 +static int llc_data_req_handler(struct llc_prim_if_block *prim)
 +{
-+	int rc = 0;
++	struct llc_conn_state_ev *ev;
++	int rc = -ECONNABORTED;
 +	/* accept data frame from network layer to be sent using connection
 +	 * mode communication; timeout/retries handled by this layer;
 +	 * package primitive as an event and send to connection event handler */
 +	struct sock *sk = prim->data->data.sk;
++	struct llc_opt *llc = LLC_SK(sk);
 +
-+	LLC_SK(sk)->data_ret_val = 0;
-+	if (LLC_SK(sk)->state == LLC_CONN_STATE_ADM) {
-+		LLC_SK(sk)->data_ret_val = -ECONNABORTED;
-+	} else if (llc_data_accept_state(LLC_SK(sk)->state)) {
++	if (llc->state == LLC_CONN_STATE_ADM)
++		goto out;
++	rc = -EBUSY;
++	if (llc_data_accept_state(llc->state)) {
 +		/* data_conn_refuse */
-+		LLC_SK(sk)->failed_data_req = 1;
-+		LLC_SK(sk)->data_ret_val = -EBUSY;
-+	} else if (LLC_SK(sk)->p_flag) {
-+		LLC_SK(sk)->failed_data_req = 1;
-+		LLC_SK(sk)->data_ret_val = -EBUSY;
-+	} else {
-+		struct llc_conn_state_ev *ev = llc_conn_alloc_ev(sk);
-+
-+		if (ev) {
-+			ev->type	   = LLC_CONN_EV_TYPE_PRIM;
-+			ev->data.prim.prim = LLC_DATA_PRIM;
-+			ev->data.prim.type = LLC_PRIM_TYPE_REQ;
-+			ev->data.prim.data = prim;
-+			rc = llc_conn_send_ev(sk, ev);
-+		} else
-+			rc = 1;
-+		LLC_SK(sk)->data_ret_val = rc;
++		llc->failed_data_req = 1;
++		goto out;
 +	}
-+	rc = LLC_SK(sk)->data_ret_val;
-+	LLC_SK(sk)->data_ret_val = 0;
-+	return rc;
++	if (llc->p_flag) {
++		llc->failed_data_req = 1;
++		goto out;
++	}
++	rc = -ENOMEM;
++	ev = llc_conn_alloc_ev(sk);
++	if (ev) {
++		ev->type	   = LLC_CONN_EV_TYPE_PRIM;
++		ev->data.prim.prim = LLC_DATA_PRIM;
++		ev->data.prim.type = LLC_PRIM_TYPE_REQ;
++		ev->data.prim.data = prim;
++		rc = llc_conn_send_ev(sk, ev);
++	}
++out:	return rc;
 +}
 +
 +/**
@@ -11914,6 +11903,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_if.c:1.1.2.3
 +static int llc_conn_req_handler(struct llc_prim_if_block *prim)
 +{
 +	int rc = -EBUSY;
++	struct llc_opt *llc;
 +	struct llc_sap *sap = prim->sap;
 +	struct llc_conn_state_ev *ev;
 +	/* network layer supplies addressing required to establish connection;
@@ -11939,13 +11929,13 @@ diff -u /dev/null kernel-acme/net/llc/llc_if.c:1.1.2.3
 +	sock_hold(sk);
 +	/* assign new connection to it's SAP */
 +	llc_sap_assign_sock(sap, sk);
-+	memcpy(&LLC_SK(sk)->remote_dl_addr, &prim->data->conn.daddr,
-+	       sizeof(struct llc_addr));
-+	memcpy(&LLC_SK(sk)->local_dl_addr, &prim->data->conn.saddr,
-+	       sizeof(struct llc_addr));
-+	LLC_SK(sk)->dev  = prim->data->conn.dev;
-+	LLC_SK(sk)->link = prim->data->conn.link;
++	llc = LLC_SK(sk);
++	memcpy(&llc->daddr, &prim->data->conn.daddr, sizeof(llc->daddr));
++	memcpy(&llc->laddr, &prim->data->conn.saddr, sizeof(llc->laddr));
++	llc->dev  = prim->data->conn.dev;
++	llc->link = prim->data->conn.link;
 +	ev = llc_conn_alloc_ev(sk);
++	rc = -ENOMEM;
 +	if (ev) {
 +		ev->type	   = LLC_CONN_EV_TYPE_PRIM;
 +		ev->data.prim.prim = LLC_CONN_PRIM;
@@ -12091,10 +12081,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_if.c:1.1.2.3
 +EXPORT_SYMBOL(llc_sap_open);
 +EXPORT_SYMBOL(llc_sap_close);
 Index: kernel-acme/net/llc/llc_mac.c
-diff -u /dev/null kernel-acme/net/llc/llc_mac.c:1.1.2.3
---- /dev/null	Mon Nov 12 00:14:34 2001
-+++ kernel-acme/net/llc/llc_mac.c	Wed Nov  7 14:38:55 2001
-@@ -0,0 +1,278 @@
+diff -u /dev/null kernel-acme/net/llc/llc_mac.c:1.1.2.4
+--- /dev/null	Thu Nov 22 23:54:59 2001
++++ kernel-acme/net/llc/llc_mac.c	Sat Nov 17 16:19:36 2001
+@@ -0,0 +1,277 @@
 +/*
 + * llc_mac.c - Manages interface between LLC and MAC
 + *
@@ -12205,8 +12195,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_mac.c:1.1.2.3
 +			sk = llc_sock_alloc();
 +			if (!sk)
 +				goto drop;
-+			memcpy(&LLC_SK(sk)->remote_dl_addr, &saddr,
-+			       sizeof(struct llc_addr));
++			memcpy(&LLC_SK(sk)->daddr, &saddr, sizeof(saddr));
 +			llc_sap_assign_sock(sap, sk);
 +			sock_hold(sk);
 +		}
@@ -12374,10 +12363,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_mac.c:1.1.2.3
 +	return rc;
 +}
 Index: kernel-acme/net/llc/llc_main.c
-diff -u /dev/null kernel-acme/net/llc/llc_main.c:1.1.2.4
---- /dev/null	Mon Nov 12 00:14:35 2001
-+++ kernel-acme/net/llc/llc_main.c	Sun Nov 11 15:29:45 2001
-@@ -0,0 +1,608 @@
+diff -u /dev/null kernel-acme/net/llc/llc_main.c:1.1.2.5
+--- /dev/null	Thu Nov 22 23:54:59 2001
++++ kernel-acme/net/llc/llc_main.c	Sat Nov 17 16:19:36 2001
+@@ -0,0 +1,607 @@
 +/*
 + * llc_main.c - This module contains main functions to manage station, saps
 + * 	and connections of the LLC.
@@ -12452,8 +12441,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_main.c:1.1.2.4
 +	if (sap) {
 +		memset(sap, 0, sizeof(*sap));
 +		sap->state = LLC_SAP_STATE_ACTIVE;
-+		memcpy(sap->local_dl_addr.mac, llc_main_station.mac_sa,
-+		       MAC_ADDR_LEN);
++		memcpy(sap->laddr.mac, llc_main_station.mac_sa, MAC_ADDR_LEN);
 +		spin_lock_init(&sap->sk_list.lock);
 +		INIT_LIST_HEAD(&sap->sk_list.list);
 +		skb_queue_head_init(&sap->mac_pdu_q);
@@ -12507,7 +12495,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_main.c:1.1.2.4
 +	spin_lock_bh(&llc_main_station.sap_list.lock);
 +	list_for_each(entry, &llc_main_station.sap_list.list) {
 +		sap = list_entry(entry, struct llc_sap, node);
-+		if (sap->local_dl_addr.lsap == sap_value)
++		if (sap->laddr.lsap == sap_value)
 +			break;
 +	}
 +        if (entry == &llc_main_station.sap_list.list) /* not found */
@@ -12903,7 +12891,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_main.c:1.1.2.4
 +		struct llc_sap *sap = list_entry(sap_entry, struct llc_sap,
 +						 node);
 +
-+		len += sprintf(bf + len, "lsap=%d\n", sap->local_dl_addr.lsap);
++		len += sprintf(bf + len, "lsap=%d\n", sap->laddr.lsap);
 +		spin_lock_bh(&sap->sk_list.lock);
 +		if (list_empty(&sap->sk_list.list)) {
 +			len += sprintf(bf + len, "no connections\n");
@@ -12987,10 +12975,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_main.c:1.1.2.4
 +module_init(llc_init);
 +module_exit(llc_exit);
 Index: kernel-acme/net/llc/llc_pdu.c
-diff -u /dev/null kernel-acme/net/llc/llc_pdu.c:1.1.2.3
---- /dev/null	Mon Nov 12 00:14:35 2001
-+++ kernel-acme/net/llc/llc_pdu.c	Thu Nov  8 20:57:46 2001
-@@ -0,0 +1,657 @@
+diff -u /dev/null kernel-acme/net/llc/llc_pdu.c:1.1.2.5
+--- /dev/null	Thu Nov 22 23:54:59 2001
++++ kernel-acme/net/llc/llc_pdu.c	Thu Nov 22 22:16:04 2001
+@@ -0,0 +1,655 @@
 +/*
 + * llc_pdu.c - access to PDU internals
 + *
@@ -13036,10 +13024,9 @@ diff -u /dev/null kernel-acme/net/llc/llc_pdu.c:1.1.2.3
 +	p->ssap |= cr;
 +}
 +
-+int llc_pdu_set_cmd_rsp(struct sk_buff *skb, u8 pdu_type)
++void llc_pdu_set_cmd_rsp(struct sk_buff *skb, u8 pdu_type)
 +{
 +	((pdu_un_t *)skb->nh.raw)->ssap |= pdu_type;
-+	return 0;
 +}
 +
 +/**
@@ -13051,12 +13038,11 @@ diff -u /dev/null kernel-acme/net/llc/llc_pdu.c:1.1.2.3
 + *	in I or S pdus, p/f bit is right bit of fourth byte in header. in U
 + *	pdus p/f bit is fifth bit of third byte.
 + */
-+int llc_pdu_set_pf_bit(struct sk_buff *skb, u8 bit_value)
++void llc_pdu_set_pf_bit(struct sk_buff *skb, u8 bit_value)
 +{
 +	u8 pdu_type;
-+	int rc = llc_pdu_decode_pdu_type(skb, &pdu_type);
 +
-+	if (rc)
++	if (llc_pdu_decode_pdu_type(skb, &pdu_type))
 +		goto out;
 +	switch (pdu_type) {
 +		case LLC_PDU_TYPE_I:
@@ -13071,7 +13057,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_pdu.c:1.1.2.3
 +				(bit_value << 4);
 +			break;
 +	}
-+out:	return 0;
++out:;
 +}
 +
 +/**
@@ -13649,10 +13635,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_pdu.c:1.1.2.3
 +	return pf_bit;
 +}
 Index: kernel-acme/net/llc/llc_s_ac.c
-diff -u /dev/null kernel-acme/net/llc/llc_s_ac.c:1.1.2.2
---- /dev/null	Mon Nov 12 00:14:35 2001
-+++ kernel-acme/net/llc/llc_s_ac.c	Wed Nov  7 14:38:55 2001
-@@ -0,0 +1,224 @@
+diff -u /dev/null kernel-acme/net/llc/llc_s_ac.c:1.1.2.4
+--- /dev/null	Thu Nov 22 23:54:59 2001
++++ kernel-acme/net/llc/llc_s_ac.c	Wed Nov 21 00:19:21 2001
+@@ -0,0 +1,222 @@
 +/*
 + * llc_s_ac.c - actions performed during sap state transition.
 + *
@@ -13735,11 +13721,9 @@ diff -u /dev/null kernel-acme/net/llc/llc_s_ac.c:1.1.2.2
 +{
 +	struct llc_prim_if_block *prim = ev->data.prim.data;
 +	struct llc_prim_xid *prim_data = &prim->data->xid;
-+	int rc = 1;
-+        struct sk_buff *skb = llc_alloc_frame();
-+
-+	if (rc)
-+		goto out;
++	struct sk_buff *skb = prim_data->skb;
++	int rc;
++	
 +	llc_pdu_header_init(skb, LLC_PDU_TYPE_U, prim_data->saddr.lsap,
 +			    prim_data->daddr.lsap, LLC_PDU_CMD);
 +	rc = llc_pdu_init_as_xid_cmd(skb, XID_NULL_CLASS_2, 0);
@@ -13773,8 +13757,8 @@ diff -u /dev/null kernel-acme/net/llc/llc_s_ac.c:1.1.2.2
 +	if (!skb)
 +		goto out;
 +	skb->dev = ev_skb->dev;
-+	llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->local_dl_addr.lsap,
-+			    dsap, LLC_PDU_RSP);
++	llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->laddr.lsap, dsap,
++			    LLC_PDU_RSP);
 +	rc = llc_pdu_init_as_xid_rsp(skb, XID_NULL_CLASS_2, 0);
 +	if (rc)
 +		goto out;
@@ -13821,12 +13805,12 @@ diff -u /dev/null kernel-acme/net/llc/llc_s_ac.c:1.1.2.2
 +	llc_pdu_decode_sa(ev_skb, mac_da);
 +	llc_pdu_decode_da(ev_skb, mac_sa);
 +	llc_pdu_decode_ssap(ev_skb, &dsap);
-+	skb = skb_clone(ev_skb, GFP_ATOMIC);
++	skb = llc_alloc_frame();
 +	if (!skb)
 +		goto out;
 +	skb->dev = ev_skb->dev;
-+	llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->local_dl_addr.lsap,
-+			    dsap, LLC_PDU_RSP);
++	llc_pdu_header_init(skb, LLC_PDU_TYPE_U, sap->laddr.lsap, dsap,
++			    LLC_PDU_RSP);
 +	rc = llc_pdu_init_as_test_rsp(skb, ev_skb);
 +	if (rc)
 +		goto out;
@@ -13879,7 +13863,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_s_ac.c:1.1.2.2
 +}
 Index: kernel-acme/net/llc/llc_s_ev.c
 diff -u /dev/null kernel-acme/net/llc/llc_s_ev.c:1.1.2.3
---- /dev/null	Mon Nov 12 00:14:35 2001
+--- /dev/null	Thu Nov 22 23:54:59 2001
 +++ kernel-acme/net/llc/llc_s_ev.c	Sun Nov 11 15:29:45 2001
 @@ -0,0 +1,100 @@
 +/*
@@ -13983,9 +13967,9 @@ diff -u /dev/null kernel-acme/net/llc/llc_s_ev.c:1.1.2.3
 +	       ev->data.a.ev == LLC_SAP_EV_DEACTIVATION_REQ ? 0 : 1;
 +}
 Index: kernel-acme/net/llc/llc_s_st.c
-diff -u /dev/null kernel-acme/net/llc/llc_s_st.c:1.1.2.3
---- /dev/null	Mon Nov 12 00:14:35 2001
-+++ kernel-acme/net/llc/llc_s_st.c	Sun Nov 11 15:29:45 2001
+diff -u /dev/null kernel-acme/net/llc/llc_s_st.c:1.1.2.5
+--- /dev/null	Thu Nov 22 23:54:59 2001
++++ kernel-acme/net/llc/llc_s_st.c	Tue Nov 13 23:28:00 2001
 @@ -0,0 +1,163 @@
 +/*
 + * llc_s_st.c - Defines SAP component state machine transitions.
@@ -14010,149 +13994,149 @@ diff -u /dev/null kernel-acme/net/llc/llc_s_st.c:1.1.2.3
 +#include <net/llc_s_st.h>
 +
 +/* dummy last-transition indicator; common to all state transition groups */
-+static struct llc_sap_state_trans sap_state_trans_n = {
++static struct llc_sap_state_trans llc_sap_state_trans_n = {
 +	NULL, 0, NULL	/* last entry for this state */
 +};
 +
 +/* state LLC_SAP_STATE_INACTIVE transition for LLC_SAP_EV_ACTIVATION_REQ event */
-+static llc_sap_action_t sap_inactive_state_actions_1[] = {
++static llc_sap_action_t llc_sap_inactive_state_actions_1[] = {
 +	llc_sap_action_report_status,
 +	NULL
 +};
 +
-+static struct llc_sap_state_trans sap_inactive_state_trans_1 = {
++static struct llc_sap_state_trans llc_sap_inactive_state_trans_1 = {
 +	llc_sap_ev_activation_req,	LLC_SAP_STATE_ACTIVE,
-+					sap_inactive_state_actions_1
++					llc_sap_inactive_state_actions_1
 +};
 +
 +/* array of pointers; one to each transition */
-+static struct llc_sap_state_trans *sap_inactive_state_transitions[] = {
-+	&sap_inactive_state_trans_1,
-+	&sap_state_trans_n
++static struct llc_sap_state_trans *llc_sap_inactive_state_transitions[] = {
++	&llc_sap_inactive_state_trans_1,
++	&llc_sap_state_trans_n
 +};
 +
 +/* state LLC_SAP_STATE_ACTIVE transition for LLC_SAP_EV_RX_UI event */
-+static llc_sap_action_t sap_active_state_actions_1[] = {
++static llc_sap_action_t llc_sap_active_state_actions_1[] = {
 +	llc_sap_action_unitdata_ind,
 +	NULL
 +};
 +
-+static struct llc_sap_state_trans sap_active_state_trans_1 = {
-+	llc_sap_ev_rx_ui,			LLC_SAP_STATE_ACTIVE,
-+					sap_active_state_actions_1
++static struct llc_sap_state_trans llc_sap_active_state_trans_1 = {
++	llc_sap_ev_rx_ui,		LLC_SAP_STATE_ACTIVE,
++					llc_sap_active_state_actions_1
 +};
 +
 +/* state LLC_SAP_STATE_ACTIVE transition for LLC_SAP_EV_UNITDATA_REQ event */
-+static llc_sap_action_t sap_active_state_actions_2[] = {
++static llc_sap_action_t llc_sap_active_state_actions_2[] = {
 +	llc_sap_action_send_ui,
 +	NULL
 +};
 +
-+static struct llc_sap_state_trans sap_active_state_trans_2 = {
++static struct llc_sap_state_trans llc_sap_active_state_trans_2 = {
 +	llc_sap_ev_unitdata_req,	LLC_SAP_STATE_ACTIVE,
-+					sap_active_state_actions_2
++					llc_sap_active_state_actions_2
 +};
 +
 +
 +/* state LLC_SAP_STATE_ACTIVE transition for LLC_SAP_EV_XID_REQ event */
-+static llc_sap_action_t sap_active_state_actions_3[] = {
++static llc_sap_action_t llc_sap_active_state_actions_3[] = {
 +	llc_sap_action_send_xid_c,
 +	NULL
 +};
 +
-+static struct llc_sap_state_trans sap_active_state_trans_3 = {
++static struct llc_sap_state_trans llc_sap_active_state_trans_3 = {
 +	llc_sap_ev_xid_req,		LLC_SAP_STATE_ACTIVE,
-+					sap_active_state_actions_3
++					llc_sap_active_state_actions_3
 +};
 +
 +/* state LLC_SAP_STATE_ACTIVE transition for LLC_SAP_EV_RX_XID_C event */
-+static llc_sap_action_t sap_active_state_actions_4[] = {
++static llc_sap_action_t llc_sap_active_state_actions_4[] = {
 +	llc_sap_action_send_xid_r,
 +	NULL
 +};
 +
-+static struct llc_sap_state_trans sap_active_state_trans_4 = {
++static struct llc_sap_state_trans llc_sap_active_state_trans_4 = {
 +	llc_sap_ev_rx_xid_c,		LLC_SAP_STATE_ACTIVE,
-+					sap_active_state_actions_4
++					llc_sap_active_state_actions_4
 +};
 +
 +/* state LLC_SAP_STATE_ACTIVE transition for LLC_SAP_EV_RX_XID_R event */
-+static llc_sap_action_t sap_active_state_actions_5[] = {
++static llc_sap_action_t llc_sap_active_state_actions_5[] = {
 +	llc_sap_action_xid_ind,
 +	NULL
 +};
 +
-+static struct llc_sap_state_trans sap_active_state_trans_5 = {
++static struct llc_sap_state_trans llc_sap_active_state_trans_5 = {
 +	llc_sap_ev_rx_xid_r,		LLC_SAP_STATE_ACTIVE,
-+					sap_active_state_actions_5
++					llc_sap_active_state_actions_5
 +};
 +
 +/* state LLC_SAP_STATE_ACTIVE transition for LLC_SAP_EV_TEST_REQ event */
-+static llc_sap_action_t sap_active_state_actions_6[] = {
++static llc_sap_action_t llc_sap_active_state_actions_6[] = {
 +	llc_sap_action_send_test_c,
 +	NULL
 +};
 +
-+static struct llc_sap_state_trans sap_active_state_trans_6 = {
++static struct llc_sap_state_trans llc_sap_active_state_trans_6 = {
 +	llc_sap_ev_test_req,		LLC_SAP_STATE_ACTIVE,
-+					sap_active_state_actions_6
++					llc_sap_active_state_actions_6
 +};
 +
 +/* state LLC_SAP_STATE_ACTIVE transition for LLC_SAP_EV_RX_TEST_C event */
-+static llc_sap_action_t sap_active_state_actions_7[] = {
++static llc_sap_action_t llc_sap_active_state_actions_7[] = {
 +	llc_sap_action_send_test_r,
 +	NULL
 +};
 +
-+static struct llc_sap_state_trans sap_active_state_trans_7 = {
++static struct llc_sap_state_trans llc_sap_active_state_trans_7 = {
 +	llc_sap_ev_rx_test_c,		LLC_SAP_STATE_ACTIVE,
-+					sap_active_state_actions_7
++					llc_sap_active_state_actions_7
 +};
 +
 +/* state LLC_SAP_STATE_ACTIVE transition for LLC_SAP_EV_RX_TEST_R event */
-+static llc_sap_action_t sap_active_state_actions_8[] = {
++static llc_sap_action_t llc_sap_active_state_actions_8[] = {
 +	llc_sap_action_test_ind,
 +	NULL
 +};
 +
-+static struct llc_sap_state_trans sap_active_state_trans_8 = {
++static struct llc_sap_state_trans llc_sap_active_state_trans_8 = {
 +	llc_sap_ev_rx_test_r,		LLC_SAP_STATE_ACTIVE,
-+					sap_active_state_actions_8
++					llc_sap_active_state_actions_8
 +};
 +
 +/* state LLC_SAP_STATE_ACTIVE transition for LLC_SAP_EV_DEACTIVATION_REQ event */
-+static llc_sap_action_t sap_active_state_actions_9[] = {
++static llc_sap_action_t llc_sap_active_state_actions_9[] = {
 +	llc_sap_action_report_status,
 +	NULL
 +};
 +
-+static struct llc_sap_state_trans sap_active_state_trans_9 = {
++static struct llc_sap_state_trans llc_sap_active_state_trans_9 = {
 +	llc_sap_ev_deactivation_req,	LLC_SAP_STATE_INACTIVE,
-+					sap_active_state_actions_9
++					llc_sap_active_state_actions_9
 +};
 +
 +/* array of pointers; one to each transition */
-+static struct llc_sap_state_trans *sap_active_state_transitions[] = {
-+	&sap_active_state_trans_2,
-+	&sap_active_state_trans_1,
-+	&sap_active_state_trans_3,
-+	&sap_active_state_trans_4,
-+	&sap_active_state_trans_5,
-+	&sap_active_state_trans_6,
-+	&sap_active_state_trans_7,
-+	&sap_active_state_trans_8,
-+	&sap_active_state_trans_9,
-+	&sap_state_trans_n
++static struct llc_sap_state_trans *llc_sap_active_state_transitions[] = {
++	&llc_sap_active_state_trans_2,
++	&llc_sap_active_state_trans_1,
++	&llc_sap_active_state_trans_3,
++	&llc_sap_active_state_trans_4,
++	&llc_sap_active_state_trans_5,
++	&llc_sap_active_state_trans_6,
++	&llc_sap_active_state_trans_7,
++	&llc_sap_active_state_trans_8,
++	&llc_sap_active_state_trans_9,
++	&llc_sap_state_trans_n
 +};
 +
 +/* SAP state transition table */
 +struct llc_sap_state llc_sap_state_table[] = {
-+	{ LLC_SAP_STATE_INACTIVE, sap_inactive_state_transitions },
-+	{ LLC_SAP_STATE_ACTIVE,	  sap_active_state_transitions   }
++	{ LLC_SAP_STATE_INACTIVE, llc_sap_inactive_state_transitions },
++	{ LLC_SAP_STATE_ACTIVE,	  llc_sap_active_state_transitions   }
 +};
 Index: kernel-acme/net/llc/llc_sap.c
 diff -u /dev/null kernel-acme/net/llc/llc_sap.c:1.1.2.3
---- /dev/null	Mon Nov 12 00:14:35 2001
+--- /dev/null	Thu Nov 22 23:54:59 2001
 +++ kernel-acme/net/llc/llc_sap.c	Sun Nov 11 15:29:45 2001
 @@ -0,0 +1,254 @@
 +/*
@@ -14410,10 +14394,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_sap.c:1.1.2.3
 +	return rc;
 +}
 Index: kernel-acme/net/llc/llc_sock.c
-diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
---- /dev/null	Mon Nov 12 00:14:35 2001
-+++ kernel-acme/net/llc/llc_sock.c	Mon Nov 12 00:11:56 2001
-@@ -0,0 +1,1598 @@
+diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.10
+--- /dev/null	Thu Nov 22 23:54:59 2001
++++ kernel-acme/net/llc/llc_sock.c	Thu Nov 22 23:49:28 2001
+@@ -0,0 +1,1743 @@
 +/*
 + * llc_sock.c - LLC User Interface SAPs
 + * Description:
@@ -14461,14 +14445,15 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +
 +static u16 llc_ui_sap_last_autoport;
 +static u16 llc_ui_sap_link_no_max[256];
++static u8 llc_ui_addrany[IFHWADDRLEN]; /* zeroed because its in .bss */
 +static struct sock *llc_ui_sockets;
 +static struct proto_ops llc_ui_ops;
-+static spinlock_t llc_ui_sockets_lock = SPIN_LOCK_UNLOCKED;
++static rwlock_t llc_ui_sockets_lock = RW_LOCK_UNLOCKED;
 +
 +static int llc_ui_indicate(struct llc_prim_if_block *prim);
 +static int llc_ui_confirm(struct llc_prim_if_block *prim);
-+static int llc_ui_wait_for_connect(struct sock *sk, int seconds);
-+static int llc_ui_wait_for_disconnect(struct sock *sk, int seconds);
++static int llc_ui_wait_for_conn(struct sock *sk, int seconds);
++static int llc_ui_wait_for_disc(struct sock *sk, int seconds);
 +
 +/**
 + *	llc_ui_next_link_no - return the next unused link number for a sap
@@ -14485,31 +14470,26 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 + *	llc_ui_mac_match - determines if two mac addresses are the same
 + *	@mac1: First mac address to compare.
 + *	@mac2: Second mac address to compare.
-+ *	@len : Min length to compare.
 + *
 + *	Determines if two given mac address are the same.  Returns 0 if there
 + *	is not a complete match upto len, 1 if a complete match upto len is
 + *	found.
 + */
-+static inline u8 llc_ui_mac_match(u8 *mac1, u8 *mac2, u8 len)
++static inline u8 llc_ui_mac_match(u8 *mac1, u8 *mac2)
 +{
-+	return !memcmp(mac1, mac2, len);
++	return !memcmp(mac1, mac2, IFHWADDRLEN);
 +}
 +
 +/**
 + *	llc_ui_mac_null - determines if a address is a NULL mac address
 + *	@mac: Mac address to test if NULL.
-+ *	@len: Length of given mac address.
 + *
 + *	Determines if a given address is a NULL mac address.  Returns 0 if the
 + *	address is not a NULL mac, 1 if the address is a NULL mac.
 + */
-+static inline u8 llc_ui_mac_null(u8 *mac, u8 len)
++static inline u8 llc_ui_mac_null(u8 *mac)
 +{
-+	u8 addrany[IFHWADDRLEN];
-+
-+	memset(&addrany, 0, sizeof(addrany));
-+	return !memcmp(addrany, mac, len);
++	return !memcmp(mac, llc_ui_addrany, IFHWADDRLEN);
 +}
 +
 +/**
@@ -14538,12 +14518,11 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 + *	operation the user would like to perform and the type of socket.
 + *	Returns the correct llc header length.
 + */
-+static inline u8 llc_ui_header_len(struct sock *sk)
++static inline u8 llc_ui_header_len(struct sock *sk, struct sockaddr_llc *addr)
 +{
-+	struct llc_ui_opt *llc = LLC_UI_SK(sk);
 +	u8 rc = LLC_PDU_LEN_U;
 +
-+	if (llc->addr.sllc_test || llc->addr.sllc_xid)
++	if (addr->sllc_test || addr->sllc_xid)
 +		rc = LLC_PDU_LEN_U;
 +	else if (sk->type == SOCK_STREAM)
 +		rc = LLC_PDU_LEN_I;
@@ -14551,7 +14530,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +}
 +
 +/**
-+ *	llc_ui_send_connect - send connect command for new llc2 connection
++ *	llc_ui_send_conn - send connect command for new llc2 connection
 + *	@sap : Sap the socket is bound to.
 + *	@addr: Source and destination fields provided by the user.
 + *	@dev : Device which this connection should use.
@@ -14560,10 +14539,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 + *	Send a connect command to the llc layer for a new llc2 connection.
 + *	Returns 0 upon success, non-zero if action didn't succeed.
 + */
-+static int llc_ui_send_connect(struct sock *sk, struct llc_sap *sap,
-+			       struct net_device *dev, int link)
++static int llc_ui_send_conn(struct sock *sk, struct llc_sap *sap,
++			    struct sockaddr_llc *addr,
++			    struct net_device *dev, int link)
 +{
-+	struct llc_ui_opt *llc = LLC_UI_SK(sk);
 +	union llc_u_prim_data prim_data;
 +	struct llc_prim_if_block prim;
 +
@@ -14574,22 +14553,22 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +	prim_data.conn.link = link;
 +	prim_data.conn.sk   = NULL;
 +	prim_data.conn.pri  = 0;
-+	prim_data.conn.saddr.lsap = sap->local_dl_addr.lsap;
-+	prim_data.conn.daddr.lsap = llc->addr.sllc_dsap;
-+	memcpy(prim_data.conn.saddr.mac, sap->local_dl_addr.mac, IFHWADDRLEN);
-+	memcpy(prim_data.conn.daddr.mac, llc->addr.sllc_dmac, IFHWADDRLEN);
++	prim_data.conn.saddr.lsap = LLC_UI_SK(sk)->addr.sllc_ssap;
++	prim_data.conn.daddr.lsap = addr->sllc_dsap;
++	memcpy(prim_data.conn.saddr.mac, dev->dev_addr, IFHWADDRLEN);
++	memcpy(prim_data.conn.daddr.mac, addr->sllc_dmac, IFHWADDRLEN);
 +	return sap->req(&prim);
 +}
 +
 +/**
-+ *	llc_ui_send_disconnect - send disc command to llc layer
++ *	llc_ui_send_disc - send disc command to llc layer
 + *	@sk: Socket with valid llc information.
 + *
 + *	Send a disconnect command to the llc layer for an established
 + *	llc2 connection.
 + *	Returns 0 upon success, non-zero if action did not succeed.
 + */
-+static int llc_ui_send_disconnect(struct sock *sk)
++static int llc_ui_send_disc(struct sock *sk)
 +{
 +	struct llc_ui_opt *llc = LLC_UI_SK(sk);
 +	union llc_u_prim_data prim_data;
@@ -14611,54 +14590,58 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +/**
 + *	llc_ui_send_data - send data via reliable llc2 connection
 + *	@sap: Sap the socket is bound to.
-+ *	@handle: Connection the socket is using.
++ *	@sk: Connection the socket is using.
 + *	@skb: Data the user wishes to send.
 + *	@addr: Source and destination fields provided by the user.
 + *
 + *	Send data via reliable llc2 connection.
 + *	Returns 0 upon success,  non-zero if action did not succeed.
 + */
-+int llc_ui_send_data(struct llc_sap *sap, struct sock* sk, struct sk_buff *skb)
++static int llc_ui_send_data(struct llc_sap *sap, struct sock* sk,
++			    struct sk_buff *skb, struct sockaddr_llc *addr)
 +{
-+	struct llc_ui_opt *llc = LLC_UI_SK(sk);
 +	union llc_u_prim_data prim_data;
 +	struct llc_prim_if_block prim;
++	struct sock* core_sk = LLC_UI_SK(sk)->core_sk;
 +
 +	prim.data	   = &prim_data;
 +	prim.sap	   = sap;
 +	prim.prim	   = LLC_DATA_PRIM;
 +	prim_data.data.skb = skb;
 +	prim_data.data.pri = 0;
-+	prim_data.data.sk  = sk;
-+	skb->protocol	   = llc_ui_protocol_type(llc->addr.sllc_arphrd);
++	prim_data.data.sk  = core_sk;
++	skb->protocol	   = llc_ui_protocol_type(addr->sllc_arphrd);
++	wait_event(sk->socket->wait, !LLC_SK(core_sk)->failed_data_req);
 +	return sap->req(&prim);
 +}
 +
 +/**
 + *	llc_ui_send_llc1 - send llc1 prim data block to llc layer.
-+ *	@llc      : llc_ui_opt of the sock
++ *	@sap      : Sap the socket is bound to.
 + *	@skb      : Data the user wishes to send.
++ *	@addr     : Source and destination fields provided by the user.
 + *	@primitive: Action the llc layer should perform.
 + *
 + *	Send an llc1 primitive data block to the llc layer for processing.
 + *	This function is used for test, xid and unit_data messages.
 + *	Returns 0 upon success, non-zero if action did not succeed.
 + */
-+int llc_ui_send_llc1(struct llc_ui_opt *llc, struct sk_buff *skb, int primitive)
++static int llc_ui_send_llc1(struct llc_sap *sap, struct sk_buff *skb,
++			    struct sockaddr_llc *addr, int primitive)
 +{
 +	union llc_u_prim_data prim_data;
 +	struct llc_prim_if_block prim;
 +
 +	prim.data 		  = &prim_data;
-+	prim.sap 		  = llc->sap;
++	prim.sap 		  = sap;
 +	prim.prim		  = primitive;
 +	prim_data.test.skb 	  = skb;
-+	prim_data.test.saddr.lsap = llc->sap->local_dl_addr.lsap;
-+	prim_data.test.daddr.lsap = llc->addr.sllc_dsap;
-+	skb->protocol = llc_ui_protocol_type(llc->addr.sllc_arphrd);
++	prim_data.test.saddr.lsap = sap->laddr.lsap;
++	prim_data.test.daddr.lsap = addr->sllc_dsap;
++	skb->protocol = llc_ui_protocol_type(addr->sllc_arphrd);
 +	memcpy(prim_data.test.saddr.mac, skb->dev->dev_addr, IFHWADDRLEN);
-+	memcpy(prim_data.test.daddr.mac, llc->addr.sllc_dmac, IFHWADDRLEN);
-+	return llc->sap->req(&prim);
++	memcpy(prim_data.test.daddr.mac, addr->sllc_dmac, IFHWADDRLEN);
++	return sap->req(&prim);
 +}
 +
 +/**
@@ -14667,76 +14650,114 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 + *
 + *	Search the local socket list and return the first instance of the sap
 + *	structure which matches the sap number the user specified.
-+ *	Returns llc_sap upon match, NULL otherwise.
++ *	Returns llc_sap upon match, %NULL otherwise.
 + */
 +static inline struct llc_sap *llc_ui_find_sap(u8 sap)
 +{
 +	struct sock *sk;
 +	struct llc_sap *s = NULL;
 +
++	read_lock_bh(&llc_ui_sockets_lock);
 +	for (sk = llc_ui_sockets; sk; sk = sk->next) {
 +		struct llc_ui_opt *llc = LLC_UI_SK(sk);
 +
 +		if (!llc->sap)
 +			continue;
-+		if (llc->sap->local_dl_addr.lsap == sap) {
++		if (llc->sap->laddr.lsap == sap) {
 +			s = llc->sap;
 +			break;
 +		}
 +	}
++	read_unlock_bh(&llc_ui_sockets_lock);
 +	return s;
 +}
 +
 +/**
-+ *	llc_ui_find_socket_by_link_no - return socket matching sap and link_no
++ *	llc_ui_find_sk_by_link_no - return socket matching sap and link_no
 + *	@sap: Sap to search for.
 + *	@link: link number of connection to match.
 + *
 + *	Search the local socket list and return the socket which has a matching
 + *	sap and link_no. This search only works on connected sockets.
-+ *	Returns sock upon match,  NULL otherwise.
++ *	Returns sock upon match, %NULL otherwise.
 + */
-+static inline struct sock *llc_ui_find_socket_by_link_no(struct llc_sap *sap,
-+							 u16 link)
++static struct sock *llc_ui_find_sk_by_link_no(struct llc_sap *sap, u16 link)
 +{
 +	struct sock *sk;
 +
++	read_lock(&llc_ui_sockets_lock);
 +	for (sk = llc_ui_sockets; sk; sk = sk->next) {
 +		struct llc_ui_opt *llc = LLC_UI_SK(sk);
 +
-+		if (llc->sap &&
-+		    llc->sap->local_dl_addr.lsap == sap->local_dl_addr.lsap &&
++		if (llc->sap && llc->sap->laddr.lsap == sap->laddr.lsap &&
 +		    llc->core_sk &&    /* if no core_sk, link_no is invalid */
 +		    llc->link == link)
 +			break; /* exact mac + sap match. */
 +	}
++	if (sk)
++		sock_hold(sk);
++	read_unlock(&llc_ui_sockets_lock);
 +	return sk;
 +}
 +
 +/**
-+ *	llc_ui_find_socket_by_addr - return socket matching local mac + sap.
++ *	__llc_ui_find_sk_by_addr - return socket matching local mac + sap.
 + *	@addr: Local address to match.
 + *
 + *	Search the local socket list and return the socket which has a matching
 + *	local (mac + sap) address (allows null mac). This search will work on
 + *	unconnected and connected sockets, though find_by_link_no is recommend
 + *	for connected sockets.
-+ *	Returns sock upon match, NULL otherwise.
++ *	Returns sock upon match, %NULL otherwise.
 + */
-+static inline struct sock *llc_ui_find_socket_by_addr(struct llc_addr *addr)
++static struct sock *__llc_ui_find_sk_by_addr(struct llc_addr *addr,
++					     struct net_device *dev)
 +{
 +	struct sock *sk;
 +
 +	for (sk = llc_ui_sockets; sk; sk = sk->next) {
 +		struct llc_ui_opt *llc = LLC_UI_SK(sk);
 +
-+		if (!llc->sap || llc->sap->local_dl_addr.lsap != addr->lsap)
++		if (!llc->sap || llc->sap->laddr.lsap != addr->lsap)
 +			continue;
-+		if (!llc->dev || /* socket gets all connections for this sap. */
-+		    llc_ui_mac_match(addr->mac, llc->dev->dev_addr,
-+				     IFHWADDRLEN)) /* exact mac + sap match. */
++		if (!llc->dev) {
++			if (!llc_ui_mac_null(llc->addr.sllc_mmac) &&
++			    !llc_ui_mac_match(addr->mac, llc->addr.sllc_mmac))
++				continue;
++			break;
++		}
++		if (llc_ui_mac_match(addr->mac, llc->addr.sllc_smac) &&
++		    llc_ui_mac_null(llc->addr.sllc_mmac))
++			break;
++		if (!llc_ui_mac_null(llc->addr.sllc_mmac) &&
++		    llc_ui_mac_match(addr->mac, llc->addr.sllc_mmac) &&
++		    llc_ui_mac_match(llc->addr.sllc_smac, dev->dev_addr))
 +			break;
 +	}
++	return sk;
++}
++
++static struct sock *llc_ui_find_sk_by_addr(struct llc_addr *addr,
++					   struct net_device *dev)
++{
++	struct sock *sk;
++	read_lock(&llc_ui_sockets_lock);
++	sk = __llc_ui_find_sk_by_addr(addr, dev);
++	if (sk)
++		sock_hold(sk);
++	read_unlock(&llc_ui_sockets_lock);
++	return sk;
++}
++
++static struct sock *llc_ui_bh_find_sk_by_addr(struct llc_addr *addr,
++					      struct net_device *dev)
++{
++	struct sock *sk;
++	read_lock_bh(&llc_ui_sockets_lock);
++	sk = __llc_ui_find_sk_by_addr(addr, dev);
++	if (sk)
++		sock_hold(sk);
++	read_unlock_bh(&llc_ui_sockets_lock);
 +	return sk;
 +}
 +
@@ -14748,13 +14769,14 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 + */
 +static inline void llc_ui_insert_socket(struct sock *sk)
 +{
-+	spin_lock_bh(&llc_ui_sockets_lock);
++	write_lock_bh(&llc_ui_sockets_lock);
 +	sk->next = llc_ui_sockets;
 +	if (sk->next)
 +		llc_ui_sockets->pprev = &sk->next;
 +	llc_ui_sockets = sk;
 +	sk->pprev = &llc_ui_sockets;
-+	spin_unlock_bh(&llc_ui_sockets_lock);
++	sock_hold(sk);
++	write_unlock_bh(&llc_ui_sockets_lock);
 +}
 +
 +/**
@@ -14765,14 +14787,17 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 + */
 +static inline void llc_ui_remove_socket(struct sock *sk)
 +{
-+	spin_lock_bh(&llc_ui_sockets_lock);
++	write_lock_bh(&llc_ui_sockets_lock);
 +	if (sk->pprev) {
 +		if (sk->next)
 +			sk->next->pprev = sk->pprev;
 +		*sk->pprev = sk->next;
 +		sk->pprev = NULL;
++		/* this only makes sense if the socket was inserted on the
++		 * list, if sk->pprev is NULL it wasn't */
++		sock_put(sk);
 +	}
-+	spin_unlock_bh(&llc_ui_sockets_lock);
++	write_unlock_bh(&llc_ui_sockets_lock);
 +}
 +
 +/**
@@ -14789,10 +14814,9 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +	skb_queue_purge(&sk->receive_queue);
 +	skb_queue_purge(&sk->write_queue);
 +	if (!atomic_read(&sk->wmem_alloc) &&
-+	    !atomic_read(&sk->rmem_alloc) && sk->dead) {
-+		sock_put(sk);
++	    !atomic_read(&sk->rmem_alloc) && sk->dead)
 +		MOD_DEC_USE_COUNT;
-+	} else {
++	else {
 +		sk->timer.expires = jiffies + SOCK_DESTROY_TIME;
 +		add_timer(&sk->timer);
 +	}
@@ -14815,12 +14839,12 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +
 +	MOD_INC_USE_COUNT;
 +	switch (sock->type) {
-+		case SOCK_RAW:
 +		case SOCK_DGRAM:	/* llc1 */
 +		case SOCK_STREAM:	/* llc2 */
 +			prot = &llc_ui_ops;
 +			break;
-+		case SOCK_SEQPACKET:	/* llc3 */
++		case SOCK_SEQPACKET:	/* llc3, not supported */
++		case SOCK_RAW:		/* not supported */
 +		default:
 +			goto decmod;
 +	}
@@ -14851,28 +14875,18 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +		goto out;
 +	llc_ui_remove_socket(sk);
 +	llc = LLC_UI_SK(sk);
-+	if (llc->sap) {
-+		/* if no one else is using the sap, close it,
-+		 * else disconnect. */
-+		if (!llc_ui_find_sap(llc->sap->local_dl_addr.lsap))
-+	                llc_sap_close(llc->sap);
-+		else {
-+			llc_ui_send_disconnect(sk);
-+			MOD_DEC_USE_COUNT;
-+			sock->sk = NULL;
-+			goto out;
-+		}
-+	}
++	if (llc->core_sk)
++		llc_ui_send_disc(sk);
++	if (llc->sap && !llc_ui_find_sap(llc->sap->laddr.lsap))
++		llc_sap_close(llc->sap);
 +	skb_queue_purge(&sk->receive_queue);
 +	skb_queue_purge(&sk->write_queue);
 +	sock_orphan(sk);
 +	sock->sk = NULL;
-+
 +	if (!atomic_read(&sk->wmem_alloc) &&
-+	    !atomic_read(&sk->rmem_alloc) && sk->dead) {
-+		sock_put(sk);
++	    !atomic_read(&sk->rmem_alloc) && sk->dead)
 +		MOD_DEC_USE_COUNT;
-+	} else {
++	else {
 +		init_timer(&sk->timer);
 +		sk->timer.expires = jiffies + SOCK_DESTROY_TIME;
 +		sk->timer.function = llc_ui_destroy_timer;
@@ -14913,6 +14927,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +/**
 + *	llc_ui_autobind - Bind a socket to a specific address.
 + *	@sk: Socket to bind an address to.
++ *	@addr: Address the user wants the socket bound to.
 + *
 + *	Bind a socket to a specific address. For llc a user is able to bind to
 + *	a specific sap only or mac + sap. If the user only specifies a sap and
@@ -14926,10 +14941,9 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 + *	otherwise all hell will break loose.
 + *	Returns: 0 upon success, negative otherwise.
 + */
-+static int llc_ui_autobind(struct socket *sock)
++static int llc_ui_autobind(struct socket *sock, struct sockaddr_llc *addr)
 +{
 +	struct sock *sk = sock->sk;
-+	struct llc_ui_opt *llc = LLC_UI_SK(sk);
 +	struct llc_sap *sap;
 +	struct net_device *dev = NULL;
 +	int rc = -EINVAL;
@@ -14937,10 +14951,9 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +	if (!sk->zapped)
 +		goto out;
 +	/* bind to a specific mac, optional. */
-+	if (!llc_ui_mac_null(llc->addr.sllc_smac, IFHWADDRLEN)) {
++	if (!llc_ui_mac_null(addr->sllc_smac)) {
 +		rtnl_lock();
-+		dev = dev_getbyhwaddr(llc->addr.sllc_arphrd,
-+				      llc->addr.sllc_smac);
++		dev = dev_getbyhwaddr(addr->sllc_arphrd, addr->sllc_smac);
 +		rtnl_unlock();
 +		rc = -ENETUNREACH;
 +		if (!dev)
@@ -14948,32 +14961,40 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +		LLC_UI_SK(sk)->dev = dev;
 +	}
 +	/* bind to a specific sap, optional. */
-+	if (!llc->addr.sllc_ssap) {
++	if (!addr->sllc_ssap) {
 +		rc = -EUSERS;
-+		llc->addr.sllc_ssap = llc_ui_autoport();
-+		if (!llc->addr.sllc_ssap)
++		addr->sllc_ssap = llc_ui_autoport();
++		if (!addr->sllc_ssap)
 +			goto out;
 +	}
-+	sap = llc_ui_find_sap(llc->addr.sllc_ssap);
++	sap = llc_ui_find_sap(addr->sllc_ssap);
 +	if (!sap) {
 +		sap = llc_sap_open(llc_ui_indicate, llc_ui_confirm,
-+				   llc->addr.sllc_ssap);
++				   addr->sllc_ssap);
 +		rc = -EBUSY; /* some other network layer is using the sap */
 +		if (!sap)
 +			goto out;
 +	} else {
 +		struct llc_addr local_addr;
++		struct sock *ask;
 +
 +		rc = -EUSERS; /* can't get exclusive use of sap */
-+		if (!dev)
++		if (!dev && llc_ui_mac_null(addr->sllc_mmac))
 +			goto out;
 +		memset(&local_addr, 0, sizeof(local_addr));
-+		memcpy(local_addr.mac, llc->addr.sllc_smac, IFHWADDRLEN);
-+		local_addr.lsap = llc->addr.sllc_ssap;
++		if (!llc_ui_mac_null(addr->sllc_mmac))
++			memcpy(local_addr.mac, addr->sllc_mmac, IFHWADDRLEN);
++		else
++			memcpy(local_addr.mac, addr->sllc_smac, IFHWADDRLEN);
++		local_addr.lsap = addr->sllc_ssap;
 +		rc = -EADDRINUSE;   /* mac + sap clash. */
-+		if (llc_ui_find_socket_by_addr(&local_addr))
++		ask = llc_ui_bh_find_sk_by_addr(&local_addr, dev);
++		if (ask) {
++			sock_put(ask);
 +			goto out;
++		}
 +	}
++	memcpy(&LLC_UI_SK(sk)->addr, addr, sizeof(*addr));
 +	LLC_UI_SK(sk)->sap = sap;
 +	rc = sk->zapped = 0;
 +	llc_ui_insert_socket(sk);
@@ -15003,7 +15024,6 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +{
 +	struct sockaddr_llc *addr = (struct sockaddr_llc *)uaddr;
 +	struct sock *sk = sock->sk;
-+	struct llc_ui_opt *llc = LLC_UI_SK(sk);
 +	int rc = -EINVAL;
 +
 +	if (!sk->zapped || addr_len != sizeof(*addr))
@@ -15011,9 +15031,8 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +	rc = -EAFNOSUPPORT;
 +	if (addr->sllc_family != AF_LLC)
 +		goto out;
-+	memcpy(&llc->addr, addr, sizeof(llc->addr));
 +	/* use autobind, to avoid code replication. */
-+	rc = llc_ui_autobind(sock);
++	rc = llc_ui_autobind(sock, addr);
 +out:	return rc;
 +}
 +
@@ -15039,9 +15058,9 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +	rc = -EINVAL;
 +	if (how != 2)
 +		goto out;
-+	rc = llc_ui_send_disconnect(sk);
++	rc = llc_ui_send_disc(sk);
 +	if (!rc)
-+	        llc_ui_wait_for_disconnect(sk, 255);
++	        llc_ui_wait_for_disc(sk, 255);
 +	/* Wake up anyone sleeping in poll */
 +	sk->state_change(sk);
 +out:	release_sock(sk);
@@ -15085,11 +15104,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +		goto out;
 +	sock->state = SS_CONNECTING;
 +	sk->state   = TCP_SYN_SENT;
-+	memcpy(&llc->addr, addr, sizeof(llc->addr));
 +	/* must bind connection to sap if user hasn't done it. */
 +	if (sk->zapped) {
 +		/* bind to sap with null dev, exclusive */
-+		rc = llc_ui_autobind(sock);
++		rc = llc_ui_autobind(sock, addr);
 +		if (rc) {
 +			sock->state = SS_UNCONNECTED;
 +			sk->state   = TCP_CLOSE;
@@ -15107,14 +15125,14 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +		}
 +	} else
 +		dev = llc->dev;
-+	llc->link = llc_ui_next_link_no(llc->sap->local_dl_addr.lsap);
-+	rc = llc_ui_send_connect(sk, llc->sap, dev, llc->link);
++	llc->link = llc_ui_next_link_no(llc->sap->laddr.lsap);
++	rc = llc_ui_send_conn(sk, llc->sap, addr, dev, llc->link);
 +	if (rc) {
 +		sock->state = SS_UNCONNECTED;
 +		sk->state   = TCP_CLOSE;
 +		goto out;
 +	}
-+	rc = llc_ui_wait_for_connect(sk, 255);
++	rc = llc_ui_wait_for_conn(sk, 255);
 +out:	release_sock(sk);
 +	return rc;
 +}
@@ -15156,7 +15174,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +	return rc;
 +}
 +
-+static int llc_ui_wait_for_disconnect(struct sock *sk, int seconds)
++static int llc_ui_wait_for_disc(struct sock *sk, int seconds)
 +{
 +	DECLARE_WAITQUEUE(wait, current);
 +	int rc, timeout = seconds * HZ;
@@ -15181,7 +15199,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +	return rc;
 +}
 +
-+static int llc_ui_wait_for_connect(struct sock *sk, int seconds)
++static int llc_ui_wait_for_conn(struct sock *sk, int seconds)
 +{
 +	DECLARE_WAITQUEUE(wait, current);
 +	int rc, timeout = seconds * HZ;
@@ -15195,7 +15213,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +		if (sk->state == TCP_ESTABLISHED) {
 +			if (!LLC_UI_SK(sk)->core_sk)
 +				rc = -EAGAIN;
-+                        break;
++			break;
 +		}
 +		rc = -EAGAIN;
 +		if (sk->state == TCP_CLOSE)
@@ -15266,6 +15284,8 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +	LLC_UI_SK(newsk)->dev     = LLC_UI_SK(sk)->dev;
 +	LLC_UI_SK(newsk)->link    = LLC_SK(skb->sk)->link;
 +	LLC_UI_SK(newsk)->core_sk = skb->sk;
++	memcpy(&LLC_UI_SK(newsk)->addr, &LLC_UI_SK(sk)->addr,
++	       sizeof(LLC_UI_SK(sk)->addr));
 +	/* put orignal socket back into a clean listen state. */
 +	sk->state		  = TCP_LISTEN;
 +	sk->ack_backlog--;
@@ -15294,29 +15314,30 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +	struct sockaddr_llc *uaddr = (struct sockaddr_llc *)msg->msg_name;
 +	struct sockaddr_llc saddr;
 +	struct sk_buff *skb;
-+	int rc = 0, copied = 0;
++	int rc = -ENOMEM, copied = 0;
 +	int noblock = flags & MSG_DONTWAIT;
 +
 +	lock_sock(sk);
 +	skb = skb_recv_datagram(sk, flags, noblock, &rc);
 +	if (!skb)
 +		goto out;
-+	if (skb->len < sizeof(struct sockaddr_llc))
++	rc = -EPROTO;
++	if (skb->len < sizeof(saddr))
 +		goto dgram_free;
 +	/* remove saved sllc header. */
-+	memcpy(&saddr, skb->head, sizeof(struct sockaddr_llc));
-+	skb_pull(skb, sizeof(struct sockaddr_llc));
++	memcpy(&saddr, skb->head, sizeof(saddr));
++	skb_pull(skb, sizeof(saddr));
 +	copied = skb->len;
 +	if (copied > size) {
 +		copied = size;
 +		msg->msg_flags |= MSG_TRUNC;
 +	}
-+	rc  = skb_copy_datagram_iovec(skb, 0, msg->msg_iov, copied);
-+	if (!rc) {
-+		if (uaddr)
-+			memcpy(uaddr, &saddr, sizeof(*uaddr));
-+		msg->msg_namelen = sizeof(*uaddr);
-+	}
++	rc = skb_copy_datagram_iovec(skb, 0, msg->msg_iov, copied);
++	if (rc)
++		goto dgram_free;
++	if (uaddr)
++		memcpy(uaddr, &saddr, sizeof(*uaddr));
++	msg->msg_namelen = sizeof(*uaddr);
 +dgram_free:
 +	skb_free_datagram(sk, skb); /* Free the datagram. */
 +out:	release_sock(sk);
@@ -15338,68 +15359,77 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +{
 +	struct sock *sk = sock->sk;
 +	struct llc_ui_opt *llc = LLC_UI_SK(sk);
++	struct sockaddr_llc *addr = (struct sockaddr_llc *)msg->msg_name;
 +	int flags = msg->msg_flags;
 +	struct net_device *dev;
 +	struct sk_buff *skb;
-+	int rc = -EINVAL, size = 0;
++	int rc = -EOPNOTSUPP, size = 0;
 +
 +	lock_sock(sk);
 +	if (flags & ~MSG_DONTWAIT)
-+		goto out;
++		goto release;
++	rc = -EINVAL;
++	if (sk->type == SOCK_DGRAM && msg->msg_namelen < sizeof(*addr))
++		goto release;
++	if (sk->type == SOCK_STREAM && !addr)
++		addr = &llc->addr;
++	if (!addr)
++		goto release;
 +	/* must bind connection to sap if user hasn't done it. */
 +	if (sk->zapped) {
 +		/* bind to sap with null dev, exclusive. */
-+		rc = llc_ui_autobind(sock);
++		rc = llc_ui_autobind(sock, addr);
 +		if (rc) {
 +			sock->state = SS_UNCONNECTED;
 +			sk->state   = TCP_CLOSE;
-+			goto out;
++			goto release;
 +		}
 +	}
 +	if (!llc->dev) {
 +		rtnl_lock();
-+		dev = dev_getbyhwaddr(llc->addr.sllc_arphrd, llc->addr.sllc_smac);
++		dev = dev_getbyhwaddr(addr->sllc_arphrd, addr->sllc_smac);
 +		rtnl_unlock();
 +		rc = -ENETUNREACH;
 +		if (!dev)
-+			goto out;
++			goto release;
 +	} else
 +		dev = llc->dev;
-+	size = dev->hard_header_len + len + llc_ui_header_len(sk);
++	size = dev->hard_header_len + len + llc_ui_header_len(sk, addr);
 +	rc = -EMSGSIZE;
 +	if (size > dev->mtu)
-+		goto out;
-+	skb = sock_alloc_send_skb(sk, size, flags & MSG_DONTWAIT, &rc);
++		goto release;
++	skb = sock_alloc_send_skb(sk, size, flags&MSG_DONTWAIT, &rc);
 +	if (!skb)
-+		goto out;
++		goto release;
 +	skb->sk  = sk;
 +	skb->dev = dev;
-+	skb_reserve(skb, dev->hard_header_len);
-+	skb_reserve(skb, llc_ui_header_len(sk));
++	skb_reserve(skb, dev->hard_header_len + llc_ui_header_len(sk, addr));
 +	rc = memcpy_fromiovec(skb_put(skb, len), msg->msg_iov, len);
 +	if (rc)
++		goto release;
++	if (addr->sllc_test) {
++		rc = llc_ui_send_llc1(llc->sap, skb, addr, LLC_TEST_PRIM);
 +		goto out;
-+	if (llc->addr.sllc_test)
-+		rc = llc_ui_send_llc1(llc, skb, LLC_TEST_PRIM);
-+	else {
-+		if (llc->addr.sllc_xid)
-+			rc = llc_ui_send_llc1(llc, skb, LLC_XID_PRIM);
-+		else {
-+			if (sk->type == SOCK_DGRAM || llc->addr.sllc_ua)
-+				rc = llc_ui_send_llc1(llc, skb,
-+						      LLC_DATAUNIT_PRIM);
-+			if (sk->type == SOCK_STREAM && !llc->addr.sllc_ua) {
-+				if (llc->core_sk)
-+					rc = llc_ui_send_data(llc->sap,
-+							     llc->core_sk, skb);
-+				else
-+					rc = -ENOTCONN;
-+			}
-+		}
 +	}
-+	if (rc)
++	if (addr->sllc_xid) {
++		rc = llc_ui_send_llc1(llc->sap, skb, addr, LLC_XID_PRIM);
++		goto out;
++	}
++	if (sk->type == SOCK_DGRAM || addr->sllc_ua) {
++		rc = llc_ui_send_llc1(llc->sap, skb, addr, LLC_DATAUNIT_PRIM);
++		goto out;
++	}
++	rc = -ENOPROTOOPT;
++	if (!(sk->type == SOCK_STREAM && !addr->sllc_ua))
++		goto out;
++	rc = -ENOTCONN;
++	if (!llc->core_sk)
++		goto out;
++	rc = llc_ui_send_data(llc->sap, sk, skb, addr);
++out:	if (rc)
 +		skb_free_datagram(sk, skb);
-+out:	release_sock(sk);
++release:
++	release_sock(sk);
 +	return rc ? : len;
 +}
 +
@@ -15423,7 +15453,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +	lock_sock(sk);
 +	if (sk->zapped)
 +		goto out;
-+	*uaddr_len = sizeof(struct sockaddr_llc);
++	*uaddr_len = sizeof(sllc);
 +	memset(uaddr, 0, *uaddr_len);
 +	if (peer) {
 +		rc = -ENOTCONN;
@@ -15431,14 +15461,14 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +			goto out;
 +		if(llc->dev)
 +			sllc.sllc_arphrd = llc->dev->type;
-+		sllc.sllc_dsap	 = LLC_SK(llc->core_sk)->remote_dl_addr.lsap;
-+		memcpy(&sllc.sllc_dmac,
-+		       &LLC_SK(llc->core_sk)->remote_dl_addr.mac, IFHWADDRLEN);
++		sllc.sllc_dsap = LLC_SK(llc->core_sk)->daddr.lsap;
++		memcpy(&sllc.sllc_dmac, &LLC_SK(llc->core_sk)->daddr.mac,
++		       IFHWADDRLEN);
 +	} else {
 +		rc = -EINVAL;
 +		if (!llc->sap)
 +			goto out;
-+		sllc.sllc_ssap = llc->sap->local_dl_addr.lsap;
++		sllc.sllc_ssap = llc->sap->laddr.lsap;
 +
 +		if (llc->dev) {
 +			sllc.sllc_arphrd = llc->dev->type;
@@ -15562,7 +15592,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +	int val = 0, len = 0, rc = -EINVAL;
 +
 +	lock_sock(sk);
-+	if (level != SOL_LLC || sk->type != SOCK_STREAM)
++	if (level != SOL_LLC)
 +		goto out;
 +	rc = -ENOTCONN;
 +	if (!llc->core_sk)
@@ -15610,8 +15640,228 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +}
 +
 +/**
++ *	llc_ui_ind_test - handle TEST indication
++ *	@prim: Primitive block provided by the llc layer.
++ *
++ *	handle TEST indication.
++ */
++static void llc_ui_ind_test(struct llc_prim_if_block *prim)
++{
++	struct llc_prim_test *prim_data = &prim->data->test;
++	struct sockaddr_llc *llc;
++	struct sk_buff *skb2, *skb = prim_data->skb;
++	struct sock *sk = llc_ui_find_sk_by_addr(&prim_data->daddr, skb->dev);
++
++	if (!sk)
++		goto out;
++	if (sk->state == TCP_LISTEN)
++		goto out_put;
++	skb2 = skb_copy_expand(skb, sizeof(*llc), 0, GFP_ATOMIC);
++	if (!skb2)
++		goto out_put;
++	/* save primitive for use by the user. (pulled in recvmsg) */
++	llc = (struct sockaddr_llc *)skb_push(skb2, sizeof(*llc));
++	llc->sllc_family = AF_LLC;
++	llc->sllc_arphrd = skb->dev->type;
++	llc->sllc_test   = 1;
++	llc->sllc_xid    = 0;
++	llc->sllc_ua     = 0;
++	llc->sllc_dsap = prim_data->daddr.lsap;
++	memcpy(llc->sllc_dmac, prim_data->daddr.mac, IFHWADDRLEN);
++	llc->sllc_ssap = prim_data->saddr.lsap;
++	memcpy(llc->sllc_smac, prim_data->saddr.mac, IFHWADDRLEN);
++	/* queue skb to the user. */
++	if (sock_queue_rcv_skb(sk, skb2) < 0)
++		kfree_skb(skb2);
++out_put:
++	sock_put(sk);
++out:;
++}
++
++/**
++ *	llc_ui_ind_xid - handle XID indication
++ *	@prim: Primitive block provided by the llc layer.
++ *
++ *	handle XID indication.
++ */
++static void llc_ui_ind_xid(struct llc_prim_if_block *prim)
++{
++	struct llc_prim_xid *prim_data = &prim->data->xid;
++	struct sk_buff *skb2, *skb = prim_data->skb;
++	struct sockaddr_llc *llc;
++	struct sock *sk = llc_ui_find_sk_by_addr(&prim_data->daddr, skb->dev);
++
++	if (!sk)
++		goto out;
++	if (sk->state == TCP_LISTEN)
++		goto out_put;
++	skb2 = skb_copy_expand(skb, sizeof(*llc), 0, GFP_ATOMIC);
++	if (!skb2)
++		goto out_put;
++	/* save primitive for use by the user. (pulled in
++	 * recvmsg) */
++	llc = (struct sockaddr_llc *)skb_push(skb2, sizeof(*llc));
++	llc->sllc_family = AF_LLC;
++	llc->sllc_arphrd = 0;
++	llc->sllc_test   = 0;
++	llc->sllc_xid    = 1;
++	llc->sllc_ua     = 0;
++	llc->sllc_dsap = prim_data->daddr.lsap;
++	memcpy(llc->sllc_dmac, prim_data->daddr.mac, IFHWADDRLEN);
++	llc->sllc_ssap = prim_data->saddr.lsap;
++	memcpy(llc->sllc_smac, prim_data->saddr.mac, IFHWADDRLEN);
++	/* queue skb to the user. */
++	if (sock_queue_rcv_skb(sk, skb2) < 0)
++		kfree_skb(skb2);
++out_put:
++	sock_put(sk);
++out:;
++}
++
++/**
++ *	llc_ui_ind_dataunit - handle DATAUNIT indication
++ *	@prim: Primitive block provided by the llc layer.
++ *
++ *	handle DATAUNIT indication.
++ */
++static void llc_ui_ind_dataunit(struct llc_prim_if_block *prim)
++{
++	struct llc_prim_unit_data *prim_data = &prim->data->udata;
++	struct sockaddr_llc *llc;
++	struct sk_buff *skb2, *skb = prim_data->skb;
++	struct sock *sk = llc_ui_find_sk_by_addr(&prim_data->daddr, skb->dev);
++
++	if (!sk)
++		goto out;
++	if (sk->state == TCP_LISTEN)
++		goto out_put;
++	skb2 = skb_copy_expand(skb, sizeof(*llc), 0, GFP_ATOMIC);
++	if (!skb2)
++		goto out_put;
++	/* save primitive for use by the user. (pulled in
++	 * recvmsg) */
++	llc = (struct sockaddr_llc *)skb_push(skb2, sizeof(*llc));
++	llc->sllc_family = AF_LLC;
++	llc->sllc_arphrd = skb->dev->type;
++	llc->sllc_test   = 0;
++	llc->sllc_xid    = 0;
++	llc->sllc_ua     = 1;
++	llc->sllc_dsap = prim_data->daddr.lsap;
++	memcpy(llc->sllc_dmac, prim_data->daddr.mac, IFHWADDRLEN);
++	llc->sllc_ssap = prim_data->saddr.lsap;
++	memcpy(llc->sllc_smac, prim_data->saddr.mac, IFHWADDRLEN);
++	/* queue skb to the user. */
++	if (sock_queue_rcv_skb(sk, skb2) < 0)
++		kfree_skb(skb2);
++out_put:
++	sock_put(sk);
++out:;
++}
++
++/**
++ *	llc_ui_ind_conn - handle CONNECT indication
++ *	@prim: Primitive block provided by the llc layer.
++ *
++ *	handle CONNECT indication.
++ */
++static void llc_ui_ind_conn(struct llc_prim_if_block *prim)
++{
++	struct llc_prim_conn *prim_data = &prim->data->conn;
++	struct sock* sk;
++	struct sk_buff *skb2;
++
++	LLC_SK(prim_data->sk)->laddr.lsap = prim->sap->laddr.lsap;
++	sk = llc_ui_find_sk_by_addr(&LLC_SK(prim_data->sk)->laddr,
++				    prim_data->dev);
++	if (!sk)
++		goto out;
++	if (sk->type != SOCK_STREAM || sk->state != TCP_LISTEN)
++		goto out_put;
++	if (prim->data->conn.status)
++		goto out_put; /* bad status. */
++	/* give this connection a link number. */
++	LLC_SK(prim_data->sk)->link =
++		llc_ui_next_link_no(LLC_SK(prim_data->sk)->laddr.lsap);
++	skb2 = alloc_skb(0, GFP_ATOMIC);
++	if (!skb2)
++		goto out_put;
++	skb2->sk = prim_data->sk;
++	skb_queue_tail(&sk->receive_queue, skb2);
++	sk->state_change(sk);
++out_put:
++	sock_put(sk);
++out:;
++}
++
++/**
++ *	llc_ui_ind_data - handle DATA indication
++ *	@prim: Primitive block provided by the llc layer.
++ *
++ *	handle CONNECT indication.
++ */
++static void llc_ui_ind_data(struct llc_prim_if_block *prim)
++{
++	struct llc_prim_data *prim_data = &prim->data->data;
++	struct sockaddr_llc *llc;
++	struct sk_buff *skb2, *skb = prim_data->skb;
++	struct sock *sk = llc_ui_find_sk_by_link_no(prim->sap, prim_data->link);
++
++	if (!sk)
++		goto out;
++	if (sk->type != SOCK_STREAM || sk->state != TCP_ESTABLISHED)
++		goto out_put;
++	skb2 = skb_copy_expand(skb, sizeof(*llc), 0, GFP_ATOMIC);
++	if (!skb2)
++		goto out_put;
++	/* save primitive for use by the user. (pulled in recvmsg) */
++	llc = (struct sockaddr_llc *)skb_push(skb2, sizeof(*llc));
++	llc->sllc_family = AF_LLC;
++	llc->sllc_arphrd = skb->dev->type;
++	llc->sllc_test   = 0;
++	llc->sllc_xid    = 0;
++	llc->sllc_ua     = 0;
++	llc->sllc_dsap	 = LLC_UI_SK(sk)->sap->laddr.lsap;
++	memcpy(llc->sllc_dmac, LLC_SK(prim_data->sk)->laddr.mac, IFHWADDRLEN);
++	llc->sllc_ssap = LLC_SK(prim_data->sk)->daddr.lsap;
++	memcpy(llc->sllc_smac, LLC_SK(prim_data->sk)->daddr.mac, IFHWADDRLEN);
++	/* queue skb to the user. */
++	if (sock_queue_rcv_skb(sk, skb2))
++		kfree_skb(skb2);
++out_put:
++	sock_put(sk);
++out:;
++}
++
++/**
++ *	llc_ui_ind_disc - handle DISC indication
++ *	@prim: Primitive block provided by the llc layer.
++ *
++ *	handle DISC indication.
++ */
++static void llc_ui_ind_disc(struct llc_prim_if_block *prim)
++{
++	struct llc_prim_disc *prim_data = &prim->data->disc;
++	struct sock *sk = llc_ui_find_sk_by_link_no(prim->sap, prim_data->link);
++
++	if (!sk)
++		goto out;
++	if (sk->type != SOCK_STREAM || sk->state != TCP_ESTABLISHED)
++		goto out_put;
++	LLC_UI_SK(sk)->core_sk = NULL;
++	sk->socket->state  = SS_UNCONNECTED;
++	sk->state	   = TCP_CLOSE;
++	if (!sk->dead) {
++		sk->state_change(sk);
++		sk->dead = 1;
++	}
++out_put:
++	sock_put(sk);
++out:;
++}
++
++/**
 + *	llc_ui_indicate - LLC user interface hook into the LLC layer.
-+ *	@prim: Primative block provided by the llc layer.
++ *	@prim: Primitive block provided by the llc layer.
 + *
 + *	LLC user interface hook into the LLC layer, every llc_ui sap references
 + *	this function as its indicate handler.
@@ -15619,194 +15869,98 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 + */
 +static int llc_ui_indicate(struct llc_prim_if_block *prim)
 +{
-+	struct sockaddr_llc *llc;
-+	struct sk_buff *skb, *skb2;
-+	struct sock *sk;
-+
 +	switch (prim->prim) {
-+		case LLC_TEST_PRIM: {
-+			struct llc_prim_test *prim_data =
-+					     (struct llc_prim_test *)prim->data;
-+			sk = llc_ui_find_socket_by_addr(&prim_data->daddr);
-+			if (!sk)
-+				goto out;
-+			skb = prim->data->test.skb;
-+			skb2 = skb_copy_expand(skb, sizeof(struct sockaddr_llc),
-+					       0, GFP_ATOMIC);
-+			if (!skb2)
-+				goto out;
-+			/* save primitive for use by the user. (pulled in
-+			 * recvmsg) */
-+			llc = (struct sockaddr_llc *)
-+				    skb_push(skb2, sizeof(struct sockaddr_llc));
-+			llc->sllc_family = AF_LLC;
-+			llc->sllc_arphrd = skb->dev->type;
-+			llc->sllc_test   = 1;
-+			llc->sllc_xid    = 0;
-+			llc->sllc_ua     = 0;
-+			llc->sllc_dsap = prim_data->daddr.lsap;
-+			memcpy(llc->sllc_dmac, prim_data->daddr.mac,
-+			       IFHWADDRLEN);
-+			llc->sllc_ssap = prim_data->saddr.lsap;
-+			memcpy(llc->sllc_smac, prim_data->saddr.mac,
-+			       IFHWADDRLEN);
-+			/* queue skb to the user. */
-+			skb2->sk = sk;
-+			if (sock_queue_rcv_skb(sk, skb2) < 0)
-+				kfree_skb(skb2);
-+			break;
-+		}
-+		/* has no skb attched. */
-+		case LLC_XID_PRIM: {
-+			struct llc_prim_xid *prim_data =
-+					      (struct llc_prim_xid *)prim->data;
-+			sk = llc_ui_find_socket_by_addr(&prim_data->daddr);
-+			if (!sk)
-+				goto out;
-+			skb2 = alloc_skb(sizeof(struct sockaddr_llc) + 1,
-+					 GFP_ATOMIC);
-+			if (!skb2)
-+				goto out;
-+			/* save primitive for use by the user. (pulled in
-+			 * recvmsg) */
-+			llc = (struct sockaddr_llc *)
-+				    skb_push(skb2, sizeof(struct sockaddr_llc));
-+			llc->sllc_family = AF_LLC;
-+			llc->sllc_arphrd = 0;
-+			llc->sllc_test   = 0;
-+			llc->sllc_xid    = 1;
-+			llc->sllc_ua     = 0;
-+			llc->sllc_dsap = prim_data->daddr.lsap;
-+			memcpy(llc->sllc_dmac, prim_data->daddr.mac,
-+			       IFHWADDRLEN);
-+			llc->sllc_ssap = prim_data->saddr.lsap;
-+			memcpy(llc->sllc_smac, prim_data->saddr.mac,
-+			       IFHWADDRLEN);
-+			/* queue skb to the user. */
-+			skb2->sk = sk;
-+			if (sock_queue_rcv_skb(sk, skb2) < 0)
-+				kfree_skb(skb2);
-+			break;
-+		}
-+		case LLC_DATAUNIT_PRIM: {
-+			struct llc_prim_unit_data *prim_data =
-+					(struct llc_prim_unit_data *)prim->data;
-+			sk = llc_ui_find_socket_by_addr(&prim_data->daddr);
-+			if (!sk)
-+				goto out;
-+			skb = prim->data->udata.skb;
-+			skb2 = skb_copy_expand(skb, sizeof(struct sockaddr_llc),
-+					       0, GFP_ATOMIC);
-+			if (!skb2)
-+				goto out;
-+			/* save primitive for use by the user. (pulled in
-+			 * recvmsg) */
-+			llc = (struct sockaddr_llc *)
-+				    skb_push(skb2, sizeof(struct sockaddr_llc));
-+			llc->sllc_family = AF_LLC;
-+			llc->sllc_arphrd = skb->dev->type;
-+			llc->sllc_test   = 0;
-+			llc->sllc_xid    = 0;
-+			llc->sllc_ua     = 1;
-+			llc->sllc_dsap = prim_data->daddr.lsap;
-+			memcpy(llc->sllc_dmac, prim_data->daddr.mac,
-+			       IFHWADDRLEN);
-+			llc->sllc_ssap = prim_data->saddr.lsap;
-+			memcpy(llc->sllc_smac, prim_data->saddr.mac,
-+			       IFHWADDRLEN);
-+			/* queue skb to the user. */
-+			skb2->sk = sk;
-+			if (sock_queue_rcv_skb(sk, skb2) < 0)
-+				kfree_skb(skb2);
-+			break;
-+		}
-+		case LLC_CONN_PRIM: {
-+			struct llc_prim_connect *prim_data =
-+					 (struct llc_prim_connect *) prim->data;
-+			LLC_SK(prim_data->sk)->local_dl_addr.lsap
-+				= prim->sap->local_dl_addr.lsap;
-+			sk = llc_ui_find_socket_by_addr(&LLC_SK(prim_data->sk)->local_dl_addr);
-+			if (!sk)
-+				goto out;
-+			if (sk->type != SOCK_STREAM || sk->state != TCP_LISTEN)
-+				goto out;
-+			if (prim->data->conn.status)
-+				goto out; /* bad status. */
-+			/* give this connection a link number. */
-+			LLC_SK(prim_data->sk)->link =
-+				llc_ui_next_link_no(LLC_SK(prim_data->sk)->local_dl_addr.lsap);
-+			skb2 = alloc_skb(0, GFP_ATOMIC);
-+			if (!skb2)
-+				goto out;
-+			skb2->sk = prim_data->sk;
-+			skb_queue_tail(&sk->receive_queue, skb2);
-+			sk->state_change(sk);
-+			break;
-+		}
-+		case LLC_DATA_PRIM: {
-+			struct llc_prim_data *prim_data =
-+					     (struct llc_prim_data *)prim->data;
-+			sk = llc_ui_find_socket_by_link_no(prim->sap,
-+							   prim_data->link);
-+			if (!sk)
-+				goto out;
-+			if (sk->type != SOCK_STREAM ||
-+			    sk->state != TCP_ESTABLISHED)
-+				goto out;
-+			skb = prim->data->data.skb;
-+			skb2 = skb_copy_expand(skb, sizeof(struct sockaddr_llc),
-+					       0, GFP_ATOMIC);
-+			if (!skb2)
-+				goto out;
-+			/* save primitive for use by the user. (pulled in
-+			 * recvmsg) */
-+			llc = (struct sockaddr_llc *)
-+				    skb_push(skb2, sizeof(struct sockaddr_llc));
-+			llc->sllc_family = AF_LLC;
-+			llc->sllc_arphrd = skb->dev->type;
-+			llc->sllc_test   = 0;
-+			llc->sllc_xid    = 0;
-+			llc->sllc_ua     = 0;
-+			llc->sllc_dsap	 = LLC_UI_SK(sk)->sap->local_dl_addr.lsap;
-+			memcpy(llc->sllc_dmac,
-+			       LLC_SK(prim_data->sk)->local_dl_addr.mac,
-+			       IFHWADDRLEN);
-+			llc->sllc_ssap =
-+				     LLC_SK(prim_data->sk)->remote_dl_addr.lsap;
-+			memcpy(llc->sllc_smac,
-+			       LLC_SK(prim_data->sk)->remote_dl_addr.mac,
-+			       IFHWADDRLEN);
-+			/* queue skb to the user. */
-+			skb2->sk = sk;
-+			if (sock_queue_rcv_skb(sk, skb2) < 0)
-+				kfree_skb(skb2);
-+			break;
-+		}
-+		case LLC_DISC_PRIM: {
-+			struct llc_prim_disconnect *prim_data =
-+				       (struct llc_prim_disconnect *)prim->data;
-+			sk = llc_ui_find_socket_by_link_no(prim->sap,
-+							   prim_data->link);
-+			if (!sk)
-+				goto out;
-+			if (sk->type != SOCK_STREAM ||
-+			    sk->state != TCP_ESTABLISHED)
-+				goto out;
-+			LLC_UI_SK(sk)->core_sk = NULL;
-+			sk->socket->state  = SS_UNCONNECTED;
-+			sk->state	   = TCP_CLOSE;
-+			if (!sk->dead) {
-+				sk->state_change(sk);
-+				sk->dead = 1;
-+			}
-+			break;
-+		}
++		case LLC_TEST_PRIM:
++			llc_ui_ind_test(prim);		break;
++		case LLC_XID_PRIM:
++			llc_ui_ind_xid(prim);		break;
++		case LLC_DATAUNIT_PRIM:
++			llc_ui_ind_dataunit(prim);	break;
++		case LLC_CONN_PRIM:
++			llc_ui_ind_conn(prim);		break;
++		case LLC_DATA_PRIM:
++			llc_ui_ind_data(prim);		break;
++		case LLC_DISC_PRIM:
++			llc_ui_ind_disc(prim);		break;
 +		case LLC_RESET_PRIM:
 +		case LLC_FLOWCONTROL_PRIM:
-+		default:
-+			break;
++		default:				break;
 +	}
-+out:	return 0;
++	return 0;
++}
++
++/**
++ *	llc_ui_conf_conn - handle CONN confirm.
++ *	@prim: Primitive block provided by the llc layer.
++ *
++ *	handle CONN confirm.
++ */
++static void llc_ui_conf_conn(struct llc_prim_if_block *prim)
++{
++	struct llc_prim_conn *prim_data = &prim->data->conn;
++	struct sock *sk = llc_ui_find_sk_by_addr(&LLC_SK(prim_data->sk)->laddr,
++						 prim_data->dev);
++
++	if (!sk)
++		goto out;
++	if (sk->type != SOCK_STREAM || sk->state != TCP_SYN_SENT)
++		goto out_put;
++	if (!prim->data->conn.status) {
++		sk->socket->state      = SS_CONNECTED;
++		sk->state	       = TCP_ESTABLISHED;
++		LLC_UI_SK(sk)->core_sk = prim_data->sk;
++	} else {
++		sk->socket->state      = SS_UNCONNECTED;
++		sk->state	       = TCP_CLOSE;
++		LLC_UI_SK(sk)->core_sk = NULL;
++	}
++	sk->state_change(sk);
++	wake_up_interruptible(sk->sleep);
++out_put:
++	sock_put(sk);
++out:;
++}
++
++/**
++ *	llc_ui_conf_data - handle DATA confirm.
++ *	@prim: Primitive block provided by the llc layer.
++ *
++ *	handle DATA confirm.
++ */
++static void llc_ui_conf_data(struct llc_prim_if_block *prim)
++{
++	struct llc_prim_data *prim_data = &prim->data->data;
++	struct sock *sk = llc_ui_find_sk_by_link_no(prim->sap, prim_data->link);
++
++	if (sk) {
++		wake_up(sk->sleep);
++		sock_put(sk);
++	}
++}
++
++/**
++ *	llc_ui_conf_disc - handle DISC confirm.
++ *	@prim: Primitive block provided by the llc layer.
++ *
++ *	handle DISC confirm.
++ */
++static void llc_ui_conf_disc(struct llc_prim_if_block *prim)
++{
++	struct llc_prim_disc *prim_data = &prim->data->disc;
++	struct sock *sk = llc_ui_find_sk_by_link_no(prim->sap, prim_data->link);
++
++	if (!sk)
++		goto out;
++	if (sk->type != SOCK_STREAM || sk->state != TCP_CLOSING)
++		goto out_put;
++	LLC_UI_SK(sk)->core_sk = NULL;
++	sk->socket->state      = SS_UNCONNECTED;
++	sk->state	       = TCP_CLOSE;
++	sk->state_change(sk);
++	wake_up_interruptible(sk->sleep);
++out_put:
++	sock_put(sk);
++out:;
 +}
 +
 +/**
@@ -15819,58 +15973,20 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 + */
 +static int llc_ui_confirm(struct llc_prim_if_block *prim)
 +{
-+	struct sock *sk;
-+
 +	switch (prim->prim) {
-+		case LLC_CONN_PRIM: {
-+			struct llc_prim_connect *prim_data =
-+					  (struct llc_prim_connect *)prim->data;
-+			sk = llc_ui_find_socket_by_addr(
-+					&LLC_SK(prim_data->sk)->local_dl_addr);
-+			if (!sk)
-+				goto out;
-+			if (sk->type != SOCK_STREAM ||
-+			    sk->state != TCP_SYN_SENT)
-+				goto out;
-+			if (!prim->data->conn.status) {
-+				sk->socket->state   = SS_CONNECTED;
-+				sk->state	    = TCP_ESTABLISHED;
-+				LLC_UI_SK(sk)->core_sk = prim_data->sk;
-+			} else {
-+				sk->socket->state   = SS_UNCONNECTED;
-+				sk->state	    = TCP_CLOSE;
-+				LLC_UI_SK(sk)->core_sk = NULL;
-+			}
-+			sk->state_change(sk);
-+			wake_up_interruptible(sk->sleep);
-+			break;
-+		}
++		case LLC_CONN_PRIM:
++			llc_ui_conf_conn(prim);		break;
 +		case LLC_DATA_PRIM:
-+			break;
-+		case LLC_DISC_PRIM: {
-+			struct llc_prim_disconnect *prim_data =
-+				       (struct llc_prim_disconnect *)prim->data;
-+			sk = llc_ui_find_socket_by_link_no(prim->sap,
-+							   prim_data->link);
-+			if (!sk)
-+				goto out;
-+			if (sk->type != SOCK_STREAM || sk->state != TCP_CLOSING)
-+				goto out;
-+			LLC_UI_SK(sk)->core_sk = NULL;
-+			sk->socket->state   = SS_UNCONNECTED;
-+			sk->state	    = TCP_CLOSE;
-+			sk->state_change(sk);
-+			wake_up_interruptible(sk->sleep);
-+			break;
-+		}
-+		case LLC_RESET_PRIM:
-+			break;
++			llc_ui_conf_data(prim);		break;
++		case LLC_DISC_PRIM:
++			llc_ui_conf_disc(prim);		break;
++		case LLC_RESET_PRIM:			break;
 +		default:
 +			printk(KERN_ERR __FUNCTION__ ": unknown prim %d\n",
 +			       prim->prim);
 +			break;
 +	}
-+out:	return 0;
++	return 0;
 +}
 +
 +#ifdef CONFIG_PROC_FS
@@ -15889,18 +16005,20 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +	off_t pos = 0;
 +	off_t begin = 0;
 +	struct sock *s;
-+	int len = sprintf(buffer, "SocketID SKtype local_mac_sap          "
++	int len = sprintf(buffer, "SocketID SKt Mc local_mac_sap          "
 +				  "remote_mac_sap         tx_queue "
 +				  "rx_queue st uid link_no\n");
 +
 +	/* Output the LLC socket data for the /proc filesystem */
-+	spin_lock_bh(&llc_ui_sockets_lock);
++	read_lock_bh(&llc_ui_sockets_lock);
 +	for (s = llc_ui_sockets; s; s = s->next) {
 +		struct llc_ui_opt *llc = LLC_UI_SK(s);
 +		len += sprintf(buffer + len, "%p ", s);
-+		len += sprintf(buffer + len, "%02X     ", s->type);
++		len += sprintf(buffer + len, "%02X  ", s->type);
++		len += sprintf(buffer + len, "%02X ",
++			       !llc_ui_mac_null(llc->addr.sllc_mmac));
 +		if (llc->sap) {
-+			if (llc->dev)
++			if (llc->dev && llc_ui_mac_null(llc->addr.sllc_mmac))
 +				len += sprintf(buffer + len,
 +					"%02X:%02X:%02X:%02X:%02X:%02X",
 +					llc->dev->dev_addr[0],
@@ -15909,12 +16027,23 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +					llc->dev->dev_addr[3],
 +					llc->dev->dev_addr[4],
 +					llc->dev->dev_addr[5]);
-+			else
-+				len += sprintf(buffer + len,
-+					"%02X:%02X:%02X:%02X:%02X:%02X",
-+					0, 0, 0, 0, 0, 0);
++			else {
++				if (!llc_ui_mac_null(llc->addr.sllc_mmac))
++					len += sprintf(buffer + len,
++						"%02X:%02X:%02X:%02X:%02X:%02X",
++						llc->addr.sllc_mmac[0],
++						llc->addr.sllc_mmac[1],
++						llc->addr.sllc_mmac[2],
++						llc->addr.sllc_mmac[3],
++						llc->addr.sllc_mmac[4],
++						llc->addr.sllc_mmac[5]);
++				else
++					len += sprintf(buffer + len,
++						"%02X:%02X:%02X:%02X:%02X:%02X",
++						0, 0, 0, 0, 0, 0);
++			}
 +			len += sprintf(buffer + len, "@0x%02X ",
-+					llc->sap->local_dl_addr.lsap);
++					llc->sap->laddr.lsap);
 +		} else
 +			len += sprintf(buffer + len,
 +				"%02X:%02X:%02X:%02X:%02X:%02X@0x%02X ",
@@ -15922,13 +16051,13 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +		if (llc->core_sk) {
 +			len += sprintf(buffer + len,
 +				"%02X:%02X:%02X:%02X:%02X:%02X@0x%02X ",
-+				LLC_SK(llc->core_sk)->remote_dl_addr.mac[0],
-+				LLC_SK(llc->core_sk)->remote_dl_addr.mac[1],
-+				LLC_SK(llc->core_sk)->remote_dl_addr.mac[2],
-+				LLC_SK(llc->core_sk)->remote_dl_addr.mac[3],
-+				LLC_SK(llc->core_sk)->remote_dl_addr.mac[4],
-+				LLC_SK(llc->core_sk)->remote_dl_addr.mac[5],
-+				LLC_SK(llc->core_sk)->remote_dl_addr.lsap);
++				LLC_SK(llc->core_sk)->daddr.mac[0],
++				LLC_SK(llc->core_sk)->daddr.mac[1],
++				LLC_SK(llc->core_sk)->daddr.mac[2],
++				LLC_SK(llc->core_sk)->daddr.mac[3],
++				LLC_SK(llc->core_sk)->daddr.mac[4],
++				LLC_SK(llc->core_sk)->daddr.mac[5],
++				LLC_SK(llc->core_sk)->daddr.lsap);
 +		} else
 +			len += sprintf(buffer + len,
 +					"%02X:%02X:%02X:%02X:%02X:%02X@0x%02X ",
@@ -15953,7 +16082,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +		if (pos > offset + length)      /* We have dumped enough */
 +			break;
 +	}
-+	spin_unlock_bh(&llc_ui_sockets_lock);
++	read_unlock_bh(&llc_ui_sockets_lock);
 +
 +	/* The data in question runs from begin to begin + len */
 +	*start = buffer + offset - begin;       /* Start of wanted data */
@@ -16014,7 +16143,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.4
 +}
 Index: kernel-acme/net/llc/llc_stat.c
 diff -u /dev/null kernel-acme/net/llc/llc_stat.c:1.1.2.4
---- /dev/null	Mon Nov 12 00:14:36 2001
+--- /dev/null	Thu Nov 22 23:55:00 2001
 +++ kernel-acme/net/llc/llc_stat.c	Sun Nov 11 15:29:45 2001
 @@ -0,0 +1,207 @@
 +/*
@@ -16226,7 +16355,7 @@ diff -u /dev/null kernel-acme/net/llc/llc_stat.c:1.1.2.4
 +};
 Index: kernel-acme/net/netbeui/Makefile
 diff -u /dev/null kernel-acme/net/netbeui/Makefile:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:41 2001
+--- /dev/null	Thu Nov 22 23:55:00 2001
 +++ kernel-acme/net/netbeui/Makefile	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,22 @@
 +#
@@ -16253,7 +16382,7 @@ diff -u /dev/null kernel-acme/net/netbeui/Makefile:1.1.8.1
 +include $(TOPDIR)/Rules.make
 Index: kernel-acme/net/netbeui/af_netb.c
 diff -u /dev/null kernel-acme/net/netbeui/af_netb.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:41 2001
+--- /dev/null	Thu Nov 22 23:55:00 2001
 +++ kernel-acme/net/netbeui/af_netb.c	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,119 @@
 +/*
@@ -16377,7 +16506,7 @@ diff -u /dev/null kernel-acme/net/netbeui/af_netb.c:1.1.8.1
 +}
 Index: kernel-acme/net/netbeui/config.c
 diff -u /dev/null kernel-acme/net/netbeui/config.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:41 2001
+--- /dev/null	Thu Nov 22 23:55:00 2001
 +++ kernel-acme/net/netbeui/config.c	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,408 @@
 +/*
@@ -16790,7 +16919,7 @@ diff -u /dev/null kernel-acme/net/netbeui/config.c:1.1.8.1
 +}
 Index: kernel-acme/net/netbeui/dextab.c
 diff -u /dev/null kernel-acme/net/netbeui/dextab.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:41 2001
+--- /dev/null	Thu Nov 22 23:55:00 2001
 +++ kernel-acme/net/netbeui/dextab.c	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,244 @@
 +/*
@@ -17039,7 +17168,7 @@ diff -u /dev/null kernel-acme/net/netbeui/dextab.c:1.1.8.1
 +}
 Index: kernel-acme/net/netbeui/dgram_serve.c
 diff -u /dev/null kernel-acme/net/netbeui/dgram_serve.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:41 2001
+--- /dev/null	Thu Nov 22 23:55:00 2001
 +++ kernel-acme/net/netbeui/dgram_serve.c	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,601 @@
 +/*
@@ -17644,10 +17773,10 @@ diff -u /dev/null kernel-acme/net/netbeui/dgram_serve.c:1.1.8.1
 +drop:	kfree_skb(skb);
 +}
 Index: kernel-acme/net/netbeui/llc_supp.c
-diff -u /dev/null kernel-acme/net/netbeui/llc_supp.c:1.1.8.2
---- /dev/null	Mon Nov 12 00:14:41 2001
-+++ kernel-acme/net/netbeui/llc_supp.c	Sun Nov 11 15:29:46 2001
-@@ -0,0 +1,1467 @@
+diff -u /dev/null kernel-acme/net/netbeui/llc_supp.c:1.1.8.5
+--- /dev/null	Thu Nov 22 23:55:00 2001
++++ kernel-acme/net/netbeui/llc_supp.c	Wed Nov 21 00:19:21 2001
+@@ -0,0 +1,1461 @@
 +/*
 + * llc_supp.c - Contains three category of functions
 + * 			1- functions that implement Link Service State Machine
@@ -18455,8 +18584,7 @@ diff -u /dev/null kernel-acme/net/netbeui/llc_supp.c:1.1.8.2
 + */
 +static void nbll_get_connect_indicate(struct llc_prim_if_block *prim)
 +{
-+	struct llc_prim_connect *prim_data =
-+					  (struct llc_prim_connect *)prim->data;
++	struct llc_prim_conn *prim_data = &prim->data->conn;
 +	link_t *nb_link = nbll_find_link(prim_data->dev, prim_data->saddr.mac);
 +
 +	if (!nb_link) {
@@ -18473,8 +18601,7 @@ diff -u /dev/null kernel-acme/net/netbeui/llc_supp.c:1.1.8.2
 +	}
 +	if (!nb_link || nb_link->state == NETBEUI_LINK_INITIAL) {
 +		/* Request link disconnection */
-+		((struct llc_prim_disconnect *)(prim->data))->sk =
-+								prim_data->sk;
++		prim->data->disc.sk = prim_data->sk;
 +		prim->prim = LLC_DISC_PRIM;
 +		prim->sap  = netbeui_sap;
 +		netbeui_sap->req(prim);
@@ -18503,8 +18630,7 @@ diff -u /dev/null kernel-acme/net/netbeui/llc_supp.c:1.1.8.2
 + */
 +static void nbll_get_connect_confirm(struct llc_prim_if_block *prim)
 +{
-+	struct llc_prim_connect *prim_data =
-+					(struct llc_prim_connect *)prim->data;
++	struct llc_prim_conn *prim_data = &prim->data->conn;
 +	link_t *nb_link = link_table_entry(prim_data->link);
 +
 +	nbll_link_hold(nb_link);
@@ -18537,11 +18663,12 @@ diff -u /dev/null kernel-acme/net/netbeui/llc_supp.c:1.1.8.2
 + */
 +static int nbll_get_data_confirm(struct llc_prim_if_block *prim)
 +{
-+	struct llc_prim_data *prim_data = (struct llc_prim_data *)prim->data;
++	struct llc_prim_data *prim_data = &prim->data->data;
 +	link_t *nb_link = link_table_entry(prim_data->link);
 +	struct sk_buff *skb;
 +	int rc = -EBUSY;
 +
++	printk(KERN_INFO __FUNCTION__ ": enter\n");
 +	nbll_link_hold(nb_link);
 +	while ((skb = __skb_dequeue(&nb_link->skbq)) != NULL)
 +		if (nbll_isend_link(nb_link->dev, nb_link->llc_handle,
@@ -18563,8 +18690,7 @@ diff -u /dev/null kernel-acme/net/netbeui/llc_supp.c:1.1.8.2
 + */
 +static void nbll_get_disconnect_indicate(struct llc_prim_if_block *prim)
 +{
-+	link_t *nb_link = link_table_entry(((struct llc_prim_disconnect *)
-+							prim->data)->link);
++	link_t *nb_link = link_table_entry(prim->data->disc.link);
 +	nbll_link_hold(nb_link);
 +	nbll_handle_event(NETBEUI_LINK_DISC_INDICATE, nb_link);
 +	nbll_link_put(nb_link);
@@ -18603,8 +18729,7 @@ diff -u /dev/null kernel-acme/net/netbeui/llc_supp.c:1.1.8.2
 + */
 +static void nbll_get_reset_indicate(struct llc_prim_if_block *prim)
 +{
-+	link_t *nb_link = link_table_entry(((struct llc_prim_reset *)
-+							prim->data)->link);
++	link_t *nb_link = link_table_entry(prim->data->res.link);
 +
 +	nbll_link_hold(nb_link);
 +	nbll_handle_event(NETBEUI_LINK_RESET_INDICATE, nb_link);
@@ -18971,16 +19096,14 @@ diff -u /dev/null kernel-acme/net/netbeui/llc_supp.c:1.1.8.2
 +	switch (prim->prim) {
 +		case LLC_DATAUNIT_PRIM:
 +			skb = prim->data->udata.skb;
-+			nbll_deliver_datagram(skb,
-+				       (struct llc_prim_unit_data *)prim->data);
++			nbll_deliver_datagram(skb, &prim->data->udata);
 +			break;
 +		case LLC_CONN_PRIM:
 +			nbll_get_connect_indicate(prim);
 +			break;
 +		case LLC_DATA_PRIM:
 +			skb = prim->data->data.skb;
-+			nbll_deliver_packet(skb,
-+					    (struct llc_prim_data *)prim->data);
++			nbll_deliver_packet(skb, &prim->data->data);
 +			break;
 +		case LLC_DISC_PRIM:
 +			nbll_get_disconnect_indicate(prim);
@@ -19117,7 +19240,7 @@ diff -u /dev/null kernel-acme/net/netbeui/llc_supp.c:1.1.8.2
 +module_exit(netbeui_exit);
 Index: kernel-acme/net/netbeui/name_serve.c
 diff -u /dev/null kernel-acme/net/netbeui/name_serve.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:41 2001
+--- /dev/null	Thu Nov 22 23:55:00 2001
 +++ kernel-acme/net/netbeui/name_serve.c	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,898 @@
 +/*
@@ -20020,7 +20143,7 @@ diff -u /dev/null kernel-acme/net/netbeui/name_serve.c:1.1.8.1
 +}
 Index: kernel-acme/net/netbeui/nb_common.c
 diff -u /dev/null kernel-acme/net/netbeui/nb_common.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:42 2001
+--- /dev/null	Thu Nov 22 23:55:00 2001
 +++ kernel-acme/net/netbeui/nb_common.c	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,134 @@
 +/*
@@ -20159,7 +20282,7 @@ diff -u /dev/null kernel-acme/net/netbeui/nb_common.c:1.1.8.1
 +}
 Index: kernel-acme/net/netbeui/proc.c
 diff -u /dev/null kernel-acme/net/netbeui/proc.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:42 2001
+--- /dev/null	Thu Nov 22 23:55:00 2001
 +++ kernel-acme/net/netbeui/proc.c	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,281 @@
 +/*
@@ -20445,7 +20568,7 @@ diff -u /dev/null kernel-acme/net/netbeui/proc.c:1.1.8.1
 +}
 Index: kernel-acme/net/netbeui/query_serve.c
 diff -u /dev/null kernel-acme/net/netbeui/query_serve.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:42 2001
+--- /dev/null	Thu Nov 22 23:55:00 2001
 +++ kernel-acme/net/netbeui/query_serve.c	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,778 @@
 +/*
@@ -21228,7 +21351,7 @@ diff -u /dev/null kernel-acme/net/netbeui/query_serve.c:1.1.8.1
 +}
 Index: kernel-acme/net/netbeui/session_serve.c
 diff -u /dev/null kernel-acme/net/netbeui/session_serve.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:42 2001
+--- /dev/null	Thu Nov 22 23:55:01 2001
 +++ kernel-acme/net/netbeui/session_serve.c	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,2821 @@
 +/*
@@ -24054,7 +24177,7 @@ diff -u /dev/null kernel-acme/net/netbeui/session_serve.c:1.1.8.1
 +}
 Index: kernel-acme/net/netbeui/sock_dgram.c
 diff -u /dev/null kernel-acme/net/netbeui/sock_dgram.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:43 2001
+--- /dev/null	Thu Nov 22 23:55:01 2001
 +++ kernel-acme/net/netbeui/sock_dgram.c	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,458 @@
 +/*
@@ -24517,7 +24640,7 @@ diff -u /dev/null kernel-acme/net/netbeui/sock_dgram.c:1.1.8.1
 +SOCKOPS_WRAP(nbso_dgram_proto, PF_NETBEUI);
 Index: kernel-acme/net/netbeui/sock_name.c
 diff -u /dev/null kernel-acme/net/netbeui/sock_name.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:43 2001
+--- /dev/null	Thu Nov 22 23:55:01 2001
 +++ kernel-acme/net/netbeui/sock_name.c	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,156 @@
 +/*
@@ -24678,7 +24801,7 @@ diff -u /dev/null kernel-acme/net/netbeui/sock_name.c:1.1.8.1
 +SOCKOPS_WRAP(nbso_name_proto, PF_NETBEUI);
 Index: kernel-acme/net/netbeui/sock_session.c
 diff -u /dev/null kernel-acme/net/netbeui/sock_session.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:43 2001
+--- /dev/null	Thu Nov 22 23:55:01 2001
 +++ kernel-acme/net/netbeui/sock_session.c	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,864 @@
 +/*
@@ -25547,7 +25670,7 @@ diff -u /dev/null kernel-acme/net/netbeui/sock_session.c:1.1.8.1
 +SOCKOPS_WRAP(nbso_session_proto, PF_NETBEUI);
 Index: kernel-acme/net/netbeui/status_serve.c
 diff -u /dev/null kernel-acme/net/netbeui/status_serve.c:1.1.8.1
---- /dev/null	Mon Nov 12 00:14:43 2001
+--- /dev/null	Thu Nov 22 23:55:02 2001
 +++ kernel-acme/net/netbeui/status_serve.c	Tue Nov  6 20:13:49 2001
 @@ -0,0 +1,767 @@
 +/*

@@ -1,18 +1,21 @@
+** llc core **
+- test frames over ~70 bytes will cause an skb_put oops. (need dynamic
+  allocation of test response frames).
+- client network layer needs to be able to tx test and xid rsp.
+- client network layer needs to be able to rx test and xid cmd.
+
 ** pf_llc **
-- test frame w/ dsap causes kernel panic on remote linux-llc machine.
-- recv is broken when whole llc frame is not read (send/recv skb queues).
-- currently no way to have multiple smac+ssap connections.
+- llc2 recvmsg will lose data if whole frame is not read.
+- test.. test.. test..
 
 ** lar **
-- finish lar protocol testing.
-- merge llcdb into lardb to allow static and dynamic llc host name resolution.
+- finish larhosts.xml to allow static lar host name resolution.
+- check all lar code for memory leaks.
+- wildcard support.
+- use ebcdic.
+- check cached entries before network searches.
+- updated cached entry when newer information arrives.
+- enhance advertise/solicit packet support.
 
 ** dlsw **
 - continue coding base.
-- test against real equipment once it arrives.
-
-** docs **
-- update linux-llc web page.
-- write af_llc socket man page.
-- write howto use llc doc using the important parts of the email discusions
-  that happended durning the last week or so.

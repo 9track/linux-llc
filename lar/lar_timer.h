@@ -1,4 +1,4 @@
-/* dlsw_monitor.h: header file.
+/* lar_timer.h: Lan address resolution timer defintions.
  *
  * Written by Jay Schulist <jschlst@samba.org>
  * Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
@@ -13,8 +13,13 @@
  * This material is provided "as is" and at no charge.
  */
 
-#ifndef _DLSW_MONITOR_H
-#define _DLSW_MONITOR_H
+#ifndef _LAR_TIMER_H
+#define _LAR_TIMER_H
 
-extern int dlsw_monitor_process_data(int fd);
-#endif	/* _DLSW_MONITOR_H */
+typedef void (*timerproc_t)(void *data);
+
+extern void *timer_start(short one_shot, unsigned long value, 
+	timerproc_t proc, void *data);
+extern int timer_stop(void *timer);
+
+#endif /* _LAR_TIMER_H */

@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to create configure.
 
 AC_INIT(lard.c)
-AM_INIT_AUTOMAKE(lar, 0.1.13)
+AM_INIT_AUTOMAKE(lar, 0.1.14)
 
 AC_PROG_CC
 AC_EXEEXT

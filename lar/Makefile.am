@@ -10,16 +10,18 @@ sbin_PROGRAMS = lard llookup
 liblar_la_LDFLAGS = -Wc,-nostartfiles -release $(VERSION)
 liblar_la_SOURCES = lar.c lar_unix.c
 
-lard_LDADD = -llar
-lard_SOURCES = lard.c lard_load.c lar_list.c
-
 llookup_LDADD = -llar
 llookup_SOURCES = llookup.c
 
-include_HEADERS = lar.h
-noinst_HEADERS = lard.h lard_load.h llookup.h lar_unix.h lar_list.h
+lard_LDADD = -llar
+lard_SOURCES = lard.c lard_load.c lar_list.c lar_timer.c \
+	lar_vector.c lar_hosts.c
 
-man_MANS =
+include_HEADERS = lar.h
+noinst_HEADERS = lard.h lard_load.h llookup.h lar_unix.h lar_list.h \
+	lar_timer.h lar_vector.h
+
+man_MANS = lar.3 lard.8 llookup.8
 
 $(OBJECTS): libtool
 libtool: $(LIBTOOL_DEPS)

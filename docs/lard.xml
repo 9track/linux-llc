@@ -4,6 +4,7 @@
   <lar:global>
     <lar:debuglevel>1</lar:debuglevel>
     <lar:lsap>0xDC</lar:lsap>
+    <lar:timetolive>120</lar:timetolive>
   </lar:global>
   <lar:listen>
     <lar:iface>eth0</lar:iface>
@@ -13,6 +14,10 @@
     <lar:iface>eth1</lar:iface>
     <lar:igivname>on</lar:igivname>
   </lar:listen>
+  <lar:timer>
+    <lar:name>garbage</lar:name>
+    <lar:secs>10</lar:secs>
+  </lar:timer>
   <lar:timer>
     <lar:name>find</lar:name>
     <lar:secs>9</lar:secs>

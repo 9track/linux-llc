@@ -1,7 +1,7 @@
 /* lardd_load.h: loader header file.
  *
- * Author:
- * Jay Schulist         <jschlst@samba.org>
+ * Written by Jay Schulist <jschlst@samba.org>
+ * Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -47,6 +47,7 @@ typedef struct {
         int debug_level;
 
 	u_int8_t lsap;
+	int timetolive;
 
 	struct lar_linfo *ll;
 	struct lar_tinfo *tl;
@@ -56,5 +57,5 @@ extern int load_config_file(char *cfile);
 extern int load_config(global *ginfo);
 extern int lar_load_listen(struct lar_linfo *listen);
 extern int lar_load_unix(void);
-extern int lar_load_timer(void);
+extern int lar_load_timer(struct lar_tinfo *t);
 #endif	/* _LARD_LOAD_H */

@@ -1,0 +1,21 @@
+Some LLC applications expect to be able to accept new connections and 
+transfer data on the same SAP. With LLC sockets this is not very easily done.
+
+Here is my understanding of what you would like to do:
+
+local:                          remote:
+00:00:00:00:00:00@0x50    -->   01:02:03:04:05:06@0x50
+12:12:12:12:12:12@0x50   <--    24:24:24:24:24:24@0x50
+
+Now what this means is that you need to have the same socket (SAP) in a
+LISTEN state and a CONNECTED state on each machine. With sockets this is
+not possible, as no data can be transfered over a socket in the LISTEN
+state. 
+
+It is my understanding that this is how TCP works too. I don't think it is
+all that bad to make the user application open a listen SAP and another
+SAP for data transfer as a benefit of the socket API for LLC.
+
+Please let me know what you think and if I am not seeing some part of this
+problem. Also if you are aware of a protocol that uses llc which will
+*not* work because of this let me know.

@@ -1,4 +1,4 @@
-/* llcdb.c: generic functions to get host <-> mac mapping.
+/* lar_hosts.c: generic functions to get static mac to host mapping.
  * 
  * Written by Jay Schulist <jschlst@samba.org>
  * Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
@@ -38,9 +38,8 @@
 #include <gnome-xml/parser.h>
 
 /* out stuff. */
-#include "llcdb.h"
 
-static struct llcdbhost *allhosts = NULL;
+#ifdef NOT
 
 static int in_ether(char *bufp, unsigned char *ptr)
 {   
@@ -98,6 +97,8 @@ static struct llcdbhost *parse_host(xmlDocPtr doc, xmlNsPtr ns, xmlNodePtr cur)
                 return (NULL);
 
         for(cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
+		if((!strcmp(cur->name, "netid")) && (cur->ns == ns)) {
+                }
                 if((!strcmp(cur->name, "name")) && (cur->ns == ns)) {
 			char *tn = xmlNodeListGetString(doc,
 				cur->xmlChildrenNode, 1);
@@ -111,12 +112,18 @@ static struct llcdbhost *parse_host(xmlDocPtr doc, xmlNsPtr ns, xmlNodePtr cur)
 			lh->host.lh_addrtype 	= ARPHRD_ETHER;
 			lh->host.lh_length 	= IFHWADDRLEN;
 		}
+		if((!strcmp(cur->name, "lsap")) && (cur->ns == ns)) {
+		}
+		if((!strcmp(cur->name, "rtcap")) && (cur->ns == ns)) {
+		}
+		if((!strcmp(cur->name, "groups")) && (cur->ns == ns)) {
+		}
         }
 
         return (lh);
 }
 
-static int load_llchosts_file(char *cfile)
+static int load_larhosts_file(char *cfile)
 {
 	struct llcdbhost *host;
 	xmlDocPtr doc;
@@ -139,10 +146,10 @@ static int load_llchosts_file(char *cfile)
                 xmlFreeDoc(doc);
                 return (-1);
         }
-        ns = xmlSearchNsByHref(doc, cur, _PATH_LLCHOSTS_XML_HREF);
+        ns = xmlSearchNsByHref(doc, cur, _PATH_LARHOSTS_XML_HREF);
         if(!ns) {
                 fprintf(stderr, "file (%s) is of the wrong type,"
-                        " llchosts namespace not found.\n", cfile);
+                        " larhosts namespace not found.\n", cfile);
                 xmlFreeDoc(doc);
                 return (-1);
         }
@@ -216,31 +223,4 @@ static struct llchostent *find_llchost_by_addr(const void *addr,
 	*err = -ENOENT;
         return (NULL);
 }
-
-struct llchostent *getllchostbyname(const char *name)
-{
-	struct llchostent *host = NULL;
-	int err = 0;
-
-	err = load_llchosts_file(_PATH_LLCHOSTS);
-	if(err < 0)
-		goto done;
-	host = find_llchost_by_name(name, &err);
-
-done:	errno = err;
-	return (host);
-}
-
-struct llchostent *getllchostbyaddr(const void *addr, socklen_t len, int type)
-{
-	struct llchostent *host = NULL;
-        int err = 0;
-
-        err = load_llchosts_file(_PATH_LLCHOSTS);
-        if(err < 0)
-                goto done;
-	host = find_llchost_by_addr(addr, len, type, &err);
-
-done:   errno = err;
-	return (host);
-}
+#endif

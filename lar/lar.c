@@ -35,8 +35,8 @@
 #include <linux/llc.h>
 
 /* out stuff. */
-#include "lar_unix.h"
 #include "lar.h"
+#include "lar_unix.h"
 
 /* Function: lar_find_member
  * Description:
@@ -50,29 +50,30 @@
  *  0 and MEMBER, upon success.
  *  Negative and NULL, upon failure with errno set.
  */
-int lar_find_member(const u_int8_t fflag, const u_int8_t *netid, 
-	const u_int8_t *group, const u_int32_t rtmask, lar_search_t *member)
+lar_member_t **lar_find_member(const u_int8_t fflag, const u_int8_t *netid, 
+	const u_int8_t *group, const u_int32_t rtmask, int32_t *rc)
 {
-        struct larmsg *lh;
-	char buf[128];
+        char buf[LAR_MAX_I_LEN];
+	lar_member_t **members;
         int lfd, len, err = 0;
+        int i, member_cnt;
+	struct larmsg *lh;
 
         /* connect to server. */ 
         lfd = lar_unix_init();
-        if(lfd < 0) {
-		err = lfd;
+        if (lfd < 0) {
+		err = ENOTCONN;
 		goto out;
 	}
         
-        /* build record. */
-        lh = larmsg_put(LAR_UNIX_FIND_MEMBER, 1, sizeof(*lh));
-	lara_put(lh, LARA_NETID, strlen(netid), netid); 
-	lara_put(lh, LARA_GROUP, strlen(group), group);
-        lara_put(lh, LARA_RTCAP, sizeof(rtmask), &rtmask);
-
-        /* send to lard. */
+        /* build and send record. */
+        lh = larmsg_put(LAR_OP_FIND_MEMBER, sizeof(*lh));
+	lh = lara_put(lh, LARA_NETID, strlen(netid), netid); 
+	lh = lara_put(lh, LARA_GROUP, strlen(group), group);
+        lh = lara_put(lh, LARA_RTCAP, sizeof(rtmask), &rtmask);
         err = lar_unix_send(lfd, lh, lh->len);
-        if(err < 0) {
+        if (err < 0) {
+		err = EAGAIN;
                 lar_unix_fini(lfd);
 		free(lh);
 		goto out;
@@ -81,25 +82,31 @@ int lar_find_member(const u_int8_t fflag, const u_int8_t *netid,
 
 	/* get response. */
 	len = sizeof(buf);
-        err = lar_unix_recv(lfd, buf, &len);
-        if(err < 0) {
+        err = lar_unix_recv(lfd, buf, len);
+        if (err < 0) {
+		err = EAGAIN;
                 lar_unix_fini(lfd);
                 goto out;
         }
 
         err = -EINVAL;
         lh = (struct larmsg *)buf;
-        if(lh->type == LAR_UNIX_ERRNO && lh->seq == 2) {
-                struct larattr *la = LARMSG_DATA(lh);
-                int llen = LARMSG_PAYLOAD(lh, 0);
-                if(LARA_OK(la, llen))
-                        err = *((int *)LARA_DATA(la));
+        lar_attr_parse(lh, lar_unix_xtract_errno, &err);
+        if (err != 0) {
+		err = EAGAIN;
+                lar_unix_fini(lfd);
+                goto out;
         }
-	errno = err;
-        err = -err;
- 
+
+        member_cnt = i = 0;
+        lar_attr_parse(lh, lar_unix_cnt_member, &member_cnt);
+        members = calloc(1, sizeof(lar_member_t) * (member_cnt + 1));
+        lar_attr_parse(lh, lar_unix_xtract_member, members, &i);
+        members[member_cnt] = NULL;
         lar_unix_fini(lfd);
-out:	return (err);
+out:    errno = err;
+        *rc   = -err;
+        return members;
 }
 
 /* Function: lar_find
@@ -113,27 +120,28 @@ out:	return (err);
  *  0 and SNPA, upon success.
  *  Negative and NULL, upon failure with errno set.
  */
-int lar_find(const u_int8_t *netid, const u_int8_t *name, lar_snpa_t *snpa)
+lar_snpa_t **lar_find(const u_int8_t *netid, const u_int8_t *name, int32_t *rc)
 {
-        struct larmsg *lh;
-	char buf[128];
+	char buf[LAR_MAX_I_LEN];
         int lfd, len, err = 0;
+	int snpa_cnt = 0, i;
+	lar_snpa_t **snpa;
+        struct larmsg *lh;
 
         /* connect to server. */ 
         lfd = lar_unix_init();
-        if(lfd < 0) {
-		err = lfd;
+        if (lfd < 0) {
+		err = ENOTCONN;
 		goto out;
 	}
         
-        /* build record. */
-        lh = larmsg_put(LAR_UNIX_FIND, 1, sizeof(*lh));
-	lara_put(lh, LARA_NETID, strlen(netid), netid);
-        lara_put(lh, LARA_NAME, strlen(name), name);
-        
-        /* send to lard. */
+        /* build and send record. */
+        lh = larmsg_put(LAR_OP_FIND, sizeof(*lh));
+	lh = lara_put(lh, LARA_NETID, strlen(netid), netid);
+        lh = lara_put(lh, LARA_NAME, strlen(name), name);
         err = lar_unix_send(lfd, lh, lh->len);
-        if(err < 0) {
+        if (err < 0) {
+		err = EAGAIN;
                 lar_unix_fini(lfd);
 		free(lh);
 		goto out;
@@ -142,28 +150,34 @@ int lar_find(const u_int8_t *netid, const u_int8_t *name, lar_snpa_t *snpa)
 
 	/* get response. */
 	len = sizeof(buf);
-        err = lar_unix_recv(lfd, buf, &len);
-        if(err < 0) {
+        err = lar_unix_recv(lfd, buf, len);
+        if (err < 0) {
+		err = EAGAIN;
                 lar_unix_fini(lfd);
                 goto out;
         }
 
-        err = -EINVAL;
+	err = EINVAL;
         lh = (struct larmsg *)buf;
-        if(lh->type == LAR_UNIX_ERRNO && lh->seq == 2) {
-                struct larattr *la = LARMSG_DATA(lh);
-                int llen = LARMSG_PAYLOAD(lh, 0);
-                if(LARA_OK(la, llen))
-                        err = *((int *)LARA_DATA(la));
+        lar_attr_parse(lh, lar_unix_xtract_errno, &err);
+        if (err != 0) {
+		err = EAGAIN;
+                lar_unix_fini(lfd);
+                goto out; 
         }
-	errno = err;
-        err = -err;
 
+	snpa_cnt = i = 0;
+        lar_attr_parse(lh, lar_unix_cnt_snpa, &snpa_cnt);
+        snpa = calloc(1, sizeof(lar_snpa_t) * (snpa_cnt + 1));
+	lar_attr_parse(lh, lar_unix_xtract_snpa, snpa, &i);
+	snpa[snpa_cnt] = NULL;
         lar_unix_fini(lfd);
-out:	return (err);
+out:	errno = err;
+	*rc   = -err;
+	return snpa;
 }
 
-/* Fuunction: lar_search
+/* Function: lar_search
  * Description:
  *  higher layer requests CCE to determine all network entities that are members
  *  of the specified group and that have the specified routing capabilites and
@@ -175,29 +189,30 @@ out:	return (err);
  *  0 and MEMBERS, upon success.
  *  Negative and NULL, upon failure with errno set.
  */
-int lar_search(const u_int8_t *netid, const u_int8_t *group, 
-	const u_int32_t rtcap, lar_member_t *members)
+lar_member_t **lar_search(const u_int8_t *netid, const u_int8_t *group, 
+	const u_int32_t rtcap, int32_t *rc)
 {
-        struct larmsg *lh;
-	char buf[128];
+	char buf[LAR_MAX_I_LEN];
+	lar_member_t **members;
         int lfd, len, err = 0;
+	struct larmsg *lh; 
+	int i, member_cnt;
 
         /* connect to server. */ 
         lfd = lar_unix_init();
-        if(lfd < 0) {
-		err = lfd;
+        if (lfd < 0) {
+		err = ENOTCONN;
 		goto out;
 	}
         
-        /* build record. */
-        lh = larmsg_put(LAR_UNIX_SEARCH, 1, sizeof(*lh));
-	lara_put(lh, LARA_NETID, strlen(netid), netid);
-	lara_put(lh, LARA_GROUP, strlen(group), group);
-        lara_put(lh, LARA_RTCAP, sizeof(rtcap), &rtcap);
- 
-        /* send to lard. */
+        /* build and send record. */
+        lh = larmsg_put(LAR_OP_SEARCH, sizeof(*lh));
+	lh = lara_put(lh, LARA_NETID, strlen(netid), netid);
+	lh = lara_put(lh, LARA_GROUP, strlen(group), group);
+        lh = lara_put(lh, LARA_RTCAP, sizeof(rtcap), &rtcap);
         err = lar_unix_send(lfd, lh, lh->len);
-        if(err < 0) {
+        if (err < 0) {
+		err = EAGAIN;
                 lar_unix_fini(lfd);
 		free(lh);
 		goto out;
@@ -206,25 +221,30 @@ int lar_search(const u_int8_t *netid, const u_int8_t *group,
 
  	/* get response. */
 	len = sizeof(buf);
-        err = lar_unix_recv(lfd, buf, &len);
-        if(err < 0) {
+        err = lar_unix_recv(lfd, buf, len);
+        if (err < 0) {
+		err = EAGAIN;
                 lar_unix_fini(lfd);
                 goto out;
         }
 
-        err = -EINVAL;
+        err = EINVAL;
         lh = (struct larmsg *)buf;
-        if(lh->type == LAR_UNIX_ERRNO && lh->seq == 2) {
-                struct larattr *la = LARMSG_DATA(lh);
-                int llen = LARMSG_PAYLOAD(lh, 0);
-                if(LARA_OK(la, llen))
-                        err = *((int *)LARA_DATA(la));
-        }
-	errno = err;
-        err = -err;
+	lar_attr_parse(lh, lar_unix_xtract_errno, &err);
+	if (err != 0) {
+		lar_unix_fini(lfd);
+		goto out;
+	}
 
+	member_cnt = i = 0;
+	lar_attr_parse(lh, lar_unix_cnt_member, &member_cnt);
+	members = calloc(1, sizeof(lar_member_t) * (member_cnt + 1));
+	lar_attr_parse(lh, lar_unix_xtract_member, members, &i);
+	members[member_cnt] = NULL;
         lar_unix_fini(lfd);
-out:	return (err);
+out:	errno = err;
+	*rc   = -err;
+	return members;
 }
 
 /* Function: lar_record
@@ -240,37 +260,36 @@ out:	return (err);
  *  0, upon success.
  *  Negative upon failure with errno set.
  */
-int lar_record(const u_int8_t *netid, const u_int8_t *name, 
+int32_t lar_record(const u_int8_t *netid, const u_int8_t *name, 
 	const u_int32_t rtcap, lar_snpa_t **snpa_list, u_int8_t **groups)
 {
-	struct larmsg *lh;
-	char buf[128];
+	char buf[LAR_MAX_I_LEN];
 	int lfd, len, err = 0;
+	struct larmsg *lh;
 
 	/* connect to server. */
 	lfd = lar_unix_init();
-        if(lfd < 0) {
-		err = lfd;
+        if (lfd < 0) {
+		err = ENOTCONN;
 		goto out;
 	}
 
-	/* build record. */
-	lh = larmsg_put(LAR_UNIX_RECORD, 1, sizeof(*lh));
-	lara_put(lh, LARA_NETID, strlen(netid), netid);
-	lara_put(lh, LARA_NAME, strlen(name), name);
-	lara_put(lh, LARA_RTCAP, sizeof(rtcap), &rtcap);
-	while(*groups != NULL) {
-		lara_put(lh, LARA_GROUP, strlen(*groups), *groups);
+	/* build and send record. */
+	lh = larmsg_put(LAR_OP_RECORD, sizeof(*lh));
+	lh = lara_put(lh, LARA_NETID, strlen(netid), netid);
+	lh = lara_put(lh, LARA_NAME, strlen(name), name);
+	lh = lara_put(lh, LARA_RTCAP, sizeof(rtcap), &rtcap);
+	while (*groups != NULL) {
+		lh = lara_put(lh, LARA_GROUP, strlen(*groups), *groups);
 		groups++;
 	}
-	while(*snpa_list != NULL) {
-		lara_put(lh, LARA_SNPA, sizeof(lar_snpa_t), *snpa_list);
+	while (*snpa_list != NULL) {
+		lh = lara_put(lh, LARA_SNPA, sizeof(lar_snpa_t), *snpa_list);
 		snpa_list++;
 	}
-
-	/* send to lard. */
 	err = lar_unix_send(lfd, lh, lh->len);
-	if(err < 0) {
+	if (err < 0) {
+		err = EAGAIN;
 		lar_unix_fini(lfd);
 		free(lh);
 		goto out;
@@ -279,31 +298,26 @@ int lar_record(const u_int8_t *netid, const u_int8_t *name,
 
 	/* get response. */
 	len = sizeof(buf);
-	err = lar_unix_recv(lfd, buf, &len);
-	if(err < 0) {
+	err = lar_unix_recv(lfd, buf, len);
+	if (err < 0) {
+		err = EAGAIN;
 		lar_unix_fini(lfd);
 		goto out;
 	}
 
-	err = EINVAL;
-	lh = (struct larmsg *)buf;
-	if(lh->type == LAR_UNIX_ERRNO && lh->seq == 2) {
-		struct larattr *la = LARMSG_DATA(lh);
-	        int llen = LARMSG_PAYLOAD(lh, 0);
-		if(LARA_OK(la, llen))
-			err = *((int *)LARA_DATA(la));
-	}
-	errno = err;
-	err = -err;
-
+	err = EINVAL; 
+        lh = (struct larmsg *)buf;
+        lar_attr_parse(lh, lar_unix_xtract_errno, &err);
 	lar_unix_fini(lfd);
-out:	return (err);
+out:	errno = err;
+	err   = -err;
+	return err;
 }
 
 /* Function: lar_erase
  * Description:
  *  higher layer requests CCE to remove the resource identified by 'netid.name'
- *  from the list of network entiries recorded at this station.
+ *  from the list of network entries recorded at this station.
  *
  * Parameters:
  *
@@ -311,27 +325,26 @@ out:	return (err);
  * 0, upon success.
  * Negative upon failure with errno set.
  */
-int lar_erase(const u_int8_t *netid, const u_int8_t *name)
+int32_t lar_erase(const u_int8_t *netid, const u_int8_t *name)
 {
-	struct larmsg *lh;
-	char buf[128];
+	char buf[LAR_MAX_I_LEN];
         int lfd, len, err = 0;
+	struct larmsg *lh;
 
         /* connect to server. */
         lfd = lar_unix_init();
-        if(lfd < 0) {
-		err = lfd;
+        if (lfd < 0) {
+		err = ENOTCONN;
 		goto out;
 	}
 
-        /* build record. */
-        lh = larmsg_put(LAR_UNIX_ERASE, 1, sizeof(*lh));
-        lara_put(lh, LARA_NETID, strlen(netid), netid);
-        lara_put(lh, LARA_NAME, strlen(name), name);
-
-        /* send to lard. */
+        /* build and send record. */
+        lh = larmsg_put(LAR_OP_ERASE, sizeof(*lh));
+        lh = lara_put(lh, LARA_NETID, strlen(netid), netid);
+        lh = lara_put(lh, LARA_NAME, strlen(name), name);
         err = lar_unix_send(lfd, lh, lh->len);
-        if(err < 0) {
+        if (err < 0) {
+		err = EAGAIN;
                 lar_unix_fini(lfd);
 		free(lh);
 		goto out;
@@ -340,23 +353,18 @@ int lar_erase(const u_int8_t *netid, const u_int8_t *name)
 
 	/* get response. */        
         len = sizeof(buf);
-        err = lar_unix_recv(lfd, buf, &len);
-        if(err < 0) {
+        err = lar_unix_recv(lfd, buf, len);
+        if (err < 0) {
+		err = EAGAIN;
                 lar_unix_fini(lfd);
 		goto out;
         }
-                
-        err = -EINVAL;
+ 
+	err = EINVAL;
         lh = (struct larmsg *)buf;
-        if(lh->type == LAR_UNIX_ERRNO && lh->seq == 2) {
-                struct larattr *la = LARMSG_DATA(lh);
-                int llen = LARMSG_PAYLOAD(lh, 0);
-                if(LARA_OK(la, llen))
-                        err = *((int *)LARA_DATA(la));
-        }
-	errno = err;
-        err = -err;
-
+        lar_attr_parse(lh, lar_unix_xtract_errno, &err);
         lar_unix_fini(lfd);
-out:	return (err);
+out:	errno = err;
+	err   = -err;
+	return err;
 }

@@ -1,7 +1,7 @@
 /* llcpingd.c: Linux LLC Ping Server utility.
- * Copyright (c) 2001, Jay Schulist.
  *
  * Written by Jay Schulist <jschlst@samba.org>
+ * Copyright (c) 2001 by Jay Schulist <jschlst@samba.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -44,7 +44,7 @@
 #include "llcpingd_load.h"
 
 #ifndef AF_LLC
-#define AF_LLC  	22
+#define AF_LLC  	26
 #define PF_LLC          AF_LLC
 #endif
 
@@ -66,6 +66,16 @@ static int blocked = 0;
 
 extern void sig_block(void);
 extern void sig_unblock(void);
+
+char *pr_ether(char *ptr)
+{
+        static char buff[64];
+
+	snprintf(buff, sizeof(buff), "%02X:%02X:%02X:%02X:%02X:%02X",
+                (ptr[0] & 0377), (ptr[1] & 0377), (ptr[2] & 0377),
+        	(ptr[3] & 0377), (ptr[4] & 0377), (ptr[5] & 0377));
+	return(buff);
+}
 
 void llc_count_and_set_fds(int fd, fd_set *all_fds)
 {
@@ -138,6 +148,7 @@ int llc_load_listener(struct llc_linfo *l)
 	}
 
 	/* fill the our listen sockaddr_llc. */
+	memset(&laddr, 0, sizeof(laddr));
 	laddr.sllc_family	= PF_LLC;
 	laddr.sllc_arphrd	= ARPHRD_ETHER;
 	laddr.sllc_ssap		= l->lsap; 
@@ -156,6 +167,8 @@ int llc_load_listener(struct llc_linfo *l)
 	}
 	err = bind(fd, (struct sockaddr *)&laddr, sizeof(laddr));
 	if(err < 0) {
+		printf("%s: %s@0x%02X bind failed `%s'.\n",  name_s, 
+			pr_ether(l->ifmac), l->lsap, strerror(errno));
 		close(fd);
 		return (err);
 	}
@@ -202,9 +215,8 @@ int llc_load_listener(struct llc_linfo *l)
 	}
 
 	llc_count_and_set_fds(fd, &llc_all_fds);
-	syslog(LOG_ERR, "listen llc%d on %s using %02X:%02X:%02X:%02X:%02X:%02X@0x%02X",
-		l->type, l->ifname, l->ifmac[0], l->ifmac[1], l->ifmac[2],
-		l->ifmac[3], l->ifmac[4], l->ifmac[5], l->lsap);
+	syslog(LOG_ERR, "listen llc%d on %s using %s@0x%02X", 
+		l->type, l->ifname, pr_ether(l->ifmac), l->lsap);
 	return (0);
 }
 
@@ -444,8 +456,10 @@ static int llc_process_data(struct llc_data *data)
         rxlen = sendto(data->data_fd, pkt, rxlen, 0, 
 		(struct sockaddr *)&to, sizeof(to));
 	free(pkt);
-	if(rxlen < 0)
+	if(rxlen < 0) {
+		printf("%s: sendto failed `%s'.\n", name_s, strerror(errno));
 		return (rxlen);
+	}
 	return (rxlen * 2);
 }
 
@@ -470,7 +484,7 @@ static int llc_director(void)
 		llc_stats->director_events++;
 		if(fd < 0) {	/* check for immediate errors. */
 			if(fd < 0 && errno != EINTR) {
-                                syslog(LOG_ERR, "select failed: %s",
+                                syslog(LOG_ERR, "select failed `%s' sleep",
 					strerror(errno));
                                 sleep(1);
                         }
@@ -661,8 +675,10 @@ int main(int argc, char **argv)
         }
 
 	err = load_config_file(config_file);
-        if(err < 0)
+        if(err < 0) {
+		printf("%s: configuration file error `%d'.\n", name_s, err);
         	llc_signal_goaway(0);    /* clean&die */
+	}
 
         openlog(name_s, LOG_PID, LOG_DAEMON);
 	syslog(LOG_INFO, "%s %s", desc_s, version_s);
@@ -677,10 +693,15 @@ int main(int argc, char **argv)
         sig_init();
 
 	err = load_config(llc_config_info);
-        if(err < 0)
+        if(err < 0) {
+		printf("%s: error executing configuration file information `%d'.\n",
+			name_s, err);
                 llc_signal_goaway(0);    /* clean&die */
+	}
 
         /* we do the real work now, looping and directing. */
         err = llc_director();
+	if(err < 0)
+		printf("%s: fatal director error `%d'.\n", name_s, err);
 	return (err);
 }
