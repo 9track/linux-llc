@@ -1,0 +1,2 @@
+dlsw_r          2065/tcp                        # Data Link Switching Read
+dlsw_w          2067/tcp                        # Data Link Switching Write

@@ -1,5 +1,33 @@
 ChangeLog for linux-LLC package.
 
+0.1.15, December 11, 2001.
+- better handling of capXchange error cases.
+- changed logpid() to take a path.
+- dlsw v1.0 capability support is tested and works.
+- added ebcdic support to dlsw.
+- finished up mac address support in parser, now with masks.
+- added dynamic kernel directory def to spec file.
+- fixed problem with mac address parsing of dlsw config file.
+- create symlinks to kernel headers for include directory.
+- added find_sk_by_addr doc to cvs.
+- added mac address mask support to cfg file.
+- added netbios_exclusive field in cfg file.
+- added mac_exclusive field in cfg file.
+- added sap list bitmap support.
+- added web field to version display.
+- added inbound/outbound dlsw partner access control.
+- added lard/dlswd/llcpingd redhat init scripts.
+- added RPM build support in the Makefile.
+- added RPM spec file for linux-llc package.
+- added example modules.conf file.
+- added/wrote dlswd.8 man page.
+- added enhanced dlsw ssp capability handling.
+- added output of dlsw partner information to unix pipe.
+- Improved partner connect process with timer based retries.
+- Added new configuration options to support dlsw version, static partners, etc.
+- renamed the dlswd directory too just dlsw.
+- removedd dlswmon as the feature was a bit of overkill.
+
 0.1.14, November 23, 2001.
 - new patch-o-matic llc kernel patches.
 - updated all applications to use new PF_LLC number (26).

@@ -12,7 +12,7 @@ aclocal
 automake --gnu --add-missing --copy
 autoconf
 
-for sub in llcdb llcping lar dlswd dlswmon; do
+for sub in llcdb llcping lar dlsw; do
   cd $sub
   aclocal
   automake --add-missing --include-deps

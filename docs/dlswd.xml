@@ -4,13 +4,32 @@
   <dlsw:global>
     <dlsw:debuglevel>20</dlsw:debuglevel>
   </dlsw:global>
-  <dlsw:monitor>
-    <dlsw:port>4110</dlsw:port>
-  </dlsw:monitor>
+  <dlsw:ssp>
+    <dlsw:version>1</dlsw:version>
+    <dlsw:window>128</dlsw:window>
+    <dlsw:tcpconn>2</dlsw:tcpconn>
+    <dlsw:read>2065</dlsw:read>
+    <dlsw:write>2067</dlsw:write>
+  </dlsw:ssp>
+  <dlsw:listen>
+    <dlsw:iface>eth0</dlsw:iface>
+    <dlsw:sna>
+      <dlsw:sap>0x04, 0x08, 0x0C, 0x10, 0x14, 0x18, 0x1C</dlsw:sap>
+    </dlsw:sna>
+    <dlsw:netbios>
+      <dlsw:sap>0xF0</dlsw:sap>
+    </dlsw:netbios>
+    <dlsw:netbios_exclusive>no</dlsw:netbios_exclusive>
+    <dlsw:mac_exclusive>no</dlsw:mac_exclusive>
+    <dlsw:mac>00:11:22:33:44:55/48</dlsw:mac>
+    <dlsw:mac>33:12:12:12:22:22/48</dlsw:mac>
+  </dlsw:listen>
   <dlsw:partner>
-    <dlsw:device>eth0</dlsw:device>
-    <dlsw:ip>little.screamingdaemon.com</dlsw:ip>
-    <dlsw:sap>0xAB</dlsw:sap>
+    <dlsw:direction>out</dlsw:direction>
+    <dlsw:ip>snapper.screamingdaemon.com</dlsw:ip>
+    <dlsw:version>1</dlsw:version>
+    <dlsw:read>2065</dlsw:read>
+    <dlsw:write>2067</dlsw:write>
   </dlsw:partner>
 </dlsw:dlswd>
 </dlsw:Helping>

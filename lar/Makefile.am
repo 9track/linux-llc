@@ -5,7 +5,8 @@ INCLUDES = -I../include -I../llcdb
 CFLAGS = -Wall
 
 lib_LTLIBRARIES = liblar.la
-sbin_PROGRAMS = lard llookup
+bin_PROGRAMS = llookup
+sbin_PROGRAMS = lard
 
 liblar_la_LDFLAGS = -Wc,-nostartfiles -release $(VERSION)
 liblar_la_SOURCES = lar.c lar_unix.c

@@ -862,7 +862,7 @@ fi
 
 PACKAGE=linux-llc
 
-VERSION=0.1.14
+VERSION=0.1.15
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { echo "configure: error: source directory already configured; run "make distclean" there first" 1>&2; exit 1; }
@@ -5743,7 +5743,7 @@ fi
 done
 
 
-subdirs="llcdb llcping lar dlswd dlswmon"
+subdirs="llcdb llcping lar dlsw"
 
 trap '' 1 2 15
 cat > confcache <<\EOF
@@ -6157,7 +6157,7 @@ if test "$no_recursion" != yes; then
     esac
   done
 
-  for ac_config_dir in llcdb llcping lar dlswd dlswmon; do
+  for ac_config_dir in llcdb llcping lar dlsw; do
 
     # Do not complain, so a configure script can configure whichever
     # parts of a large source tree are present.

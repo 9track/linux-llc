@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+# llcpingd.init        Starts llc ping daemon.
+#
+#
+# chkconfig: 2345 12 88
+# description: Start the daemon.
+
+# Source function library.
+. /etc/init.d/functions
+
+[ -f /usr/sbin/llcpingd ] || exit 0
+[ -f /etc/llcpingd.xml ] || exit 0
+
+RETVAL=0
+umask 077
+
+start() {
+ 	echo -n $"Starting llc ping daemon: "
+	daemon llcpingd
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/llcpingd
+	return $RETVAL
+}
+	
+stop() {
+	echo -n $"Shutting down llc ping daemon: "
+	killproc llcpingd
+	echo
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/llcpingd
+	return $RETVAL
+}
+
+rhstatus() {
+	status llcpingd
+}
+
+restart() {
+	stop
+	start
+}	
+
+case "$1" in
+  start)
+  	start
+	;;
+  stop)
+  	stop
+	;;
+  status)
+  	rhstatus
+	;;
+  restart|reload)
+  	restart
+	;;
+  condrestart)
+  	[ -f /var/lock/subsys/llcpingd ] && restart || :
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart|condrestart}"
+	exit 1
+esac
+
+exit $?
+

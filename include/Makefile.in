@@ -256,6 +256,15 @@ mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
+all: setup
+
+setup:
+	ln -f -s ${KERNEL_DIR}/include/linux linux
+	ln -f -s ${KERNEL_DIR}/include/asm asm
+
+clean:
+	rm -f linux asm
+
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

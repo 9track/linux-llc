@@ -1,0 +1,69 @@
+#!/bin/bash
+#
+# lard.init        Starts Lan address resolution daemon.
+#
+#
+# chkconfig: 2345 12 88
+# description: Start the daemon.
+
+# Source function library.
+. /etc/init.d/functions
+
+[ -f /usr/sbin/lard ] || exit 0
+[ -f /etc/lard.xml ] || exit 0
+
+RETVAL=0
+
+umask 077
+
+start() {
+ 	echo -n $"Starting lan address resolution daemon: "
+	daemon lard
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/lard
+	return $RETVAL
+}
+	
+stop() {
+	echo -n $"Shutting down lan address resolution daemon: "
+	killproc lard
+	echo
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/lard
+	return $RETVAL
+}
+
+rhstatus() {
+	status lard
+}
+
+restart() {
+	stop
+	start
+}	
+
+case "$1" in
+  start)
+  	start
+	;;
+  stop)
+  	stop
+	;;
+  status)
+  	rhstatus
+	;;
+  restart|reload)
+  	restart
+	;;
+  condrestart)
+  	[ -f /var/lock/subsys/lard ] && restart || :
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart|condrestart}"
+	exit 1
+esac
+
+exit $?
+

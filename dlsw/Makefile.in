@@ -74,34 +74,40 @@ PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 STRIP = @STRIP@
 VERSION = @VERSION@
+XML_CONFIG = @XML_CONFIG@
 
 AUTOMAKE_OPTIONS = foreign
 
 EXTRA_DIST = $(man_MANS)
-INCLUDES = -I../include -I../dlswd
+INCLUDES = -I../include
 
-bin_PROGRAMS = dlswmon
+sbin_PROGRAMS = dlswd
 
-dlswmon_LDADD = -lproc
-dlswmon_SOURCES = dlswmon.c cmdtab.c parse.c
+dlswd_LDADD = -lproc
+dlswd_SOURCES = dlswd.c dlswd_load.c dlsw_list.c dlsw_vector.c dlsw_timer.c 	dlsw_ebcdic.c dlsw_ssp.c
 
-include_HEADERS = dlswmonitor.h commands.h parse.h
 
-man_MANS = dlswmon.8
+include_HEADERS = 
+noinst_HEADERS = dlswd.h dlswd_load.h dlsw_list.h dlsw_vector.h dlsw_timer.h 	dlsw_ssp.h dlsw_ebcdic.h
+
+
+man_MANS = dlswd.8
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/../mkinstalldirs
 CONFIG_CLEAN_FILES = 
-bin_PROGRAMS =  dlswmon$(EXEEXT)
-PROGRAMS =  $(bin_PROGRAMS)
+sbin_PROGRAMS =  dlswd$(EXEEXT)
+PROGRAMS =  $(sbin_PROGRAMS)
 
 
 DEFS = @DEFS@ -I. -I$(srcdir) 
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
-dlswmon_OBJECTS =  dlswmon.$(OBJEXT) cmdtab.$(OBJEXT) parse.$(OBJEXT)
-dlswmon_DEPENDENCIES = 
-dlswmon_LDFLAGS = 
+dlswd_OBJECTS =  dlswd.$(OBJEXT) dlswd_load.$(OBJEXT) \
+dlsw_list.$(OBJEXT) dlsw_vector.$(OBJEXT) dlsw_timer.$(OBJEXT) \
+dlsw_ebcdic.$(OBJEXT) dlsw_ssp.$(OBJEXT)
+dlswd_DEPENDENCIES = 
+dlswd_LDFLAGS = 
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -111,7 +117,7 @@ man8dir = $(mandir)/man8
 MANS = $(man_MANS)
 
 NROFF = nroff
-HEADERS =  $(include_HEADERS)
+HEADERS =  $(include_HEADERS) $(noinst_HEADERS)
 
 DIST_COMMON =  Makefile.am Makefile.in aclocal.m4 configure configure.in
 
@@ -120,8 +126,8 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
-SOURCES = $(dlswmon_SOURCES)
-OBJECTS = $(dlswmon_OBJECTS)
+SOURCES = $(dlswd_SOURCES)
+OBJECTS = $(dlswd_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
@@ -141,29 +147,29 @@ config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 $(srcdir)/configure: $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
 	cd $(srcdir) && $(AUTOCONF)
 
-mostlyclean-binPROGRAMS:
+mostlyclean-sbinPROGRAMS:
 
-clean-binPROGRAMS:
-	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+clean-sbinPROGRAMS:
+	-test -z "$(sbin_PROGRAMS)" || rm -f $(sbin_PROGRAMS)
 
-distclean-binPROGRAMS:
+distclean-sbinPROGRAMS:
 
-maintainer-clean-binPROGRAMS:
+maintainer-clean-sbinPROGRAMS:
 
-install-binPROGRAMS: $(bin_PROGRAMS)
+install-sbinPROGRAMS: $(sbin_PROGRAMS)
 	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(bindir)
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	$(mkinstalldirs) $(DESTDIR)$(sbindir)
+	@list='$(sbin_PROGRAMS)'; for p in $$list; do \
 	  if test -f $$p; then \
-	    echo " $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
-	    $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	    echo " $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(sbindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	    $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(sbindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	  else :; fi; \
 	done
 
-uninstall-binPROGRAMS:
+uninstall-sbinPROGRAMS:
 	@$(NORMAL_UNINSTALL)
-	list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	list='$(sbin_PROGRAMS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(sbindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	done
 
 .c.o:
@@ -210,9 +216,9 @@ distclean-libtool:
 
 maintainer-clean-libtool:
 
-dlswmon$(EXEEXT): $(dlswmon_OBJECTS) $(dlswmon_DEPENDENCIES)
-	@rm -f dlswmon$(EXEEXT)
-	$(LINK) $(dlswmon_LDFLAGS) $(dlswmon_OBJECTS) $(dlswmon_LDADD) $(LIBS)
+dlswd$(EXEEXT): $(dlswd_OBJECTS) $(dlswd_DEPENDENCIES)
+	@rm -f dlswd$(EXEEXT)
+	$(LINK) $(dlswd_LDFLAGS) $(dlswd_OBJECTS) $(dlswd_LDADD) $(LIBS)
 
 install-man8:
 	$(mkinstalldirs) $(DESTDIR)$(man8dir)
@@ -353,7 +359,7 @@ check-am: all-am
 check: check-am
 installcheck-am:
 installcheck: installcheck-am
-install-exec-am: install-binPROGRAMS
+install-exec-am: install-sbinPROGRAMS
 install-exec: install-exec-am
 
 install-data-am: install-man install-includeHEADERS
@@ -362,7 +368,7 @@ install-data: install-data-am
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-am
-uninstall-am: uninstall-binPROGRAMS uninstall-man \
+uninstall-am: uninstall-sbinPROGRAMS uninstall-man \
 		uninstall-includeHEADERS
 uninstall: uninstall-am
 all-am: Makefile $(PROGRAMS) $(MANS) $(HEADERS)
@@ -370,7 +376,7 @@ all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
-	$(mkinstalldirs)  $(DESTDIR)$(bindir) $(DESTDIR)$(mandir)/man8 \
+	$(mkinstalldirs)  $(DESTDIR)$(sbindir) $(DESTDIR)$(mandir)/man8 \
 		$(DESTDIR)$(includedir)
 
 
@@ -383,25 +389,26 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
-mostlyclean-am:  mostlyclean-binPROGRAMS mostlyclean-compile \
+mostlyclean-am:  mostlyclean-sbinPROGRAMS mostlyclean-compile \
 		mostlyclean-libtool mostlyclean-tags \
 		mostlyclean-generic
 
 mostlyclean: mostlyclean-am
 
-clean-am:  clean-binPROGRAMS clean-compile clean-libtool clean-tags \
+clean-am:  clean-sbinPROGRAMS clean-compile clean-libtool clean-tags \
 		clean-generic mostlyclean-am
 
 clean: clean-am
 
-distclean-am:  distclean-binPROGRAMS distclean-compile distclean-libtool \
-		distclean-tags distclean-generic clean-am
+distclean-am:  distclean-sbinPROGRAMS distclean-compile \
+		distclean-libtool distclean-tags distclean-generic \
+		clean-am
 	-rm -f libtool
 
 distclean: distclean-am
 	-rm -f config.status
 
-maintainer-clean-am:  maintainer-clean-binPROGRAMS \
+maintainer-clean-am:  maintainer-clean-sbinPROGRAMS \
 		maintainer-clean-compile maintainer-clean-libtool \
 		maintainer-clean-tags maintainer-clean-generic \
 		distclean-am
@@ -411,12 +418,12 @@ maintainer-clean-am:  maintainer-clean-binPROGRAMS \
 maintainer-clean: maintainer-clean-am
 	-rm -f config.status
 
-.PHONY: mostlyclean-binPROGRAMS distclean-binPROGRAMS clean-binPROGRAMS \
-maintainer-clean-binPROGRAMS uninstall-binPROGRAMS install-binPROGRAMS \
-mostlyclean-compile distclean-compile clean-compile \
-maintainer-clean-compile mostlyclean-libtool distclean-libtool \
-clean-libtool maintainer-clean-libtool install-man8 uninstall-man8 \
-install-man uninstall-man uninstall-includeHEADERS \
+.PHONY: mostlyclean-sbinPROGRAMS distclean-sbinPROGRAMS \
+clean-sbinPROGRAMS maintainer-clean-sbinPROGRAMS uninstall-sbinPROGRAMS \
+install-sbinPROGRAMS mostlyclean-compile distclean-compile \
+clean-compile maintainer-clean-compile mostlyclean-libtool \
+distclean-libtool clean-libtool maintainer-clean-libtool install-man8 \
+uninstall-man8 install-man uninstall-man uninstall-includeHEADERS \
 install-includeHEADERS tags mostlyclean-tags distclean-tags clean-tags \
 maintainer-clean-tags distdir info-am info dvi-am dvi check check-am \
 installcheck-am installcheck install-exec-am install-exec \

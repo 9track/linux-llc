@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+# dlswd.init        Starts Data link switching daemon.
+#
+#
+# chkconfig: 2345 12 88
+# description: Start the daemon.
+
+# Source function library.
+. /etc/init.d/functions
+
+[ -f /usr/sbin/dlswd ] || exit 0
+[ -f /etc/dlswd.xml ] || exit 0
+
+RETVAL=0
+umask 077
+
+start() {
+ 	echo -n $"Starting data link switching daemon: "
+	daemon dlswd
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/dlswd
+	return $RETVAL
+}
+	
+stop() {
+	echo -n $"Shutting down data link switching daemon: "
+	killproc dlswd
+	echo
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/dlswd
+	return $RETVAL
+}
+
+rhstatus() {
+	status dlswd
+}
+
+restart() {
+	stop
+	start
+}	
+
+case "$1" in
+  start)
+  	start
+	;;
+  stop)
+  	stop
+	;;
+  status)
+  	rhstatus
+	;;
+  restart|reload)
+  	restart
+	;;
+  condrestart)
+  	[ -f /var/lock/subsys/dlswd ] && restart || :
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart|condrestart}"
+	exit 1
+esac
+
+exit $?
+

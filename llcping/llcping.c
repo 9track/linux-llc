@@ -60,6 +60,7 @@ char version_s[]                        = VERSION;
 char name_s[]                           = "llcping";
 char desc_s[]                           = "IEEE 802.2 llc echo client";
 char maintainer_s[]                     = "Jay Schulist <jschlst@samba.org>";
+char web_s[]				= "http://www.linux-sna.org";
 
 static struct llc_options *tmp_llc = NULL;
 
@@ -492,6 +493,7 @@ void version(void)
 {       
         printf("%s: %s %s\n%s\n", name_s, desc_s, version_s,
                 maintainer_s);
+	printf("%s\n", web_s);
         exit(1);
 }       
 

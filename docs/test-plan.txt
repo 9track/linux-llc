@@ -1,0 +1,12 @@
+1. Setup 2 Win2K-SNA servers
+2. Get the Win2K-SNA servers communicating on the same LAN.
+3. Setup Ethernet DLSw network
+   Win2k-SNA <-Ethernet-> Linux-DLSw <-IP-> IBM6611 <-Ethernet-> Win2k-SNA
+4. Make Linux-DLSw successfully connect with IBM6611
+5. Communicate with Aping over DLSw link.
+6. Setup TokenRing DLSw network
+   Win2k-SNA <-TokenRing-> Linux-DLSw <-IP-> IBM6611 <-TokenRing-> Win2k-SNA
+7. Setup Mixed DLSw network
+   Win2k-SNA <-Ethernet-> Linux-DLSw <-IP-> IBM6611 <-TokenRing-> Win2k-SNA
+
+Release linux-LLC as complete (1.0.0). (12/07/2001).

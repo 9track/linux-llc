@@ -78,7 +78,7 @@ XML_CONFIG = @XML_CONFIG@
 
 AUTOMAKE_OPTIONS = 1.3e foreign
 
-BUILD_SUBDIRS = . include docs llcdb llcping lar dlswd dlswmon
+BUILD_SUBDIRS = . include docs llcdb llcping lar dlsw
 SUBDIRS = $(BUILD_SUBDIRS)
 DIST_SUBDIRS = $(BUILD_SUBDIRS) $(CONF_SUBDIRS)
 
@@ -92,12 +92,20 @@ EXTRA_DIST = mkstamp BUGS isapplied patch-o-matic autogen.sh chgver.sh
 CLEANFILES = libtool
 
 # Patch-o-matic happenings
-KERNEL_DIR = /usr/src/linux
+KERNEL_DIR = '\/usr\/src\/linux'
 PENDING_PATCHES := netbeui+8022.patch llc_sock.patch
 
 # Tag before making distribution.  Also, don't make a distribution if
 # checks fail.  Also, make sure the NEWS file is up-to-date.
 CVS = cvs
+#endif
+
+# RPM happenings
+#ifndef RPM_BUILD_DIR
+RPM_BUILD_DIR = "/usr/src/redhat"
+#endif
+#ifndef RPM_BUILD_TARGET
+RPM_BUILD_TARGET = `uname -m`
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ./include/config.h
@@ -377,6 +385,7 @@ installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 export KERNEL_DIR
+#endif
 
 ################################################################
 
@@ -403,6 +412,20 @@ cvs-diff:
 
 pending-patches:
 	@cd patch-o-matic && KERNEL_DIR=$(KERNEL_DIR) ./runme $(PENDING_PATCHES)
+
+rpm-dist:
+	if ! test -f $(srcdir)/docs/$(PACKAGE).spec; then \
+		echo "RPM spec file '$(PACKAGE).spec' missing from '$(srcdir)/docs' directory; aborting rpm build" 1>&2; \
+		exit 1; \
+	fi; \
+	cat $(srcdir)/docs/$(PACKAGE).spec | sed s/KERNELDIR/$(KERNEL_DIR)/g | sed s/VERSION/$(VERSION)/g > $(RPM_BUILD_DIR)/SPECS/$(PACKAGE).spec; \
+	$(MAKE) dist; \
+	cp -f $(srcdir)/$(PACKAGE)-$(VERSION).tar.gz $(RPM_BUILD_DIR)/SOURCES/$(PACKAGE)-$(VERSION).tar.gz; \
+	rpm -ba -v $(RPM_BUILD_DIR)/SPECS/$(PACKAGE).spec; 
+#	rm -f $(RPM_BUILD_DIR)/SPECS/$(PACKAGE).spec; \
+#	rm -f $(RPM_BUILD_DIR)/SOURCES/$(PACKAGE)-$(VERSION).tar.gz; \
+#	rm -rf $(RPM_BUILD_DIR)/BUILD/$(PACKAGE)-$(VERSION)
+#	find $(RPM_BUILD_DIR)/RPMS -name *.rpm -exec `cp -f {} $(srcdir)/` \;
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

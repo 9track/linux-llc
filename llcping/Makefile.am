@@ -4,7 +4,8 @@ EXTRA_DIST = $(man_MANS)
 INCLUDES = -I../include -I../llcdb
 CFLAGS = -Wall
 
-sbin_PROGRAMS = llcping llcpingd
+bin_PROGRAMS = llcping
+sbin_PROGRAMS = llcpingd
 
 llcping_LDADD = -L../llcdb -lllcdb
 llcping_SOURCES = llcping.c

@@ -47,6 +47,7 @@ char version_s[]        = VERSION;
 char name_s[]           = "llookup";
 char desc_s[]           = "Lan address resolution lookup client";
 char maintainer_s[]	= "Jay Schulist <jschlst@samba.org>";
+char web_s[]		= "http://www.linux-sna.org";
 
 static struct wordmap rtcap_types[] = {
         { "subarea",            0x40    },
@@ -335,6 +336,7 @@ static void version(void)
 {       
         printf("%s: %s %s\n%s\n", name_s, desc_s, version_s,
                 maintainer_s);
+	printf("%s\n", web_s);
         exit(1);
 }
 

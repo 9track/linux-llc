@@ -62,14 +62,17 @@ host_triplet = @host@
 AS = @AS@
 CC = @CC@
 DLLTOOL = @DLLTOOL@
+ECHO = @ECHO@
 EXEEXT = @EXEEXT@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
 OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+STRIP = @STRIP@
 VERSION = @VERSION@
 XML_CONFIG = @XML_CONFIG@
 
@@ -80,7 +83,8 @@ INCLUDES = -I../include -I../llcdb
 CFLAGS = -Wall
 
 lib_LTLIBRARIES = liblar.la
-sbin_PROGRAMS = lard llookup
+bin_PROGRAMS = llookup
+sbin_PROGRAMS = lard
 
 liblar_la_LDFLAGS = -Wc,-nostartfiles -release $(VERSION)
 liblar_la_SOURCES = lar.c lar_unix.c
@@ -109,16 +113,17 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 liblar_la_LIBADD = 
 liblar_la_OBJECTS =  lar.lo lar_unix.lo
-sbin_PROGRAMS =  lard$(EXEEXT) llookup$(EXEEXT)
-PROGRAMS =  $(sbin_PROGRAMS)
+bin_PROGRAMS =  llookup$(EXEEXT)
+sbin_PROGRAMS =  lard$(EXEEXT)
+PROGRAMS =  $(bin_PROGRAMS) $(sbin_PROGRAMS)
 
-lard_OBJECTS =  lard.o lard_load.o lar_list.o lar_timer.o lar_vector.o \
-lar_hosts.o
-lard_DEPENDENCIES = 
-lard_LDFLAGS = 
-llookup_OBJECTS =  llookup.o
+llookup_OBJECTS =  llookup.$(OBJEXT)
 llookup_DEPENDENCIES = 
 llookup_LDFLAGS = 
+lard_OBJECTS =  lard.$(OBJEXT) lard_load.$(OBJEXT) lar_list.$(OBJEXT) \
+lar_timer.$(OBJEXT) lar_vector.$(OBJEXT) lar_hosts.$(OBJEXT)
+lard_DEPENDENCIES = 
+lard_LDFLAGS = 
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -137,12 +142,12 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
-SOURCES = $(liblar_la_SOURCES) $(lard_SOURCES) $(llookup_SOURCES)
-OBJECTS = $(liblar_la_OBJECTS) $(lard_OBJECTS) $(llookup_OBJECTS)
+SOURCES = $(liblar_la_SOURCES) $(llookup_SOURCES) $(lard_SOURCES)
+OBJECTS = $(liblar_la_OBJECTS) $(llookup_OBJECTS) $(lard_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
-.SUFFIXES: .S .c .lo .o .s
+.SUFFIXES: .S .c .lo .o .obj .s
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps Makefile
 
@@ -186,6 +191,11 @@ uninstall-libLTLIBRARIES:
 .c.o:
 	$(COMPILE) -c $<
 
+# FIXME: We should only use cygpath when building on Windows,
+# and only if it is available.
+.c.obj:
+	$(COMPILE) -c `cygpath -w $<`
+
 .s.o:
 	$(COMPILE) -c $<
 
@@ -194,6 +204,7 @@ uninstall-libLTLIBRARIES:
 
 mostlyclean-compile:
 	-rm -f *.o core *.core
+	-rm -f *.$(OBJEXT)
 
 clean-compile:
 
@@ -224,6 +235,31 @@ maintainer-clean-libtool:
 liblar.la: $(liblar_la_OBJECTS) $(liblar_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(liblar_la_LDFLAGS) $(liblar_la_OBJECTS) $(liblar_la_LIBADD) $(LIBS)
 
+mostlyclean-binPROGRAMS:
+
+clean-binPROGRAMS:
+	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+
+distclean-binPROGRAMS:
+
+maintainer-clean-binPROGRAMS:
+
+install-binPROGRAMS: $(bin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo " $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	    $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	  else :; fi; \
+	done
+
+uninstall-binPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	done
+
 mostlyclean-sbinPROGRAMS:
 
 clean-sbinPROGRAMS:
@@ -249,13 +285,13 @@ uninstall-sbinPROGRAMS:
 	  rm -f $(DESTDIR)$(sbindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	done
 
-lard$(EXEEXT): $(lard_OBJECTS) $(lard_DEPENDENCIES)
-	@rm -f lard$(EXEEXT)
-	$(LINK) $(lard_LDFLAGS) $(lard_OBJECTS) $(lard_LDADD) $(LIBS)
-
 llookup$(EXEEXT): $(llookup_OBJECTS) $(llookup_DEPENDENCIES)
 	@rm -f llookup$(EXEEXT)
 	$(LINK) $(llookup_LDFLAGS) $(llookup_OBJECTS) $(llookup_LDADD) $(LIBS)
+
+lard$(EXEEXT): $(lard_OBJECTS) $(lard_DEPENDENCIES)
+	@rm -f lard$(EXEEXT)
+	$(LINK) $(lard_LDFLAGS) $(lard_OBJECTS) $(lard_LDADD) $(LIBS)
 
 install-man3:
 	$(mkinstalldirs) $(DESTDIR)$(man3dir)
@@ -429,7 +465,8 @@ check-am: all-am
 check: check-am
 installcheck-am:
 installcheck: installcheck-am
-install-exec-am: install-libLTLIBRARIES install-sbinPROGRAMS
+install-exec-am: install-libLTLIBRARIES install-binPROGRAMS \
+		install-sbinPROGRAMS
 install-exec: install-exec-am
 
 install-data-am: install-man install-includeHEADERS
@@ -438,17 +475,18 @@ install-data: install-data-am
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-am
-uninstall-am: uninstall-libLTLIBRARIES uninstall-sbinPROGRAMS \
-		uninstall-man uninstall-includeHEADERS
+uninstall-am: uninstall-libLTLIBRARIES uninstall-binPROGRAMS \
+		uninstall-sbinPROGRAMS uninstall-man \
+		uninstall-includeHEADERS
 uninstall: uninstall-am
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(MANS) $(HEADERS)
 all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
-	$(mkinstalldirs)  $(DESTDIR)$(libdir) $(DESTDIR)$(sbindir) \
-		$(DESTDIR)$(mandir)/man3 $(DESTDIR)$(mandir)/man8 \
-		$(DESTDIR)$(includedir)
+	$(mkinstalldirs)  $(DESTDIR)$(libdir) $(DESTDIR)$(bindir) \
+		$(DESTDIR)$(sbindir) $(DESTDIR)$(mandir)/man3 \
+		$(DESTDIR)$(mandir)/man8 $(DESTDIR)$(includedir)
 
 
 mostlyclean-generic:
@@ -461,20 +499,22 @@ distclean-generic:
 
 maintainer-clean-generic:
 mostlyclean-am:  mostlyclean-libLTLIBRARIES mostlyclean-compile \
-		mostlyclean-libtool mostlyclean-sbinPROGRAMS \
-		mostlyclean-tags mostlyclean-generic
+		mostlyclean-libtool mostlyclean-binPROGRAMS \
+		mostlyclean-sbinPROGRAMS mostlyclean-tags \
+		mostlyclean-generic
 
 mostlyclean: mostlyclean-am
 
 clean-am:  clean-libLTLIBRARIES clean-compile clean-libtool \
-		clean-sbinPROGRAMS clean-tags clean-generic \
-		mostlyclean-am
+		clean-binPROGRAMS clean-sbinPROGRAMS clean-tags \
+		clean-generic mostlyclean-am
 
 clean: clean-am
 
 distclean-am:  distclean-libLTLIBRARIES distclean-compile \
-		distclean-libtool distclean-sbinPROGRAMS distclean-tags \
-		distclean-generic clean-am
+		distclean-libtool distclean-binPROGRAMS \
+		distclean-sbinPROGRAMS distclean-tags distclean-generic \
+		clean-am
 	-rm -f libtool
 
 distclean: distclean-am
@@ -482,6 +522,7 @@ distclean: distclean-am
 
 maintainer-clean-am:  maintainer-clean-libLTLIBRARIES \
 		maintainer-clean-compile maintainer-clean-libtool \
+		maintainer-clean-binPROGRAMS \
 		maintainer-clean-sbinPROGRAMS maintainer-clean-tags \
 		maintainer-clean-generic distclean-am
 	@echo "This command is intended for maintainers to use;"
@@ -495,17 +536,19 @@ clean-libLTLIBRARIES maintainer-clean-libLTLIBRARIES \
 uninstall-libLTLIBRARIES install-libLTLIBRARIES mostlyclean-compile \
 distclean-compile clean-compile maintainer-clean-compile \
 mostlyclean-libtool distclean-libtool clean-libtool \
-maintainer-clean-libtool mostlyclean-sbinPROGRAMS \
-distclean-sbinPROGRAMS clean-sbinPROGRAMS maintainer-clean-sbinPROGRAMS \
-uninstall-sbinPROGRAMS install-sbinPROGRAMS install-man3 uninstall-man3 \
-install-man8 uninstall-man8 install-man uninstall-man \
-uninstall-includeHEADERS install-includeHEADERS tags mostlyclean-tags \
-distclean-tags clean-tags maintainer-clean-tags distdir info-am info \
-dvi-am dvi check check-am installcheck-am installcheck install-exec-am \
-install-exec install-data-am install-data install-am install \
-uninstall-am uninstall all-redirect all-am all installdirs \
-mostlyclean-generic distclean-generic clean-generic \
-maintainer-clean-generic clean mostlyclean distclean maintainer-clean
+maintainer-clean-libtool mostlyclean-binPROGRAMS distclean-binPROGRAMS \
+clean-binPROGRAMS maintainer-clean-binPROGRAMS uninstall-binPROGRAMS \
+install-binPROGRAMS mostlyclean-sbinPROGRAMS distclean-sbinPROGRAMS \
+clean-sbinPROGRAMS maintainer-clean-sbinPROGRAMS uninstall-sbinPROGRAMS \
+install-sbinPROGRAMS install-man3 uninstall-man3 install-man8 \
+uninstall-man8 install-man uninstall-man uninstall-includeHEADERS \
+install-includeHEADERS tags mostlyclean-tags distclean-tags clean-tags \
+maintainer-clean-tags distdir info-am info dvi-am dvi check check-am \
+installcheck-am installcheck install-exec-am install-exec \
+install-data-am install-data install-am install uninstall-am uninstall \
+all-redirect all-am all installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
 
 
 $(OBJECTS): libtool

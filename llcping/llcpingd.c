@@ -52,6 +52,7 @@ char version_s[] 			= VERSION;
 char name_s[] 				= "llcpingd";
 char desc_s[] 				= "IEEE 802.2 llc echo daemon";
 char maintainer_s[] 			= "Jay Schulist <jschlst@samba.org>";
+char web_s[]			 	= "http://www.linux-sna.org";
 
 fd_set llc_all_fds;
 char config_file[300] 			= _PATH_LLCPINGDCONF;
@@ -622,11 +623,11 @@ void sig_preexec(void)
         sig_unblock();
 }
 
-static void logpid(void)
+static void logpid(char *path)
 {
         FILE *fp;
 
-        if((fp = fopen(_PATH_LLCPINGDPID, "w")) != NULL) {
+        if((fp = fopen(path, "w")) != NULL) {
                 fprintf(fp, "%u\n", getpid());
                 (void)fclose(fp);
         }
@@ -637,6 +638,7 @@ void version(void)
 {
         printf("%s: %s %s\n%s\n", name_s, desc_s, version_s,
                 maintainer_s);
+	printf("%s\n", web_s);
         exit(1);
 }
 
@@ -687,7 +689,7 @@ int main(int argc, char **argv)
                 daemon(0, 0);
 
 	/* log our pid for scripts. */
-	logpid();
+	logpid(_PATH_LLCPINGDPID);
 
         /* setup signal handling */
         sig_init();

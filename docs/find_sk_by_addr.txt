@@ -1,0 +1,28 @@
+if (sllc_smac == NULL && sllc_ssap == destination_sap from remote) {
+	if (sllc_mmac != NULL) {
+		if (sllc_mmac == destination_mac from remote)
+			return match
+		else
+			return no match
+	}
+	return match
+}
+
+if (sllc_mmac != NULL) {
+	if (sllc_mmac == destination_mac from remote) {
+		if (sllc_smac == device mac pkt came in on)
+			return match
+	}
+	return no match
+}
+
+if (sllc_smac == destination_mac from remote && sllc_ssap == destination_sap from remote) {
+
+	sk = find_sk_by_exact();
+	if (sk)
+		return match
+	if (sllc_dmac == NULL)
+		return match;
+	return no match
+}
+}

@@ -66,6 +66,7 @@ char version_s[]                        = VERSION;
 char name_s[]                           = "lard";
 char desc_s[]                           = "Lan address resolution daemon";
 char maintainer_s[]                     = "Jay Schulist <jschlst@samba.org>";
+char web_s[]			 	= "http://www.linux-sna.org";
 
 int lar_ifr_fd = -1;
 fd_set lar_all_fds;
@@ -980,13 +981,12 @@ static int lar_process_user(struct lar_client *clnt)
         u_int8_t *pkt;
 
         pkt = new_s(pktlen);    
-        if(!pkt)
+        if (!pkt)
                 return -ENOMEM;
 
         /* process user request. */
         rxlen = recv(clnt->client_fd, pkt, pktlen, 0);
-        if (rxlen < 0 || rxlen == 0)
-        {
+        if (rxlen < 0 || rxlen == 0) {
                 lar_count_and_clear_fds(clnt->client_fd, &lar_all_fds);
                 close(clnt->client_fd);
                 lar_client_delete(clnt);
@@ -1618,11 +1618,11 @@ void sig_preexec(void)
         sig_unblock();
 }
 
-static void logpid(void)
+static void logpid(char *path)
 {
         FILE *fp;
 
-        if ((fp = fopen(_PATH_LARDPID, "w")) != NULL) {
+        if ((fp = fopen(path, "w")) != NULL) {
                 fprintf(fp, "%u\n", getpid());
                 (void)fclose(fp);
         }
@@ -1633,6 +1633,7 @@ static void version(void)
 {
         printf("%s: %s %s\n%s\n", name_s, desc_s, version_s,
                 maintainer_s);
+	printf("%s\n", web_s);
         exit(1);
 }
 
@@ -1685,7 +1686,7 @@ int main(int argc, char **argv)
                 daemon(0, 0);
 
         /* log our pid for scripts. */
-        logpid();
+        logpid(_PATH_LARDPID);
 
         /* setup signal handling */
         sig_init();
