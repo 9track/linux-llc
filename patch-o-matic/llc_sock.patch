@@ -1,6 +1,7 @@
-diff -ruN linux-llc-0.1.15/include/net/llc_pdu.h linux/include/net/llc_pdu.h
---- linux-llc-0.1.15/include/net/llc_pdu.h	Fri May  3 04:34:09 2002
-+++ linux/include/net/llc_pdu.h	Fri May  3 04:18:55 2002
+Index: linux-llc-kernel/include/net/llc_pdu.h
+diff -u linux-llc-kernel/include/net/llc_pdu.h:1.1.2.1 linux-llc-kernel/include/net/llc_pdu.h:1.1.2.2
+--- linux-llc-kernel/include/net/llc_pdu.h:1.1.2.1	Sun May  5 23:47:54 2002
++++ linux-llc-kernel/include/net/llc_pdu.h	Mon May  6 01:50:47 2002
 @@ -51,7 +51,8 @@
  #define LLC_PDU_TYPE_I         0           /* first bit */
  #define LLC_PDU_TYPE_S         1           /* first two bits */
@@ -11,9 +12,10 @@ diff -ruN linux-llc-0.1.15/include/net/llc_pdu.h linux/include/net/llc_pdu.h
  #define LLC_PDU_TYPE_IS_I(pdu) \
             ((!(pdu->ctrl_1 & LLC_PDU_TYPE_I_MASK)) ? 0 : 1)
  
-diff -ruN linux-llc-0.1.15/net/llc/llc_conn.c linux/net/llc/llc_conn.c
---- linux-llc-0.1.15/net/llc/llc_conn.c	Fri May  3 04:34:09 2002
-+++ linux/net/llc/llc_conn.c	Fri May  3 02:16:24 2002
+Index: linux-llc-kernel/net/llc/llc_conn.c
+diff -u linux-llc-kernel/net/llc/llc_conn.c:1.1.2.1 linux-llc-kernel/net/llc/llc_conn.c:1.1.2.2
+--- linux-llc-kernel/net/llc/llc_conn.c:1.1.2.1	Sun May  5 23:48:02 2002
++++ linux-llc-kernel/net/llc/llc_conn.c	Mon May  6 01:50:48 2002
 @@ -422,7 +422,8 @@
  		struct llc_opt *llc = list_entry(entry, struct llc_opt, node);
  
@@ -24,9 +26,34 @@ diff -ruN linux-llc-0.1.15/net/llc/llc_conn.c linux/net/llc/llc_conn.c
  			rc = sock_list_entry(entry, struct llc_opt, node);
  			break;
  		}
-diff -ruN linux-llc-0.1.15/net/llc/llc_pdu.c linux/net/llc/llc_pdu.c
---- linux-llc-0.1.15/net/llc/llc_pdu.c	Fri May  3 04:34:09 2002
-+++ linux/net/llc/llc_pdu.c	Fri May  3 04:42:10 2002
+Index: linux-llc-kernel/net/llc/llc_mac.c
+diff -u linux-llc-kernel/net/llc/llc_mac.c:1.1.2.1 linux-llc-kernel/net/llc/llc_mac.c:1.1.2.2
+--- linux-llc-kernel/net/llc/llc_mac.c:1.1.2.1	Sun May  5 23:48:03 2002
++++ linux-llc-kernel/net/llc/llc_mac.c	Mon May  6 02:04:50 2002
+@@ -13,6 +13,10 @@
+  */
+ #include <linux/netdevice.h>
+ #include <linux/if_arp.h>
++#ifdef CONFIG_TR
++#include <linux/if_tr.h>
++#include <linux/trdevice.h>
++#endif
+ #include <net/llc_if.h>
+ #include <net/llc_mac.h>
+ #include <net/llc_pdu.h>
+@@ -249,7 +253,7 @@
+ 				memset(trh->sa, 0, dev->addr_len);
+ 			if (da) {
+ 				memcpy(trh->da, da, dev->addr_len);
+-				tr_source_route((struct trh_hdr *)trh, dev);
++				tr_source_route(skb, (struct trh_hdr *)trh, dev);
+ 			}
+ 			skb->mac.raw = skb->data;
+ 			break;
+Index: linux-llc-kernel/net/llc/llc_pdu.c
+diff -u linux-llc-kernel/net/llc/llc_pdu.c:1.1.2.1 linux-llc-kernel/net/llc/llc_pdu.c:1.1.2.2
+--- linux-llc-kernel/net/llc/llc_pdu.c:1.1.2.1	Sun May  5 23:48:03 2002
++++ linux-llc-kernel/net/llc/llc_pdu.c	Mon May  6 01:50:48 2002
 @@ -222,7 +222,6 @@
  	xid_info->fmt_id = XID_FMT_ID;    /* 0x81*/
  	xid_info->type = svcs_supported;
@@ -45,9 +72,10 @@ diff -ruN linux-llc-0.1.15/net/llc/llc_pdu.c linux/net/llc/llc_pdu.c
  			break;
  	}
  	return rtn_val;
-diff -ruN linux-llc-0.1.15/net/llc/llc_s_ac.c linux/net/llc/llc_s_ac.c
---- linux-llc-0.1.15/net/llc/llc_s_ac.c	Fri May  3 04:34:09 2002
-+++ linux/net/llc/llc_s_ac.c	Fri May  3 04:21:14 2002
+Index: linux-llc-kernel/net/llc/llc_s_ac.c
+diff -u linux-llc-kernel/net/llc/llc_s_ac.c:1.1.2.1 linux-llc-kernel/net/llc/llc_s_ac.c:1.1.2.2
+--- linux-llc-kernel/net/llc/llc_s_ac.c:1.1.2.1	Sun May  5 23:48:04 2002
++++ linux-llc-kernel/net/llc/llc_s_ac.c	Mon May  6 01:50:48 2002
 @@ -83,7 +83,7 @@
  	struct sk_buff *skb = prim_data->skb;
  	int rc;
@@ -57,9 +85,10 @@ diff -ruN linux-llc-0.1.15/net/llc/llc_s_ac.c linux/net/llc/llc_s_ac.c
  			    prim_data->daddr.lsap, LLC_PDU_CMD);
  	rc = llc_pdu_init_as_xid_cmd(skb, XID_NULL_CLASS_2, 0);
  	if (rc)
-diff -ruN linux-llc-0.1.15/net/llc/llc_sock.c linux/net/llc/llc_sock.c
---- linux-llc-0.1.15/net/llc/llc_sock.c	Fri May  3 04:34:09 2002
-+++ linux/net/llc/llc_sock.c	Fri May  3 03:59:56 2002
+Index: linux-llc-kernel/net/llc/llc_sock.c
+diff -u linux-llc-kernel/net/llc/llc_sock.c:1.1.2.1 linux-llc-kernel/net/llc/llc_sock.c:1.1.2.2
+--- linux-llc-kernel/net/llc/llc_sock.c:1.1.2.1	Sun May  5 23:48:04 2002
++++ linux-llc-kernel/net/llc/llc_sock.c	Mon May  6 01:50:48 2002
 @@ -45,7 +45,8 @@
  
  static u16 llc_ui_sap_last_autoport;

@@ -27,7 +27,7 @@ CVS="cvs"
 
 # RPM happenings
 #ifndef RPM_BUILD_DIR
-RPM_BUILD_DIR="/usr/src/redhat"
+RPM_BUILD_DIR="/usr/src/rpm"
 #endif
 #ifndef RPM_BUILD_TARGET
 RPM_BUILD_TARGET=`uname -m`
@@ -73,11 +73,28 @@ rpm-dist:
 		echo "RPM spec file '$(PACKAGE).spec' missing from '$(srcdir)/docs' directory; aborting rpm build" 1>&2; \
 		exit 1; \
 	fi; \
-	cat $(srcdir)/docs/$(PACKAGE).spec | sed s/KERNELDIR/$(KERNEL_DIR)/g | sed s/VERSION/$(VERSION)/g > $(RPM_BUILD_DIR)/SPECS/$(PACKAGE).spec; \
+	cat $(srcdir)/docs/$(PACKAGE).spec | sed s/VERSION/$(VERSION)/g > $(RPM_BUILD_DIR)/SPECS/$(PACKAGE).spec; \
 	$(MAKE) dist; \
 	cp -f $(srcdir)/$(PACKAGE)-$(VERSION).tar.gz $(RPM_BUILD_DIR)/SOURCES/$(PACKAGE)-$(VERSION).tar.gz; \
-	rpm -ba -v $(RPM_BUILD_DIR)/SPECS/$(PACKAGE).spec; 
-#	rm -f $(RPM_BUILD_DIR)/SPECS/$(PACKAGE).spec; \
-#	rm -f $(RPM_BUILD_DIR)/SOURCES/$(PACKAGE)-$(VERSION).tar.gz; \
-#	rm -rf $(RPM_BUILD_DIR)/BUILD/$(PACKAGE)-$(VERSION)
-#	find $(RPM_BUILD_DIR)/RPMS -name *.rpm -exec `cp -f {} $(srcdir)/` \;
+	rpm -ba -v $(RPM_BUILD_DIR)/SPECS/$(PACKAGE).spec; \
+	rm -f $(RPM_BUILD_DIR)/SPECS/$(PACKAGE).spec; \
+	rm -f $(RPM_BUILD_DIR)/SOURCES/$(PACKAGE)-$(VERSION).tar.gz; \
+	rm -rf $(RPM_BUILD_DIR)/BUILD/$(PACKAGE)-$(VERSION); \
+	mkdir $(srcdir)/build.tmp
+	mkdir $(srcdir)/build.tmp/source
+	mkdir $(srcdir)/build.tmp/binaries
+	mkdir $(srcdir)/build.tmp/binaries/RPMS
+	mkdir $(srcdir)/build.tmp/binaries/SRPMS
+	mv -f $(PACKAGE)-$(VERSION).tar.gz $(srcdir)/build.tmp/source
+	mv -f `find $(RPM_BUILD_DIR)/SRPMS -name "$(PACKAGE)-*.src.rpm" -print` $(srcdir)/build.tmp/binaries/SRPMS/; \
+	mv -f `find $(RPM_BUILD_DIR)/RPMS -name "$(PACKAGE)-*.rpm" -print` $(srcdir)/build.tmp/binaries/RPMS/
+
+ftp-dist:
+	if ! test -d $(srcdir)/build.tmp; then \
+		echo "Build directory '$(srcdir)/build.tmp' missing, run 'make rpm-dist' first" 1>&2; \
+		exit 1; \
+	fi; \
+	ncftpput -R -u jschlst ftp.linux-sna.org /home/ftp/pub/$(PACKAGE)/v0.1/ $(srcdir)/build.tmp/*
+
+clean-dist:
+	rm -rf $(srcdir)/build.tmp

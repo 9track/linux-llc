@@ -3,8 +3,7 @@
 %define rel  1
 %define vendor linux-SNA Project
 %define distro linux-SNA Enterprise Multiprotocol Suite
-%define packager jschlst@samba.org
-%define kernel_dir KERNELDIR
+%define packager jschlst@linux-sna.org
 
 Vendor: %{vendor}
 Distribution: %{distro}
@@ -12,27 +11,30 @@ Packager: %{packager}
 Name: %{name}
 Version: %{ver}
 Release: %{rel}
-Summary: linux-LLC network communications software.
+Summary: linux-LLC base network communications software.
 Copyright: GPL
-Group: Networking/Admin
-URL: ftp://ftp.linux-sna.org/pub/linux-llc/
-Source0: ftp.linux-sna.org/pub/linux-llc/%{name}-%{ver}.tar.gz
+Group: Networking
+URL: http://www.linux-sna.org/pub/software/
+Source0: ftp.linux-sna.org/pub/linux-llc/v0.1/source/%{name}-%{ver}.tar.gz
 BuildRoot: /var/tmp/%{name}-%{version}-%{release}-root
 
 %package dlsw
 Summary: linux-DLSw data link switching software suite.
-Group: Networking/Admin
+Group: Networking
+Requires: linux-llc
 
 %package lar
 Summary: linux-LAR lan address resolution software suite.
-Group: Networking/Admin
+Group: Networking
+Requires: linux-llc
 
 %package llcping
 Summary: LLCping provides diagnotic information on llc links and hosts.
-Group: Networking/Admin
+Group: Networking
+Requires: linux-llc
 
 %description
-Various user-space software components to enable linux-LLC communications.
+Various user-space software configuration files to enable linux-LLC communications.
 
 %description dlsw
 Dlsw protocol suite provides intelligent LLC bridging over IP.
@@ -52,7 +54,7 @@ LLCping provides diagnostic information on remote LLC hosts.
 ./configure --prefix=${RPM_BUILD_ROOT}/usr
 
 %build
-make KERNEL_DIR=%{kernel_dir}
+make
 
 %install
 install -D -m 644 docs/llchosts.xml $RPM_BUILD_ROOT/etc/llchosts.xml

@@ -1,24 +1,7 @@
-Index: kernel-acme/Documentation/Configure.help
-diff -u kernel-acme/Documentation/Configure.help:1.1.1.9 kernel-acme/Documentation/Configure.help:1.1.1.9.2.1
---- kernel-acme/Documentation/Configure.help:1.1.1.9	Tue Nov  6 18:34:52 2001
-+++ kernel-acme/Documentation/Configure.help	Tue Nov  6 20:13:46 2001
-@@ -5082,6 +5082,12 @@
-   Ethernet, using ordinary Ethernet cards. 
- 
- 
-+ANSI/IEEE 802.2 Data link layer User Interface SAPs (EXPERIMENTAL)
-+CONFIG_LLC_UI
-+  LLC User Interface SAPs is a Linux socket interface into the
-+  LLC datalink layer. This allows a user to create entire user
-+  space network layers tied to a real SAP.
-+
- Frame Diverter (EXPERIMENTAL)
- CONFIG_NET_DIVERT
-   The Frame Diverter allows you to divert packets from the
-Index: kernel-acme/include/linux/af_netb.h
-diff -u /dev/null kernel-acme/include/linux/af_netb.h:1.1.8.1
---- /dev/null	Thu Nov 22 23:54:49 2001
-+++ kernel-acme/include/linux/af_netb.h	Tue Nov  6 20:13:47 2001
+Index: linux-llc-kernel/include/linux/af_netb.h
+diff -u /dev/null linux-llc-kernel/include/linux/af_netb.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:31 2002
++++ linux-llc-kernel/include/linux/af_netb.h	Sun May  5 23:47:52 2002
 @@ -0,0 +1,192 @@
 +#ifndef _LINUX_AF_NETB_H
 +#define _LINUX_AF_NETB_H
@@ -212,10 +195,10 @@ diff -u /dev/null kernel-acme/include/linux/af_netb.h:1.1.8.1
 +	struct nb_status_names local_names[NETBEUI_MAX_NAMES];
 +} nb_status_buffer_t;
 +#endif /* _LINUX_AF_NETB_H */
-Index: kernel-acme/include/linux/brlock.h
-diff -u kernel-acme/include/linux/brlock.h:1.1.1.2 kernel-acme/include/linux/brlock.h:1.1.1.2.4.1
---- kernel-acme/include/linux/brlock.h:1.1.1.2	Wed Sep 26 19:05:08 2001
-+++ kernel-acme/include/linux/brlock.h	Tue Nov  6 20:13:47 2001
+Index: linux-llc-kernel/include/linux/brlock.h
+diff -u linux-llc-kernel/include/linux/brlock.h:1.1.1.1 linux-llc-kernel/include/linux/brlock.h:1.1.1.1.2.1
+--- linux-llc-kernel/include/linux/brlock.h:1.1.1.1	Sun May  5 22:35:50 2002
++++ linux-llc-kernel/include/linux/brlock.h	Sun May  5 23:47:52 2002
 @@ -28,13 +28,15 @@
   * load-locked/store-conditional cpus (ALPHA/MIPS/PPC) and
   * compare-and-swap cpus (Sparc64).  So we control which
@@ -233,10 +216,10 @@ diff -u kernel-acme/include/linux/brlock.h:1.1.1.2 kernel-acme/include/linux/brl
  	__BR_END
  };
  
-Index: kernel-acme/include/linux/dextab.h
-diff -u /dev/null kernel-acme/include/linux/dextab.h:1.1.8.1
---- /dev/null	Thu Nov 22 23:54:49 2001
-+++ kernel-acme/include/linux/dextab.h	Tue Nov  6 20:13:47 2001
+Index: linux-llc-kernel/include/linux/dextab.h
+diff -u /dev/null linux-llc-kernel/include/linux/dextab.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:31 2002
++++ linux-llc-kernel/include/linux/dextab.h	Sun May  5 23:47:52 2002
 @@ -0,0 +1,58 @@
 +#ifndef __LINUX_DEXTAB_H
 +#define __LINUX_DEXTAB_H
@@ -296,10 +279,10 @@ diff -u /dev/null kernel-acme/include/linux/dextab.h:1.1.8.1
 +extern inline int dextab_count_entries(dextab_t *tbl);
 +extern void dextab_destruct(dextab_t *tbl);
 +#endif __LINUX_DEXTAB_H
-Index: kernel-acme/include/linux/llc.h
-diff -u /dev/null kernel-acme/include/linux/llc.h:1.1.4.6
---- /dev/null	Thu Nov 22 23:54:49 2001
-+++ kernel-acme/include/linux/llc.h	Wed Nov 21 00:19:20 2001
+Index: linux-llc-kernel/include/linux/llc.h
+diff -u /dev/null linux-llc-kernel/include/linux/llc.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:31 2002
++++ linux-llc-kernel/include/linux/llc.h	Sun May  5 23:47:53 2002
 @@ -0,0 +1,96 @@
 +#ifndef __LINUX_LLC_H
 +#define __LINUX_LLC_H
@@ -397,10 +380,10 @@ diff -u /dev/null kernel-acme/include/linux/llc.h:1.1.4.6
 +extern void llc_ui_exit(void);
 +#endif /* __KERNEL__ */
 +#endif /* __LINUX_LLC_H */
-Index: kernel-acme/include/linux/netbeui.h
-diff -u kernel-acme/include/linux/netbeui.h:1.1.1.1 kernel-acme/include/linux/netbeui.h:1.1.1.1.8.1
---- kernel-acme/include/linux/netbeui.h:1.1.1.1	Tue Jun 26 14:34:01 2001
-+++ kernel-acme/include/linux/netbeui.h	Tue Nov  6 20:13:47 2001
+Index: linux-llc-kernel/include/linux/netbeui.h
+diff -u linux-llc-kernel/include/linux/netbeui.h:1.1.1.1 linux-llc-kernel/include/linux/netbeui.h:1.1.1.1.2.1
+--- linux-llc-kernel/include/linux/netbeui.h:1.1.1.1	Sun May  5 22:35:49 2002
++++ linux-llc-kernel/include/linux/netbeui.h	Sun May  5 23:47:53 2002
 @@ -1,16 +1,587 @@
  #ifndef _LINUX_NETBEUI_H
  #define _LINUX_NETBEUI_H
@@ -999,39 +982,10 @@ diff -u kernel-acme/include/linux/netbeui.h:1.1.1.1 kernel-acme/include/linux/ne
 +			   int *optlen);
 +extern int nbcs_ioctl(unsigned int cmd, void *arg);
 +#endif /* _LINUX_NETBEUI_H */
-Index: kernel-acme/include/linux/socket.h
-diff -u kernel-acme/include/linux/socket.h:1.1.1.2 kernel-acme/include/linux/socket.h:1.1.1.2.6.2
---- kernel-acme/include/linux/socket.h:1.1.1.2	Thu Aug 16 15:49:55 2001
-+++ kernel-acme/include/linux/socket.h	Thu Nov 22 19:51:49 2001
-@@ -156,6 +156,7 @@
- #define AF_IRDA		23	/* IRDA sockets			*/
- #define AF_PPPOX	24	/* PPPoX sockets		*/
- #define AF_WANPIPE	25	/* Wanpipe API Sockets */
-+#define AF_LLC		26	/* Linux LLC			*/
- #define AF_BLUETOOTH	31	/* Bluetooth sockets 		*/
- #define AF_MAX		32	/* For now.. */
- 
-@@ -187,6 +188,7 @@
- #define PF_IRDA		AF_IRDA
- #define PF_PPPOX	AF_PPPOX
- #define PF_WANPIPE	AF_WANPIPE
-+#define PF_LLC		AF_LLC
- #define PF_BLUETOOTH	AF_BLUETOOTH
- #define PF_MAX		AF_MAX
- 
-@@ -237,6 +239,8 @@
- #define SOL_ATM		264	/* ATM layer (cell level) */
- #define SOL_AAL		265	/* ATM Adaption Layer (packet level) */
- #define SOL_IRDA        266
-+#define SOL_NETBEUI	267
-+#define SOL_LLC		268
- 
- /* IPX options */
- #define IPX_TYPE	1
-Index: kernel-acme/include/linux/trdevice.h
-diff -u kernel-acme/include/linux/trdevice.h:1.1.1.1 kernel-acme/include/linux/trdevice.h:1.1.1.1.8.1
---- kernel-acme/include/linux/trdevice.h:1.1.1.1	Tue Jun 26 14:34:03 2001
-+++ kernel-acme/include/linux/trdevice.h	Tue Nov  6 20:13:47 2001
+Index: linux-llc-kernel/include/linux/trdevice.h
+diff -u linux-llc-kernel/include/linux/trdevice.h:1.1.1.1 linux-llc-kernel/include/linux/trdevice.h:1.1.1.1.2.1
+--- linux-llc-kernel/include/linux/trdevice.h:1.1.1.1	Sun May  5 22:35:49 2002
++++ linux-llc-kernel/include/linux/trdevice.h	Sun May  5 23:47:53 2002
 @@ -31,6 +31,9 @@
  extern int		tr_header(struct sk_buff *skb, struct net_device *dev,
  				   unsigned short type, void *daddr,
@@ -1042,10 +996,10 @@ diff -u kernel-acme/include/linux/trdevice.h:1.1.1.1 kernel-acme/include/linux/t
  extern int		tr_rebuild_header(struct sk_buff *skb);
  extern unsigned short	tr_type_trans(struct sk_buff *skb, struct net_device *dev);
  extern struct net_device *init_trdev(struct net_device *dev, int sizeof_priv);
-Index: kernel-acme/include/net/datalink.h
-diff -u kernel-acme/include/net/datalink.h:1.1.1.1 kernel-acme/include/net/datalink.h:1.1.1.1.8.1
---- kernel-acme/include/net/datalink.h:1.1.1.1	Tue Jun 26 14:33:58 2001
-+++ kernel-acme/include/net/datalink.h	Tue Nov  6 20:13:47 2001
+Index: linux-llc-kernel/include/net/datalink.h
+diff -u linux-llc-kernel/include/net/datalink.h:1.1.1.1 linux-llc-kernel/include/net/datalink.h:1.1.1.1.2.1
+--- linux-llc-kernel/include/net/datalink.h:1.1.1.1	Sun May  5 22:35:55 2002
++++ linux-llc-kernel/include/net/datalink.h	Sun May  5 23:47:53 2002
 @@ -2,15 +2,24 @@
  #define _NET_INET_DATALINK_H_
  
@@ -1080,10 +1034,10 @@ diff -u kernel-acme/include/net/datalink.h:1.1.1.1 kernel-acme/include/net/datal
  };
  
  #endif
-Index: kernel-acme/include/net/llc_actn.h
-diff -u /dev/null kernel-acme/include/net/llc_actn.h:1.1.8.4
---- /dev/null	Thu Nov 22 23:54:51 2001
-+++ kernel-acme/include/net/llc_actn.h	Sun Nov 11 15:29:45 2001
+Index: linux-llc-kernel/include/net/llc_actn.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_actn.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_actn.h	Sun May  5 23:47:53 2002
 @@ -0,0 +1,48 @@
 +#ifndef LLC_ACTN_H
 +#define LLC_ACTN_H
@@ -1133,10 +1087,10 @@ diff -u /dev/null kernel-acme/include/net/llc_actn.h:1.1.8.4
 +extern int llc_station_ac_report_status(struct llc_station *station,
 +                                   struct llc_station_state_ev *ev);
 +#endif /* LLC_ACTN_H */
-Index: kernel-acme/include/net/llc_c_ac.h
-diff -u /dev/null kernel-acme/include/net/llc_c_ac.h:1.1.8.5
---- /dev/null	Thu Nov 22 23:54:51 2001
-+++ kernel-acme/include/net/llc_c_ac.h	Thu Nov 15 00:26:02 2001
+Index: linux-llc-kernel/include/net/llc_c_ac.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_c_ac.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_c_ac.h	Sun May  5 23:47:53 2002
 @@ -0,0 +1,254 @@
 +#ifndef LLC_C_AC_H
 +#define LLC_C_AC_H
@@ -1392,10 +1346,10 @@ diff -u /dev/null kernel-acme/include/net/llc_c_ac.h:1.1.8.5
 +extern int llc_conn_ac_send_i_as_ack(struct sock* sk,
 +				     struct llc_conn_state_ev *ev);
 +#endif /* LLC_C_AC_H */
-Index: kernel-acme/include/net/llc_c_ev.h
-diff -u /dev/null kernel-acme/include/net/llc_c_ev.h:1.1.8.4
---- /dev/null	Thu Nov 22 23:54:51 2001
-+++ kernel-acme/include/net/llc_c_ev.h	Thu Nov 15 00:26:02 2001
+Index: linux-llc-kernel/include/net/llc_c_ev.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_c_ev.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_c_ev.h	Sun May  5 23:47:53 2002
 @@ -0,0 +1,323 @@
 +#ifndef LLC_C_EV_H
 +#define LLC_C_EV_H
@@ -1720,10 +1674,10 @@ diff -u /dev/null kernel-acme/include/net/llc_c_ev.h:1.1.8.4
 +extern int llc_conn_ev_qlfy_set_status_rst_done(struct sock *sk,
 +						struct llc_conn_state_ev *ev);
 +#endif /* LLC_C_EV_H */
-Index: kernel-acme/include/net/llc_c_st.h
-diff -u /dev/null kernel-acme/include/net/llc_c_st.h:1.1.8.2
---- /dev/null	Thu Nov 22 23:54:51 2001
-+++ kernel-acme/include/net/llc_c_st.h	Wed Nov  7 14:38:54 2001
+Index: linux-llc-kernel/include/net/llc_c_st.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_c_st.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_c_st.h	Sun May  5 23:47:54 2002
 @@ -0,0 +1,48 @@
 +#ifndef LLC_C_ST_H
 +#define LLC_C_ST_H
@@ -1773,10 +1727,10 @@ diff -u /dev/null kernel-acme/include/net/llc_c_st.h:1.1.8.2
 +
 +extern struct llc_conn_state llc_conn_state_table[];
 +#endif /* LLC_C_ST_H */
-Index: kernel-acme/include/net/llc_conn.h
-diff -u /dev/null kernel-acme/include/net/llc_conn.h:1.1.8.6
---- /dev/null	Thu Nov 22 23:54:51 2001
-+++ kernel-acme/include/net/llc_conn.h	Wed Nov 21 19:42:23 2001
+Index: linux-llc-kernel/include/net/llc_conn.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_conn.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_conn.h	Sun May  5 23:47:54 2002
 @@ -0,0 +1,157 @@
 +#ifndef LLC_CONN_H
 +#define LLC_CONN_H
@@ -1935,10 +1889,10 @@ diff -u /dev/null kernel-acme/include/net/llc_conn.h:1.1.8.6
 +extern u8 llc_data_accept_state(u8 state); 
 +extern void llc_build_offset_table(void);
 +#endif /* LLC_CONN_H */
-Index: kernel-acme/include/net/llc_evnt.h
-diff -u /dev/null kernel-acme/include/net/llc_evnt.h:1.1.8.4
---- /dev/null	Thu Nov 22 23:54:51 2001
-+++ kernel-acme/include/net/llc_evnt.h	Sun Nov 11 15:29:45 2001
+Index: linux-llc-kernel/include/net/llc_evnt.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_evnt.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_evnt.h	Sun May  5 23:47:54 2002
 @@ -0,0 +1,93 @@
 +#ifndef LLC_EVNT_H
 +#define LLC_EVNT_H
@@ -2033,10 +1987,10 @@ diff -u /dev/null kernel-acme/include/net/llc_evnt.h:1.1.8.4
 +extern int llc_stat_ev_disable_req(struct llc_station *station,
 +				       struct llc_station_state_ev *ev);
 +#endif /* LLC_EVNT_H */
-Index: kernel-acme/include/net/llc_if.h
-diff -u /dev/null kernel-acme/include/net/llc_if.h:1.1.8.4
---- /dev/null	Thu Nov 22 23:54:52 2001
-+++ kernel-acme/include/net/llc_if.h	Wed Nov 21 00:19:21 2001
+Index: linux-llc-kernel/include/net/llc_if.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_if.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_if.h	Sun May  5 23:47:54 2002
 @@ -0,0 +1,152 @@
 +#ifndef LLC_IF_H
 +#define LLC_IF_H
@@ -2190,10 +2144,10 @@ diff -u /dev/null kernel-acme/include/net/llc_if.h:1.1.8.4
 +				    u8 local_sap);
 +extern void llc_sap_close(struct llc_sap *sap);
 +#endif /* LLC_IF_H */
-Index: kernel-acme/include/net/llc_mac.h
-diff -u /dev/null kernel-acme/include/net/llc_mac.h:1.1.8.1
---- /dev/null	Thu Nov 22 23:54:52 2001
-+++ kernel-acme/include/net/llc_mac.h	Tue Nov  6 20:13:48 2001
+Index: linux-llc-kernel/include/net/llc_mac.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_mac.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_mac.h	Sun May  5 23:47:54 2002
 @@ -0,0 +1,40 @@
 +#ifndef LLC_MAC_H
 +#define LLC_MAC_H
@@ -2235,10 +2189,10 @@ diff -u /dev/null kernel-acme/include/net/llc_mac.h:1.1.8.1
 +			  struct sk_buff *skb, u8 type);
 +extern u16 lan_hdrs_init(struct sk_buff *skb, u8 *sa, u8 *da);
 +#endif /* LLC_MAC_H */
-Index: kernel-acme/include/net/llc_main.h
-diff -u /dev/null kernel-acme/include/net/llc_main.h:1.1.8.3
---- /dev/null	Thu Nov 22 23:54:52 2001
-+++ kernel-acme/include/net/llc_main.h	Wed Nov  7 14:38:54 2001
+Index: linux-llc-kernel/include/net/llc_main.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_main.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_main.h	Sun May  5 23:47:54 2002
 @@ -0,0 +1,69 @@
 +#ifndef LLC_MAIN_H
 +#define LLC_MAIN_H
@@ -2309,10 +2263,10 @@ diff -u /dev/null kernel-acme/include/net/llc_main.h:1.1.8.3
 +				 struct sk_buff *skb);
 +extern struct sk_buff *llc_alloc_frame(void);
 +#endif /* LLC_MAIN_H */
-Index: kernel-acme/include/net/llc_pdu.h
-diff -u /dev/null kernel-acme/include/net/llc_pdu.h:1.1.8.4
---- /dev/null	Thu Nov 22 23:54:52 2001
-+++ kernel-acme/include/net/llc_pdu.h	Thu Nov 22 20:58:31 2001
+Index: linux-llc-kernel/include/net/llc_pdu.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_pdu.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_pdu.h	Sun May  5 23:47:54 2002
 @@ -0,0 +1,257 @@
 +#ifndef LLC_PDU_H
 +#define LLC_PDU_H
@@ -2571,10 +2525,10 @@ diff -u /dev/null kernel-acme/include/net/llc_pdu.h:1.1.8.4
 +extern int llc_pdu_init_as_rnr_rsp(struct sk_buff *skb, u8 f_bit, u8 nr);
 +extern int llc_pdu_init_as_ua_rsp(struct sk_buff *skb, u8 f_bit);
 +#endif /* LLC_PDU_H */
-Index: kernel-acme/include/net/llc_s_ac.h
-diff -u /dev/null kernel-acme/include/net/llc_s_ac.h:1.1.8.3
---- /dev/null	Thu Nov 22 23:54:52 2001
-+++ kernel-acme/include/net/llc_s_ac.h	Sun Nov 11 15:29:45 2001
+Index: linux-llc-kernel/include/net/llc_s_ac.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_s_ac.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_s_ac.h	Sun May  5 23:47:55 2002
 @@ -0,0 +1,47 @@
 +#ifndef LLC_S_AC_H
 +#define LLC_S_AC_H
@@ -2623,10 +2577,10 @@ diff -u /dev/null kernel-acme/include/net/llc_s_ac.h:1.1.8.3
 +extern int llc_sap_action_test_ind(struct llc_sap *sap,
 +				   struct llc_sap_state_ev *ev);
 +#endif /* LLC_S_AC_H */
-Index: kernel-acme/include/net/llc_s_ev.h
-diff -u /dev/null kernel-acme/include/net/llc_s_ev.h:1.1.8.3
---- /dev/null	Thu Nov 22 23:54:52 2001
-+++ kernel-acme/include/net/llc_s_ev.h	Sun Nov 11 15:29:45 2001
+Index: linux-llc-kernel/include/net/llc_s_ev.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_s_ev.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_s_ev.h	Sun May  5 23:47:55 2002
 @@ -0,0 +1,101 @@
 +#ifndef LLC_S_EV_H
 +#define LLC_S_EV_H
@@ -2729,10 +2683,10 @@ diff -u /dev/null kernel-acme/include/net/llc_s_ev.h:1.1.8.3
 +extern int llc_sap_ev_deactivation_req(struct llc_sap *sap,
 +				       struct llc_sap_state_ev *ev); 
 +#endif /* LLC_S_EV_H */
-Index: kernel-acme/include/net/llc_s_st.h
-diff -u /dev/null kernel-acme/include/net/llc_s_st.h:1.1.8.2
---- /dev/null	Thu Nov 22 23:54:52 2001
-+++ kernel-acme/include/net/llc_s_st.h	Wed Nov  7 14:38:54 2001
+Index: linux-llc-kernel/include/net/llc_s_st.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_s_st.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_s_st.h	Sun May  5 23:47:55 2002
 @@ -0,0 +1,34 @@
 +#ifndef LLC_S_ST_H
 +#define LLC_S_ST_H
@@ -2768,10 +2722,10 @@ diff -u /dev/null kernel-acme/include/net/llc_s_st.h:1.1.8.2
 +/* only access to SAP state table */
 +extern struct llc_sap_state llc_sap_state_table[LLC_NBR_SAP_STATES];
 +#endif /* LLC_S_ST_H */
-Index: kernel-acme/include/net/llc_sap.h
-diff -u /dev/null kernel-acme/include/net/llc_sap.h:1.1.8.3
---- /dev/null	Thu Nov 22 23:54:52 2001
-+++ kernel-acme/include/net/llc_sap.h	Sat Nov 17 16:19:36 2001
+Index: linux-llc-kernel/include/net/llc_sap.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_sap.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_sap.h	Sun May  5 23:47:55 2002
 @@ -0,0 +1,42 @@
 +#ifndef LLC_SAP_H
 +#define LLC_SAP_H
@@ -2815,10 +2769,10 @@ diff -u /dev/null kernel-acme/include/net/llc_sap.h:1.1.8.3
 +			    struct llc_sap_state_ev *ev);
 +extern void llc_sap_send_pdu(struct llc_sap *sap, struct sk_buff *skb);
 +#endif /* LLC_SAP_H */
-Index: kernel-acme/include/net/llc_stat.h
-diff -u /dev/null kernel-acme/include/net/llc_stat.h:1.1.8.3
---- /dev/null	Thu Nov 22 23:54:52 2001
-+++ kernel-acme/include/net/llc_stat.h	Wed Nov  7 14:38:54 2001
+Index: linux-llc-kernel/include/net/llc_stat.h
+diff -u /dev/null linux-llc-kernel/include/net/llc_stat.h:1.1.2.1
+--- /dev/null	Thu May  9 11:12:32 2002
++++ linux-llc-kernel/include/net/llc_stat.h	Sun May  5 23:47:55 2002
 @@ -0,0 +1,35 @@
 +#ifndef LLC_STAT_H
 +#define LLC_STAT_H
@@ -2855,10 +2809,10 @@ diff -u /dev/null kernel-acme/include/net/llc_stat.h:1.1.8.3
 +
 +extern struct llc_station_state llc_station_state_table[LLC_NBR_STATION_STATES];
 +#endif /* LLC_STAT_H */
-Index: kernel-acme/include/net/p8022.h
-diff -u kernel-acme/include/net/p8022.h:1.1.1.1 kernel-acme/include/net/p8022.h:1.1.1.1.8.1
---- kernel-acme/include/net/p8022.h:1.1.1.1	Tue Jun 26 14:33:57 2001
-+++ kernel-acme/include/net/p8022.h	Tue Nov  6 20:13:48 2001
+Index: linux-llc-kernel/include/net/p8022.h
+diff -u linux-llc-kernel/include/net/p8022.h:1.1.1.1 linux-llc-kernel/include/net/p8022.h:1.1.1.1.2.1
+--- linux-llc-kernel/include/net/p8022.h:1.1.1.1	Sun May  5 22:35:55 2002
++++ linux-llc-kernel/include/net/p8022.h	Sun May  5 23:47:56 2002
 @@ -1,7 +1,9 @@
  #ifndef _NET_P8022_H
  #define _NET_P8022_H
@@ -2872,10 +2826,10 @@ diff -u kernel-acme/include/net/p8022.h:1.1.1.1 kernel-acme/include/net/p8022.h:
  extern void unregister_8022_client(unsigned char type);
 -
  #endif
-Index: kernel-acme/include/net/sock.h
-diff -u kernel-acme/include/net/sock.h:1.1.1.4 kernel-acme/include/net/sock.h:1.1.1.4.2.3
---- kernel-acme/include/net/sock.h:1.1.1.4	Tue Nov  6 18:35:05 2001
-+++ kernel-acme/include/net/sock.h	Sat Nov 17 16:19:36 2001
+Index: linux-llc-kernel/include/net/sock.h
+diff -u linux-llc-kernel/include/net/sock.h:1.1.1.1 linux-llc-kernel/include/net/sock.h:1.1.1.1.2.1
+--- linux-llc-kernel/include/net/sock.h:1.1.1.1	Sun May  5 22:35:55 2002
++++ linux-llc-kernel/include/net/sock.h	Sun May  5 23:47:56 2002
 @@ -24,6 +24,8 @@
   *		Alan Cox	:	Eliminate low level recv/recvfrom
   *		David S. Miller	:	New socket lookup architecture.
@@ -2913,7 +2867,7 @@ diff -u kernel-acme/include/net/sock.h:1.1.1.4 kernel-acme/include/net/sock.h:1.
  	} tp_pinfo;
  
  	int			err, err_soft;	/* Soft holds errors that don't
-@@ -654,6 +666,12 @@
+@@ -652,6 +664,12 @@
  #endif
  #if defined(CONFIG_IRDA) || defined(CONFIG_IRDA_MODULE)
  		struct irda_sock        *irda;
@@ -2926,11 +2880,11 @@ diff -u kernel-acme/include/net/sock.h:1.1.1.4 kernel-acme/include/net/sock.h:1.
  #endif
  #if defined(CONFIG_WAN_ROUTER) || defined(CONFIG_WAN_ROUTER_MODULE)
                 struct wanpipe_opt      *af_wanpipe;
-Index: kernel-acme/net/Config.in
-diff -u kernel-acme/net/Config.in:1.1.1.2 kernel-acme/net/Config.in:1.1.1.2.2.1
---- kernel-acme/net/Config.in:1.1.1.2	Tue Nov  6 18:30:30 2001
-+++ kernel-acme/net/Config.in	Tue Nov  6 20:13:48 2001
-@@ -65,11 +65,12 @@
+Index: linux-llc-kernel/net/Config.in
+diff -u linux-llc-kernel/net/Config.in:1.1.1.1 linux-llc-kernel/net/Config.in:1.1.1.1.2.1
+--- linux-llc-kernel/net/Config.in:1.1.1.1	Sun May  5 22:37:30 2002
++++ linux-llc-kernel/net/Config.in	Sun May  5 23:47:57 2002
+@@ -63,11 +63,12 @@
  if [ "$CONFIG_EXPERIMENTAL" = "y" ]; then
     tristate 'CCITT X.25 Packet Layer (EXPERIMENTAL)' CONFIG_X25
     tristate 'LAPB Data Link Driver (EXPERIMENTAL)' CONFIG_LAPB
@@ -2947,10 +2901,10 @@ diff -u kernel-acme/net/Config.in:1.1.1.2 kernel-acme/net/Config.in:1.1.1.2.2.1
     if [ "$CONFIG_INET" = "y" ]; then
        tristate 'Acorn Econet/AUN protocols (EXPERIMENTAL)' CONFIG_ECONET
     fi
-Index: kernel-acme/net/Makefile
-diff -u kernel-acme/net/Makefile:1.1.1.3 kernel-acme/net/Makefile:1.1.1.3.2.1
---- kernel-acme/net/Makefile:1.1.1.3	Tue Nov  6 18:30:30 2001
-+++ kernel-acme/net/Makefile	Tue Nov  6 20:13:48 2001
+Index: linux-llc-kernel/net/Makefile
+diff -u linux-llc-kernel/net/Makefile:1.1.1.1 linux-llc-kernel/net/Makefile:1.1.1.1.2.1
+--- linux-llc-kernel/net/Makefile:1.1.1.1	Sun May  5 22:37:30 2002
++++ linux-llc-kernel/net/Makefile	Sun May  5 23:47:57 2002
 @@ -7,7 +7,7 @@
  
  O_TARGET :=	network.o
@@ -2960,7 +2914,7 @@ diff -u kernel-acme/net/Makefile:1.1.1.3 kernel-acme/net/Makefile:1.1.1.3.2.1
  export-objs :=	netsyms.o
  
  subdir-y :=	core ethernet
-@@ -46,7 +46,8 @@
+@@ -45,7 +45,8 @@
  subdir-$(CONFIG_DECNET)		+= decnet
  subdir-$(CONFIG_ECONET)		+= econet
  subdir-$(CONFIG_VLAN_8021Q)           += 8021q
@@ -2970,11 +2924,11 @@ diff -u kernel-acme/net/Makefile:1.1.1.3 kernel-acme/net/Makefile:1.1.1.3.2.1
  
  obj-y	:= socket.o $(join $(subdir-y), $(patsubst %,/%.o,$(notdir $(subdir-y))))
  ifeq ($(CONFIG_NET),y)
-Index: kernel-acme/net/netsyms.c
-diff -u kernel-acme/net/netsyms.c:1.1.1.6 kernel-acme/net/netsyms.c:1.1.1.6.2.2
---- kernel-acme/net/netsyms.c:1.1.1.6	Tue Nov  6 18:30:30 2001
-+++ kernel-acme/net/netsyms.c	Fri Nov 16 13:11:50 2001
-@@ -459,6 +459,7 @@
+Index: linux-llc-kernel/net/netsyms.c
+diff -u linux-llc-kernel/net/netsyms.c:1.1.1.1 linux-llc-kernel/net/netsyms.c:1.1.1.1.2.1
+--- linux-llc-kernel/net/netsyms.c:1.1.1.1	Sun May  5 22:37:30 2002
++++ linux-llc-kernel/net/netsyms.c	Sun May  5 23:47:57 2002
+@@ -458,6 +458,7 @@
  #endif  /* CONFIG_INET */
  
  #ifdef CONFIG_TR
@@ -2982,7 +2936,7 @@ diff -u kernel-acme/net/netsyms.c:1.1.1.6 kernel-acme/net/netsyms.c:1.1.1.6.2.2
  EXPORT_SYMBOL(tr_type_trans);
  #endif
  
-@@ -477,6 +478,7 @@
+@@ -476,6 +477,7 @@
  EXPORT_SYMBOL(__dev_get_by_index);
  EXPORT_SYMBOL(dev_get_by_name);
  EXPORT_SYMBOL(__dev_get_by_name);
@@ -2990,10 +2944,10 @@ diff -u kernel-acme/net/netsyms.c:1.1.1.6 kernel-acme/net/netsyms.c:1.1.1.6.2.2
  EXPORT_SYMBOL(netdev_finish_unregister);
  EXPORT_SYMBOL(netdev_set_master);
  EXPORT_SYMBOL(eth_type_trans);
-Index: kernel-acme/net/802/p8022.c
-diff -u kernel-acme/net/802/p8022.c:1.1.1.1 kernel-acme/net/802/p8022.c:1.1.1.1.8.2
---- kernel-acme/net/802/p8022.c:1.1.1.1	Tue Jun 26 14:28:54 2001
-+++ kernel-acme/net/802/p8022.c	Fri Nov  9 23:42:33 2001
+Index: linux-llc-kernel/net/802/p8022.c
+diff -u linux-llc-kernel/net/802/p8022.c:1.1.1.1 linux-llc-kernel/net/802/p8022.c:1.1.1.1.2.1
+--- linux-llc-kernel/net/802/p8022.c:1.1.1.1	Sun May  5 22:37:33 2002
++++ linux-llc-kernel/net/802/p8022.c	Sun May  5 23:47:58 2002
 @@ -11,11 +11,10 @@
   *		matches. The control byte is ignored and handling of such items
   *		is up to the routine passed the frame.
@@ -3091,7 +3045,7 @@ diff -u kernel-acme/net/802/p8022.c:1.1.1.1 kernel-acme/net/802/p8022.c:1.1.1.1.
 +	*rawp	= 0x03;	/* UI */
  	dev->hard_header(skb, dev, ETH_P_802_3, dest_node, NULL, skb->len);
  }
--
+ 
 -static struct packet_type p8022_packet_type =
 -{
 -	0,	/* MUTTER ntohs(ETH_P_8022),*/
@@ -3110,7 +3064,7 @@ diff -u kernel-acme/net/802/p8022.c:1.1.1.1 kernel-acme/net/802/p8022.c:1.1.1.1.
 -	dev_add_pack(&p8022_packet_type);
 -	return 0;
 -}
- 
+-
 -module_init(p8022_init);
 -
 -struct datalink_proto *register_8022_client(unsigned char type, int (*rcvfunc)(struct sk_buff *, struct net_device *, struct packet_type *))
@@ -3182,10 +3136,10 @@ diff -u kernel-acme/net/802/p8022.c:1.1.1.1 kernel-acme/net/802/p8022.c:1.1.1.1.
 +
 +EXPORT_SYMBOL(register_8022_client);
 +EXPORT_SYMBOL(unregister_8022_client);
-Index: kernel-acme/net/802/tr.c
-diff -u kernel-acme/net/802/tr.c:1.1.1.1 kernel-acme/net/802/tr.c:1.1.1.1.8.1
---- kernel-acme/net/802/tr.c:1.1.1.1	Tue Jun 26 14:28:54 2001
-+++ kernel-acme/net/802/tr.c	Tue Nov  6 20:13:48 2001
+Index: linux-llc-kernel/net/802/tr.c
+diff -u linux-llc-kernel/net/802/tr.c:1.1.1.1 linux-llc-kernel/net/802/tr.c:1.1.1.1.2.1
+--- linux-llc-kernel/net/802/tr.c:1.1.1.1	Sun May  5 22:37:33 2002
++++ linux-llc-kernel/net/802/tr.c	Sun May  5 23:47:58 2002
 @@ -36,7 +36,8 @@
  #include <linux/init.h>
  #include <net/arp.h>
@@ -3215,10 +3169,10 @@ diff -u kernel-acme/net/802/tr.c:1.1.1.1 kernel-acme/net/802/tr.c:1.1.1.1.8.1
  {
  	int i, slack;
  	unsigned int hash;
-Index: kernel-acme/net/core/Makefile
-diff -u kernel-acme/net/core/Makefile:1.1.1.2 kernel-acme/net/core/Makefile:1.1.1.2.2.1
---- kernel-acme/net/core/Makefile:1.1.1.2	Tue Nov  6 18:30:33 2001
-+++ kernel-acme/net/core/Makefile	Tue Nov  6 20:13:48 2001
+Index: linux-llc-kernel/net/core/Makefile
+diff -u linux-llc-kernel/net/core/Makefile:1.1.1.1 linux-llc-kernel/net/core/Makefile:1.1.1.1.2.1
+--- linux-llc-kernel/net/core/Makefile:1.1.1.1	Sun May  5 22:37:36 2002
++++ linux-llc-kernel/net/core/Makefile	Sun May  5 23:47:58 2002
 @@ -9,7 +9,7 @@
  
  O_TARGET := core.o
@@ -3239,10 +3193,10 @@ diff -u kernel-acme/net/core/Makefile:1.1.1.2 kernel-acme/net/core/Makefile:1.1.
  
  obj-$(CONFIG_NETFILTER) += netfilter.o
  obj-$(CONFIG_NET_DIVERT) += dv.o
-Index: kernel-acme/net/core/ext8022.c
-diff -u /dev/null kernel-acme/net/core/ext8022.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:54:54 2001
-+++ kernel-acme/net/core/ext8022.c	Tue Nov  6 20:13:48 2001
+Index: linux-llc-kernel/net/core/ext8022.c
+diff -u /dev/null linux-llc-kernel/net/core/ext8022.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:33 2002
++++ linux-llc-kernel/net/core/ext8022.c	Mon May  6 01:56:27 2002
 @@ -0,0 +1,76 @@
 +/*
 + * (ext8022.c)
@@ -3320,10 +3274,10 @@ diff -u /dev/null kernel-acme/net/core/ext8022.c:1.1.8.1
 +
 +EXPORT_SYMBOL(llc_register_sap);
 +EXPORT_SYMBOL(llc_unregister_sap);
-Index: kernel-acme/net/llc/Makefile
-diff -u /dev/null kernel-acme/net/llc/Makefile:1.1.2.1
---- /dev/null	Thu Nov 22 23:54:56 2001
-+++ kernel-acme/net/llc/Makefile	Tue Nov  6 20:13:48 2001
+Index: linux-llc-kernel/net/llc/Makefile
+diff -u /dev/null linux-llc-kernel/net/llc/Makefile:1.1.2.1
+--- /dev/null	Thu May  9 11:12:33 2002
++++ linux-llc-kernel/net/llc/Makefile	Sun May  5 23:47:59 2002
 @@ -0,0 +1,38 @@
 +###########################################################################
 +# Makefile for the Linux 802.2 LLC (fully-functional) layer.
@@ -3363,10 +3317,10 @@ diff -u /dev/null kernel-acme/net/llc/Makefile:1.1.2.1
 +endif
 +
 +include $(TOPDIR)/Rules.make
-Index: kernel-acme/net/llc/llc_actn.c
-diff -u /dev/null kernel-acme/net/llc/llc_actn.c:1.1.2.4
---- /dev/null	Thu Nov 22 23:54:56 2001
-+++ kernel-acme/net/llc/llc_actn.c	Sun Nov 11 15:29:45 2001
+Index: linux-llc-kernel/net/llc/llc_actn.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_actn.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:33 2002
++++ linux-llc-kernel/net/llc/llc_actn.c	Sun May  5 23:47:59 2002
 @@ -0,0 +1,147 @@
 +/*
 + * llc_actn.c - Implementation of actions of station component of LLC
@@ -3515,10 +3469,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_actn.c:1.1.2.4
 +		llc_station_send_ev(station, ev);
 +	}
 +}
-Index: kernel-acme/net/llc/llc_c_ac.c
-diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.8
---- /dev/null	Thu Nov 22 23:54:56 2001
-+++ kernel-acme/net/llc/llc_c_ac.c	Thu Nov 22 23:49:28 2001
+Index: linux-llc-kernel/net/llc/llc_c_ac.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_c_ac.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:33 2002
++++ linux-llc-kernel/net/llc/llc_c_ac.c	Sun May  5 23:47:59 2002
 @@ -0,0 +1,1639 @@
 +/*
 + * llc_c_ac.c - actions performed during connection state transition.
@@ -5159,10 +5113,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ac.c:1.1.2.8
 +	}
 +out:	bh_unlock_sock(sk);
 +}
-Index: kernel-acme/net/llc/llc_c_ev.c
-diff -u /dev/null kernel-acme/net/llc/llc_c_ev.c:1.1.2.6
---- /dev/null	Thu Nov 22 23:54:56 2001
-+++ kernel-acme/net/llc/llc_c_ev.c	Wed Nov 21 19:42:23 2001
+Index: linux-llc-kernel/net/llc/llc_c_ev.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_c_ev.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:34 2002
++++ linux-llc-kernel/net/llc/llc_c_ev.c	Sun May  5 23:48:00 2002
 @@ -0,0 +1,868 @@
 +/*
 + * llc_c_ev.c - Connection component state transition event qualifiers
@@ -6032,10 +5986,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_ev.c:1.1.2.6
 +	ev->status = LLC_STATUS_RESET_DONE;
 +	return 0;
 +}
-Index: kernel-acme/net/llc/llc_c_st.c
-diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.4
---- /dev/null	Thu Nov 22 23:54:56 2001
-+++ kernel-acme/net/llc/llc_c_st.c	Thu Nov 15 00:26:02 2001
+Index: linux-llc-kernel/net/llc/llc_c_st.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_c_st.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:34 2002
++++ linux-llc-kernel/net/llc/llc_c_st.c	Sun May  5 23:48:00 2002
 @@ -0,0 +1,4911 @@
 +/*
 + * llc_c_st.c - This module contains state transition of connection component.
@@ -10948,10 +10902,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_c_st.c:1.1.2.4
 +	{ LLC_CONN_STATE_ERROR,		llc_error_state_transitions },
 +	{ LLC_CONN_STATE_TEMP,		llc_temp_state_transitions }
 +};
-Index: kernel-acme/net/llc/llc_conn.c
-diff -u /dev/null kernel-acme/net/llc/llc_conn.c:1.1.2.7
---- /dev/null	Thu Nov 22 23:54:58 2001
-+++ kernel-acme/net/llc/llc_conn.c	Wed Nov 21 19:42:23 2001
+Index: linux-llc-kernel/net/llc/llc_conn.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_conn.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:34 2002
++++ linux-llc-kernel/net/llc/llc_conn.c	Sun May  5 23:48:02 2002
 @@ -0,0 +1,519 @@
 +/*
 + * llc_conn.c - Driver routines for connection component.
@@ -11472,10 +11426,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_conn.c:1.1.2.7
 +	}
 +	return rc;
 +}
-Index: kernel-acme/net/llc/llc_evnt.c
-diff -u /dev/null kernel-acme/net/llc/llc_evnt.c:1.1.2.4
---- /dev/null	Thu Nov 22 23:54:58 2001
-+++ kernel-acme/net/llc/llc_evnt.c	Sun Nov 11 15:29:45 2001
+Index: linux-llc-kernel/net/llc/llc_evnt.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_evnt.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/llc/llc_evnt.c	Sun May  5 23:48:02 2002
 @@ -0,0 +1,111 @@
 +/*
 + * llc_evnt.c - LLC station component event match functions
@@ -11588,10 +11542,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_evnt.c:1.1.2.4
 +	       ev->data.prim.prim == LLC_DISABLE_PRIM &&
 +	       ev->data.prim.type == LLC_PRIM_TYPE_REQ ? 0 : 1;
 +}
-Index: kernel-acme/net/llc/llc_if.c
-diff -u /dev/null kernel-acme/net/llc/llc_if.c:1.1.2.8
---- /dev/null	Thu Nov 22 23:54:58 2001
-+++ kernel-acme/net/llc/llc_if.c	Thu Nov 22 23:49:28 2001
+Index: linux-llc-kernel/net/llc/llc_if.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_if.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/llc/llc_if.c	Sun May  5 23:48:03 2002
 @@ -0,0 +1,487 @@
 +/*
 + * llc_if.c - Defines LLC interface to upper layer
@@ -12080,10 +12034,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_if.c:1.1.2.8
 +
 +EXPORT_SYMBOL(llc_sap_open);
 +EXPORT_SYMBOL(llc_sap_close);
-Index: kernel-acme/net/llc/llc_mac.c
-diff -u /dev/null kernel-acme/net/llc/llc_mac.c:1.1.2.4
---- /dev/null	Thu Nov 22 23:54:59 2001
-+++ kernel-acme/net/llc/llc_mac.c	Sat Nov 17 16:19:36 2001
+Index: linux-llc-kernel/net/llc/llc_mac.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_mac.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/llc/llc_mac.c	Sun May  5 23:48:03 2002
 @@ -0,0 +1,277 @@
 +/*
 + * llc_mac.c - Manages interface between LLC and MAC
@@ -12362,10 +12316,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_mac.c:1.1.2.4
 +	}
 +	return rc;
 +}
-Index: kernel-acme/net/llc/llc_main.c
-diff -u /dev/null kernel-acme/net/llc/llc_main.c:1.1.2.5
---- /dev/null	Thu Nov 22 23:54:59 2001
-+++ kernel-acme/net/llc/llc_main.c	Sat Nov 17 16:19:36 2001
+Index: linux-llc-kernel/net/llc/llc_main.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_main.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/llc/llc_main.c	Sun May  5 23:48:03 2002
 @@ -0,0 +1,607 @@
 +/*
 + * llc_main.c - This module contains main functions to manage station, saps
@@ -12974,10 +12928,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_main.c:1.1.2.5
 +
 +module_init(llc_init);
 +module_exit(llc_exit);
-Index: kernel-acme/net/llc/llc_pdu.c
-diff -u /dev/null kernel-acme/net/llc/llc_pdu.c:1.1.2.5
---- /dev/null	Thu Nov 22 23:54:59 2001
-+++ kernel-acme/net/llc/llc_pdu.c	Thu Nov 22 22:16:04 2001
+Index: linux-llc-kernel/net/llc/llc_pdu.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_pdu.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/llc/llc_pdu.c	Sun May  5 23:48:03 2002
 @@ -0,0 +1,655 @@
 +/*
 + * llc_pdu.c - access to PDU internals
@@ -13634,10 +13588,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_pdu.c:1.1.2.5
 +	}
 +	return pf_bit;
 +}
-Index: kernel-acme/net/llc/llc_s_ac.c
-diff -u /dev/null kernel-acme/net/llc/llc_s_ac.c:1.1.2.4
---- /dev/null	Thu Nov 22 23:54:59 2001
-+++ kernel-acme/net/llc/llc_s_ac.c	Wed Nov 21 00:19:21 2001
+Index: linux-llc-kernel/net/llc/llc_s_ac.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_s_ac.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/llc/llc_s_ac.c	Sun May  5 23:48:04 2002
 @@ -0,0 +1,222 @@
 +/*
 + * llc_s_ac.c - actions performed during sap state transition.
@@ -13861,10 +13815,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_s_ac.c:1.1.2.4
 +	llc_sap_rtn_pdu(sap, ev->data.pdu.skb, ev);
 +	return 0;
 +}
-Index: kernel-acme/net/llc/llc_s_ev.c
-diff -u /dev/null kernel-acme/net/llc/llc_s_ev.c:1.1.2.3
---- /dev/null	Thu Nov 22 23:54:59 2001
-+++ kernel-acme/net/llc/llc_s_ev.c	Sun Nov 11 15:29:45 2001
+Index: linux-llc-kernel/net/llc/llc_s_ev.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_s_ev.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/llc/llc_s_ev.c	Sun May  5 23:48:04 2002
 @@ -0,0 +1,100 @@
 +/*
 + * llc_s_ev.c - Defines SAP component events
@@ -13966,10 +13920,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_s_ev.c:1.1.2.3
 +	return ev->type == LLC_SAP_EV_TYPE_SIMPLE &&
 +	       ev->data.a.ev == LLC_SAP_EV_DEACTIVATION_REQ ? 0 : 1;
 +}
-Index: kernel-acme/net/llc/llc_s_st.c
-diff -u /dev/null kernel-acme/net/llc/llc_s_st.c:1.1.2.5
---- /dev/null	Thu Nov 22 23:54:59 2001
-+++ kernel-acme/net/llc/llc_s_st.c	Tue Nov 13 23:28:00 2001
+Index: linux-llc-kernel/net/llc/llc_s_st.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_s_st.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/llc/llc_s_st.c	Sun May  5 23:48:04 2002
 @@ -0,0 +1,163 @@
 +/*
 + * llc_s_st.c - Defines SAP component state machine transitions.
@@ -14134,10 +14088,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_s_st.c:1.1.2.5
 +	{ LLC_SAP_STATE_INACTIVE, llc_sap_inactive_state_transitions },
 +	{ LLC_SAP_STATE_ACTIVE,	  llc_sap_active_state_transitions   }
 +};
-Index: kernel-acme/net/llc/llc_sap.c
-diff -u /dev/null kernel-acme/net/llc/llc_sap.c:1.1.2.3
---- /dev/null	Thu Nov 22 23:54:59 2001
-+++ kernel-acme/net/llc/llc_sap.c	Sun Nov 11 15:29:45 2001
+Index: linux-llc-kernel/net/llc/llc_sap.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_sap.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/llc/llc_sap.c	Sun May  5 23:48:04 2002
 @@ -0,0 +1,254 @@
 +/*
 + * llc_sap.c - driver routines for SAP component.
@@ -14393,10 +14347,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_sap.c:1.1.2.3
 +			rc = 1;
 +	return rc;
 +}
-Index: kernel-acme/net/llc/llc_sock.c
-diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.10
---- /dev/null	Thu Nov 22 23:54:59 2001
-+++ kernel-acme/net/llc/llc_sock.c	Thu Nov 22 23:49:28 2001
+Index: linux-llc-kernel/net/llc/llc_sock.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_sock.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/llc/llc_sock.c	Sun May  5 23:48:04 2002
 @@ -0,0 +1,1743 @@
 +/*
 + * llc_sock.c - LLC User Interface SAPs
@@ -16141,10 +16095,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_sock.c:1.1.2.10
 +	sock_unregister(PF_LLC);
 +	return;
 +}
-Index: kernel-acme/net/llc/llc_stat.c
-diff -u /dev/null kernel-acme/net/llc/llc_stat.c:1.1.2.4
---- /dev/null	Thu Nov 22 23:55:00 2001
-+++ kernel-acme/net/llc/llc_stat.c	Sun Nov 11 15:29:45 2001
+Index: linux-llc-kernel/net/llc/llc_stat.c
+diff -u /dev/null linux-llc-kernel/net/llc/llc_stat.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/llc/llc_stat.c	Sun May  5 23:48:05 2002
 @@ -0,0 +1,207 @@
 +/*
 + * llc_stat.c - Implementation of LLC station component state machine
@@ -16353,10 +16307,10 @@ diff -u /dev/null kernel-acme/net/llc/llc_stat.c:1.1.2.4
 +	{ LLC_STATION_STATE_DUP_ADDR_CHK, llc_stat_dupaddr_state_trans },
 +	{ LLC_STATION_STATE_UP,		  llc_stat_up_state_trans }
 +};
-Index: kernel-acme/net/netbeui/Makefile
-diff -u /dev/null kernel-acme/net/netbeui/Makefile:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:00 2001
-+++ kernel-acme/net/netbeui/Makefile	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/Makefile
+diff -u /dev/null linux-llc-kernel/net/netbeui/Makefile:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/netbeui/Makefile	Sun May  5 23:48:06 2002
 @@ -0,0 +1,22 @@
 +#
 +# Makefile for the Linux NETBEUI layer.
@@ -16380,10 +16334,10 @@ diff -u /dev/null kernel-acme/net/netbeui/Makefile:1.1.8.1
 +endif
 +
 +include $(TOPDIR)/Rules.make
-Index: kernel-acme/net/netbeui/af_netb.c
-diff -u /dev/null kernel-acme/net/netbeui/af_netb.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:00 2001
-+++ kernel-acme/net/netbeui/af_netb.c	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/af_netb.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/af_netb.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/netbeui/af_netb.c	Sun May  5 23:48:06 2002
 @@ -0,0 +1,119 @@
 +/*
 + * af_netb.c - Contains functions that supply socket system calls for NetBEUI
@@ -16504,10 +16458,10 @@ diff -u /dev/null kernel-acme/net/netbeui/af_netb.c:1.1.8.1
 +{
 +	return sock_unregister(netbeui_family_ops.family);
 +}
-Index: kernel-acme/net/netbeui/config.c
-diff -u /dev/null kernel-acme/net/netbeui/config.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:00 2001
-+++ kernel-acme/net/netbeui/config.c	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/config.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/config.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/netbeui/config.c	Sun May  5 23:48:06 2002
 @@ -0,0 +1,408 @@
 +/*
 + * config.c - Contains functions that configure or query NetBEUI parameters
@@ -16917,10 +16871,10 @@ diff -u /dev/null kernel-acme/net/netbeui/config.c:1.1.8.1
 +	}
 +	return rc;
 +}
-Index: kernel-acme/net/netbeui/dextab.c
-diff -u /dev/null kernel-acme/net/netbeui/dextab.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:00 2001
-+++ kernel-acme/net/netbeui/dextab.c	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/dextab.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/dextab.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/netbeui/dextab.c	Sun May  5 23:48:06 2002
 @@ -0,0 +1,244 @@
 +/*
 + * dextab.c - Contains functions that implement a dynamically expandable table.
@@ -17166,10 +17120,10 @@ diff -u /dev/null kernel-acme/net/netbeui/dextab.c:1.1.8.1
 +	spin_unlock_bh(&tbl->lock);
 +	dextab_init(tbl, tbl->reserved, tbl->max_size);
 +}
-Index: kernel-acme/net/netbeui/dgram_serve.c
-diff -u /dev/null kernel-acme/net/netbeui/dgram_serve.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:00 2001
-+++ kernel-acme/net/netbeui/dgram_serve.c	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/dgram_serve.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/dgram_serve.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:35 2002
++++ linux-llc-kernel/net/netbeui/dgram_serve.c	Sun May  5 23:48:06 2002
 @@ -0,0 +1,601 @@
 +/*
 + * dgram_serve.c - Contains functions that supply DATAGRAM service for NetBEUI
@@ -17772,10 +17726,10 @@ diff -u /dev/null kernel-acme/net/netbeui/dgram_serve.c:1.1.8.1
 +	spin_unlock_bh(&nbdg_names.lock);
 +drop:	kfree_skb(skb);
 +}
-Index: kernel-acme/net/netbeui/llc_supp.c
-diff -u /dev/null kernel-acme/net/netbeui/llc_supp.c:1.1.8.5
---- /dev/null	Thu Nov 22 23:55:00 2001
-+++ kernel-acme/net/netbeui/llc_supp.c	Wed Nov 21 00:19:21 2001
+Index: linux-llc-kernel/net/netbeui/llc_supp.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/llc_supp.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:36 2002
++++ linux-llc-kernel/net/netbeui/llc_supp.c	Sun May  5 23:48:06 2002
 @@ -0,0 +1,1461 @@
 +/*
 + * llc_supp.c - Contains three category of functions
@@ -19238,10 +19192,10 @@ diff -u /dev/null kernel-acme/net/netbeui/llc_supp.c:1.1.8.5
 +}
 +module_init(netbeui_init);
 +module_exit(netbeui_exit);
-Index: kernel-acme/net/netbeui/name_serve.c
-diff -u /dev/null kernel-acme/net/netbeui/name_serve.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:00 2001
-+++ kernel-acme/net/netbeui/name_serve.c	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/name_serve.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/name_serve.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:36 2002
++++ linux-llc-kernel/net/netbeui/name_serve.c	Sun May  5 23:48:07 2002
 @@ -0,0 +1,898 @@
 +/*
 + * name_serve.c - Contains functions that implement NetBIOS Name Service
@@ -20141,10 +20095,10 @@ diff -u /dev/null kernel-acme/net/netbeui/name_serve.c:1.1.8.1
 +{
 +	return name_table.count;
 +}
-Index: kernel-acme/net/netbeui/nb_common.c
-diff -u /dev/null kernel-acme/net/netbeui/nb_common.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:00 2001
-+++ kernel-acme/net/netbeui/nb_common.c	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/nb_common.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/nb_common.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:36 2002
++++ linux-llc-kernel/net/netbeui/nb_common.c	Sun May  5 23:48:07 2002
 @@ -0,0 +1,134 @@
 +/*
 + * nb_common.c - Contains common in use functions for NetBEUI services.
@@ -20280,10 +20234,10 @@ diff -u /dev/null kernel-acme/net/netbeui/nb_common.c:1.1.8.1
 +{
 +	return LLCMAC_UI_HEADLEN(mac_hlen) + user_datalen;
 +}
-Index: kernel-acme/net/netbeui/proc.c
-diff -u /dev/null kernel-acme/net/netbeui/proc.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:00 2001
-+++ kernel-acme/net/netbeui/proc.c	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/proc.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/proc.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:36 2002
++++ linux-llc-kernel/net/netbeui/proc.c	Sun May  5 23:48:07 2002
 @@ -0,0 +1,281 @@
 +/*
 + * proc.c - Implements directory entries for NETBEUI names , links and
@@ -20566,10 +20520,10 @@ diff -u /dev/null kernel-acme/net/netbeui/proc.c:1.1.8.1
 +		remove_proc_entry("netbeui", proc_net);
 +	}
 +}
-Index: kernel-acme/net/netbeui/query_serve.c
-diff -u /dev/null kernel-acme/net/netbeui/query_serve.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:00 2001
-+++ kernel-acme/net/netbeui/query_serve.c	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/query_serve.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/query_serve.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:36 2002
++++ linux-llc-kernel/net/netbeui/query_serve.c	Sun May  5 23:48:07 2002
 @@ -0,0 +1,778 @@
 +/*
 + * query_serve.c - Contains functions that implement NetBIOS Query Service.
@@ -21349,10 +21303,10 @@ diff -u /dev/null kernel-acme/net/netbeui/query_serve.c:1.1.8.1
 +	nbqs_handle_event(NETBEUI_QUERY_NAME_RECOGNIZED, nb_query);
 +out:	kfree_skb(skb);
 +}
-Index: kernel-acme/net/netbeui/session_serve.c
-diff -u /dev/null kernel-acme/net/netbeui/session_serve.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:01 2001
-+++ kernel-acme/net/netbeui/session_serve.c	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/session_serve.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/session_serve.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:36 2002
++++ linux-llc-kernel/net/netbeui/session_serve.c	Sun May  5 23:48:08 2002
 @@ -0,0 +1,2821 @@
 +/*
 + * session_serve.c - Contains functions that implement NetBIOS Session Service
@@ -24175,10 +24129,10 @@ diff -u /dev/null kernel-acme/net/netbeui/session_serve.c:1.1.8.1
 +		rc = session->status = -ECONNABORTED;
 +out:	return rc;
 +}
-Index: kernel-acme/net/netbeui/sock_dgram.c
-diff -u /dev/null kernel-acme/net/netbeui/sock_dgram.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:01 2001
-+++ kernel-acme/net/netbeui/sock_dgram.c	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/sock_dgram.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/sock_dgram.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:37 2002
++++ linux-llc-kernel/net/netbeui/sock_dgram.c	Sun May  5 23:48:09 2002
 @@ -0,0 +1,458 @@
 +/*
 + * sock_dgram.c - Contains functions that supply SOCK_DGRAM type sockets for
@@ -24638,10 +24592,10 @@ diff -u /dev/null kernel-acme/net/netbeui/sock_dgram.c:1.1.8.1
 +};
 +#include <linux/smp_lock.h>
 +SOCKOPS_WRAP(nbso_dgram_proto, PF_NETBEUI);
-Index: kernel-acme/net/netbeui/sock_name.c
-diff -u /dev/null kernel-acme/net/netbeui/sock_name.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:01 2001
-+++ kernel-acme/net/netbeui/sock_name.c	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/sock_name.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/sock_name.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:37 2002
++++ linux-llc-kernel/net/netbeui/sock_name.c	Sun May  5 23:48:09 2002
 @@ -0,0 +1,156 @@
 +/*
 + * sock_name.c - Contains functions that implement first layer of socket
@@ -24799,10 +24753,10 @@ diff -u /dev/null kernel-acme/net/netbeui/sock_name.c:1.1.8.1
 +};
 +#include <linux/smp_lock.h>
 +SOCKOPS_WRAP(nbso_name_proto, PF_NETBEUI);
-Index: kernel-acme/net/netbeui/sock_session.c
-diff -u /dev/null kernel-acme/net/netbeui/sock_session.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:01 2001
-+++ kernel-acme/net/netbeui/sock_session.c	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/sock_session.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/sock_session.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:37 2002
++++ linux-llc-kernel/net/netbeui/sock_session.c	Sun May  5 23:48:09 2002
 @@ -0,0 +1,864 @@
 +/*
 + * sock_session.c - Contains functions that supply SOCK_STREAM type sockets for
@@ -25668,10 +25622,10 @@ diff -u /dev/null kernel-acme/net/netbeui/sock_session.c:1.1.8.1
 +};
 +#include <linux/smp_lock.h>
 +SOCKOPS_WRAP(nbso_session_proto, PF_NETBEUI);
-Index: kernel-acme/net/netbeui/status_serve.c
-diff -u /dev/null kernel-acme/net/netbeui/status_serve.c:1.1.8.1
---- /dev/null	Thu Nov 22 23:55:02 2001
-+++ kernel-acme/net/netbeui/status_serve.c	Tue Nov  6 20:13:49 2001
+Index: linux-llc-kernel/net/netbeui/status_serve.c
+diff -u /dev/null linux-llc-kernel/net/netbeui/status_serve.c:1.1.2.1
+--- /dev/null	Thu May  9 11:12:37 2002
++++ linux-llc-kernel/net/netbeui/status_serve.c	Sun May  5 23:48:09 2002
 @@ -0,0 +1,767 @@
 +/*
 + * status_serve.c - Contains functions that supply STATUS service for NetBEUI
