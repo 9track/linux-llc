@@ -1,0 +1,170 @@
+.Dd May 31, 2000 
+.Dt LLCPING 8
+.Os "Linux-SNA Project"
+.Sh NAME
+.Nm llcping
+.Nd send
+.Tn LLC TEST command
+packets to network hosts
+.Sh SYNOPSIS
+.Nm llcping
+.Op Fl fqvhb
+.Op Fl c Ar count
+.Op Fl i Ar wait
+.Op Fl l Ar preload
+.Op Fl p Ar pattern
+.Op Fl s Ar packetsize
+.Sh DESCRIPTION
+.Nm llcping
+uses the
+.Tn LLC 
+protocol's mandatory
+.Tn TEST COMMAND
+to elicit a
+.Tn LLC TEST RESPONSE
+from a host or gateway.
+.Tn LLC TEST COMMANDS
+(``llcpings'') have an MAC and
+.Tn LLC
+header,
+followed by a
+.Dq struct timeval
+and then an arbitrary number of ``pad'' bytes used to fill out the
+packet.
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl b
+Bit-swap the destination MAC address.
+.It Fl c Ar count
+Stop after sending (and receiving)
+.Ar count
+.Tn TEST
+packets.
+.It Fl f
+Flood ping.
+Outputs packets as fast as they come back or one hundred times per second,
+whichever is more.
+For every
+.Tn TEST COMMAND
+sent a period ``.'' is printed, while for ever
+.Tn TEST RESPONSE
+received a backspace is printed.
+This provides a rapid display of how many packets are being dropped.
+Only the super-user may use this option.
+.Bf -emphasis
+This can be very hard on a network and should be used with caution.
+.Ef
+.It Fl i Ar wait
+Wait
+.Ar wait
+seconds
+.Em between sending each packet .
+The default is to wait for one second between each packet.
+This option is incompatible with the
+.Fl f
+option.
+.It Fl l Ar preload
+If
+.Ar preload
+is specified,
+.Nm llcping
+sends that many packets as fast as possible before falling into its normal
+mode of behavior.
+Only the super-user may use this option.
+.It Fl p Ar pattern
+You may specify up to 16 ``pad'' bytes to fill out the packet you send.
+This is useful for diagnosing data-dependent problems in a network.
+For example,
+.Dq Li \-p ff
+will cause the sent packet to be filled with all
+ones.
+.It Fl q
+Quiet output.
+Nothing is displayed except the summary lines at startup time and
+when finished.
+.It Fl s Ar packetsize
+Specifies the number of data bytes to be sent.  
+The default is 61, which translates into 64
+.Tn LLC TEST COMMAND 
+data bytes when combined
+with the 3 bytes of
+.Tn LLC
+header data.
+.It Fl v
+Displays the current maintainer and version of 
+.Nm llcping .
+.El
+.Pp
+When using
+.Nm llcping
+for fault isolation, it should first be run on the local host, to verify
+that the local network interface is up and running.
+Round-trip times and packet loss statistics are computed.
+If duplicate packets are received, they are not included in the packet
+loss calculation, although the round trip time of these packets is used
+in calculating the minimum/average/maximum round-trip time numbers.
+When the specified number of packets have been sent (and received) or
+if the program is terminated with a
+.Dv SIGINT ,
+a brief summary is displayed.
+.Pp
+If 
+.Nm llcping
+does not receive any reply packets at all it will exit with code 1.
+On error it exits with code 2. Otherwise it exits with code 0. This
+makes it possible to use the exit code to see if a host is alive or
+not.
+.Pp
+This program is intended for use in network testing, measurement and
+management.
+Because of the load it can impose on the network, it is unwise to use
+.Nm llcping
+during normal operations or from automated scripts.
+.Sh DUPLICATE AND DAMAGED PACKETS
+.Nm llcping
+will report duplicate and damaged packets.
+Duplicate packets should never occur, and seem to be caused by
+inappropriate link-level retransmissions.
+Duplicates may occur in many situations and are rarely (if ever) a
+good sign, although the presence of low levels of duplicates may not
+always be cause for alarm.
+.Pp
+Damaged packets are obviously serious cause for alarm and often
+indicate broken hardware somewhere in the
+.Nm llcping
+packet's path (in the network or in the hosts).
+.Sh TRYING DIFFERENT DATA PATTERNS
+The (inter)network layer should never treat packets differently depending
+on the data contained in the data portion.
+Unfortunately, data-dependent problems have been known to sneak into
+networks and remain undetected for long periods of time.
+In many cases the particular pattern that will have problems is something
+that doesn't have sufficient ``transitions'', such as all ones or all
+zeros, or a pattern right at the edge, such as almost all zeros.
+It isn't necessarily enough to specify a data pattern of all zeros (for
+example) on the command line because the pattern that is of interest is
+at the data link level, and the relationship between what you type and
+what the controllers transmit can be complicated.
+.Pp
+This means that if you have a data-dependent problem you will probably
+have to do a lot of testing to find it.
+If you are lucky, you may manage to find a file that either can't be sent
+across your network or that takes much longer to transfer than other
+similar length files.
+You can then examine this file for repeated patterns that you can test
+using the
+.Fl p
+option of
+.Nm llcping .
+.Sh BUGS
+Prior to Linux kernel version 2.5.x LLC TEST commands were not honored
+in Linux, hosts prior to kernel 2.5.x need to have a patched LLC layer.
+.Pp
+Flood pinging is not recommended in general, and flood pinging the
+broadcast address should only be done under very controlled conditions.
+.Sh SEE ALSO
+.Xr ping 8 ,
+.Xr aping 8
+.Pp
+.Sh AUTHORS
+Jay Schulist, <jschlst@turbolinux.com>

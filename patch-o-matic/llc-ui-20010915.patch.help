@@ -1,0 +1,6 @@
+Author: Jay Schulist <jschlst@samba.org>
+Status: Beta
+
+LLC User Interface SAPs is a Linux socket interface into the
+LLC datalink layer. This allows a user to create entire user
+space network layers tied to a real SAP.

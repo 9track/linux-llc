@@ -1,0 +1,72 @@
+llc.txt: Documentation for the Linux IEEE 802.2 LLC UI layer.
+         Written by: Jay Schulist <jschlst@samba.org>
+
+Logical Link Control (LLC) is a sublayer of the IEEE 802.2 LAN Protocol Suite.
+LLC is the top sub-layer in the data link layer and is the common access
+method to the different medium access techonologies such as Tokenring,
+Ethernet and FDDI.
+
+Linux-LLC provides two access facilities. Kernel level access and
+User space socket access. This document contains information only on the
+User space component of the Linux-LLC stack. Please use the 8022llc kernel
+source files for documentation on Kernel level access.
+
+LLC provides four (4) classes of communications. The current Linux-LLC
+implementation supports Class One and Class Two LLC, support for Class
+Three and Four is not implemented. Definition of the Classes follows:
+
+Class One
+ - Data-link Connectionless mode (Unacknowledged data transfer).
+Class Two
+ - Data-link Connection oriented and Data-link Connectionless mode.
+Class Three
+ - Acknowledged Connectionless mode and Data-link Connectionless mode.
+Class Four
+ - Support for Class One, Two and Three.
+
+Linux Socket(2) type mappings to LLC Class Types.
+
+LLC Class 1 socket types:
+ - SOCK_DGRAM
+LLC Class 2 socket types:
+ - SOCK_STREAM
+LLC Class 3 socket types:
+ - SOCK_STREAM
+ - SOCK_RDM
+
+The following data structure is required for all connectionless and
+some connection oriented socket calls to the LLC layer. All Linux-LLC
+socket based applications must include the following header(s):
+
+#include <linux/llc.h>
+
+struct sockaddr_llc {
+        sa_family_t     sllc_family;         
+        sa_family_t     sllc_arphrd;            
+        unsigned char   sllc_test;
+        unsigned char   sllc_xid;
+        unsigned char   sllc_ua;
+        unsigned char   sllc_dsap;
+        unsigned char   sllc_ssap;
+        unsigned char   sllc_dmac[IFHWADDRLEN];
+        unsigned char   sllc_smac[IFHWADDRLEN];
+};
+
+The description of each field follows:
+sllc_family:	Always set to PF_LLC.
+sllc_arphrd:	Set to the arp protocol type of the device which is assigned
+		the specified smac in the field sllc_smac.
+sllc_test:	Set to 1 when user is requesting transmission of an 
+		LLC test command.
+sllc_xid:	Set to 1 when user is requesting transmission of an
+		XID command.
+sllc_ua:	For connection oriented sockets only (SOCK_STREAM). Allows
+		the connected socket to send unacknowledged data when set to 1.
+sllc_dsap:	The destination SAP to communication with.
+sllc_ssap:	The local or source SAP.
+sllc_dmac:	The MAC address of the remote computer to communicate with.
+sllc_smac:	The local or source MAC to transmit the data from.
+
+Other sources of information:
+A client and server ping program called llcping is available as part of the
+linux-llc package on ftp://ftp.screamingdaemon.com/pub/linux-llc

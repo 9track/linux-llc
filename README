@@ -1,0 +1,19 @@
+linux-llc:	A collection of programs that form the base set of the
+		Linux-LLC networking distribution for the Linux
+		operating system.
+
+Author/maintainter: Jay Schulist <jschlst@samba.org>
+web: http://www.linux-sna.org
+ftp: ftp://ftp.linux-sna.org
+
+Files:
+- ChangeLog: version notes and release specification information.
+
+Notes:
+- make pending-patches KERNEL_DIR=/usr/src/linux
+This command will start the patch-o-matic system to apply any
+outstanding kernel patches you require to use this distributions
+software.
+
+Send comments, bugs, patches and anything else related to Linux-LLC
+to Jay Schulist, or to the Linux-SNA mailing list. linux-sna@turbolinux.com

@@ -1,0 +1,36 @@
+Change log for Linux-LLC package.
+
+1.00PRE08, September 25, 2001
+- New llc-ui patch with less debug
+
+1.00PRE07, September 15 2001
+- Added new llc-ui patch, find some bugs.. I dare you ;)
+
+1.00PRE06, September 12 2001
+- Shit, forgot to include the new patch in the makefile.
+
+1.00PRE05, September 12 2001
+- Added new llc_sock patch.
+- Fixed up the accept wait queue problem(s).
+- Wrote llc.txt which contains basic information on using llc sockets.
+
+1.00PRE04, September 10 2001
+- Found and fixed a good number of bugs in the llc_ui layer.
+- Fixed llc layer test command handling.
+- Massive kernel code cleanup.
+
+1.00PRE03, September 9 2001
+- Updated LLC patches with latest code.
+- Added support for multiple connections over one sap.
+- Fixed socket release problem.
+
+1.00PRE02, September 3 2001
+- llc_sock is now core feature complete.
+- Added llcpingd utility
+- Added feature to specify dsap from command line for llcping
+
+1.00PRE01, August 19 2001
+- Added notifcations support to the linux-llc cvs tree.
+- ported linux-sna llc stack to kernel 2.4.9, placed in patch-o-matic.
+- checked all linux-llc files into cvs.
+- create linux-llc distribution.

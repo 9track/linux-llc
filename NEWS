@@ -1,0 +1,23 @@
+Linux-LLC software NEWs.
+
+1.00PRE08:
+New llc-ui patch with less debug
+
+1.00PRE07:
+New llc-ui patch, no more open issues.
+
+1.00PRE06:
+forgot to include the new patch in the makefile.
+
+1.00PRE05:
+New llc-ui patch, includes accept wait queue fixes.
+
+1.00PRE04:
+Major kernel code cleanup, plug bug fixes.
+
+1.00PRE03:
+Complete LLC UI sockets, plug new tools.
+
+1.00PRE02:
+Added llc2 support in llcping, lots of changes to llc stack.
+

@@ -1,0 +1,9 @@
+Author: Arnaldo Carvalho de Melo <acme@conectiva.com.br>
+Status: Beta
+
+This patch contains various networking stack changes
+for the addition of the linux-llc layer.
+
+LLC or Logical Link Control is a low level networking protocol
+to allows reliable and unreliable message passing. Many
+network layers use LLC such as Appletalk, IPX/SPX and SNA.

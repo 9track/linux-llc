@@ -1,0 +1,21 @@
+Release 1.00pre10:
+- Fixed version problem in the build system.
+
+Release 1.00pre5:
+- Merged Mike's kick ass automake changes.
+
+Release 1.00pre2:
+- Played with autoconf a bit
+
+Release 0.103:
+- Autoconf'd the llcping
+
+Release 0.102:
+- Created a man page for llcping
+- Updated the readme file
+
+Release 0.101:
+- Added bit swapping flag (-b) for destination address.
+- Merged Bob's changes for timer resolution and packet counting.
+- Fixed LLC layer bug that stops a linux box from returning TEST
+  frame contents.
