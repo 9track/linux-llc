@@ -5,10 +5,10 @@ INCLUDES=-I../include -I../dlswmon
 
 sbin_PROGRAMS = dlswd
 
-dlswd_LDADD = -lxml -lproc
+dlswd_LDADD = -lproc
 dlswd_SOURCES = dlswd.c dlsw_load.c dlsw_monitor.c
 
-include_HEADERS = dlswd.h dlsw_load.h dlsw_monitor.h
+include_HEADERS = dlswd.h dlsw_load.h dlsw_monitor.h dlsw_proto.h
 
 man_MANS = dlswd.8
 

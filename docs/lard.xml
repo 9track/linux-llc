@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<lar:Helping xmlns:lar="http://www.linux-sna.org/lard">
+<lar:lard>
+  <lar:global>
+    <lar:debuglevel>1</lar:debuglevel>
+    <lar:lsap>0xDC</lar:lsap>
+  </lar:global>
+  <lar:listen>
+    <lar:iface>eth0</lar:iface>
+    <lar:igivname>on</lar:igivname>
+  </lar:listen>
+  <lar:listen>
+    <lar:iface>eth1</lar:iface>
+    <lar:igivname>on</lar:igivname>
+  </lar:listen>
+  <lar:timer>
+    <lar:name>find</lar:name>
+    <lar:secs>9</lar:secs>
+    <lar:count>2</lar:count>
+  </lar:timer>
+  <lar:timer>
+    <lar:name>advertise</lar:name>
+    <lar:secs>5</lar:secs>
+    <lar:count>10</lar:count>
+  </lar:timer>
+  <lar:timer>
+    <lar:name>solicit</lar:name>
+    <lar:secs>10</lar:secs>
+  </lar:timer>
+  <lar:timer>
+    <lar:name>query</lar:name>
+    <lar:secs>9</lar:secs>
+  </lar:timer>
+</lar:lard>
+</lar:Helping>

@@ -22,7 +22,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <dlfcn.h>
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
@@ -57,7 +56,6 @@ char maintainer_s[] 			= "Jay Schulist <jschlst@samba.org>";
 fd_set llc_all_fds;
 char config_file[300] 			= _PATH_LLCPINGDCONF;
 global *llc_config_info 		= NULL;
-int nodaemon 				= 0;
 
 struct llc_listen *llc_listen_list	= NULL;
 struct llc_data *llc_data_list		= NULL;
@@ -92,8 +90,7 @@ int llc_get_and_set_hwaddr(u_int8_t *name, u_int8_t *hwaddr)
 	struct ifreq req;
 	int fd;
 
-	if(!strcmp(name, "any"))
-	{
+	if(!strcmp(name, "any")) {
 		memset(hwaddr, 0, IFHWADDRLEN);
 		return (0);
 	}
@@ -106,10 +103,13 @@ int llc_get_and_set_hwaddr(u_int8_t *name, u_int8_t *hwaddr)
         req.ifr_hwaddr.sa_family = ARPHRD_ETHER;
         strcpy(req.ifr_name, name);
 
-        if(ioctl(fd, SIOCGIFHWADDR, &req) < 0)
+        if(ioctl(fd, SIOCGIFHWADDR, &req) < 0) {
+		close(fd);
                 return (-1);
+	}
 
         memcpy(hwaddr, &req.ifr_hwaddr.sa_data, IFHWADDRLEN);
+	close(fd);
 	return (0);
 }
 
@@ -131,8 +131,7 @@ int llc_load_listener(struct llc_linfo *l)
 		return (-EINVAL);
 
 	/* set the mac address if not set by user. */
-	if(llc_mac_null(l->ifmac, IFHWADDRLEN))
-	{
+	if(llc_mac_null(l->ifmac, IFHWADDRLEN)) {
 		err = llc_get_and_set_hwaddr(l->ifname, l->ifmac);
 		if(err < 0)
 			return (err);
@@ -149,20 +148,21 @@ int llc_load_listener(struct llc_linfo *l)
 		fd = socket(PF_LLC, SOCK_DGRAM, 0);
 	else
 		fd = socket(PF_LLC, SOCK_STREAM, 0);
-	if(fd < 0)
+	if(fd < 0) {
+		printf("%s: socket `%s'.\n", name_s, strerror(errno));
+                if(errno == EAFNOSUPPORT)
+                        printf("%s: did you load the llc module?\n", name_s);
 		return (fd);
+	}
 	err = bind(fd, (struct sockaddr *)&laddr, sizeof(laddr));
-	if(err < 0)
-	{
+	if(err < 0) {
 		close(fd);
 		return (err);
 	}
 
-	if(l->type == 1)
-	{
+	if(l->type == 1) {
 		struct llc_data *data;
-		if(!new(data))
-		{
+		if(!new(data)) {
 			close(fd);
 			return (-ENOMEM);
 		}
@@ -176,19 +176,15 @@ int llc_load_listener(struct llc_linfo *l)
 		memcpy(&data->ifmac, &l->ifmac, IFHWADDRLEN);
 		data->next	= llc_data_list;
 		llc_data_list	= data;
-	}
-	else
-	{
+	} else {
 		struct llc_listen *lstn;
-		if(!new(lstn))
-		{
+		if(!new(lstn)) {
 			close(fd);
 			return (-ENOMEM);
 		}
 
 		err = listen(fd, 10);
-		if(err < 0)
-		{
+		if(err < 0) {
 			close(fd);
 			free(lstn);
 			return (err);
@@ -237,10 +233,8 @@ int llc_delete_data(struct llc_data *data)
         struct llc_data *ent, **clients;
                         
         clients = &llc_data_list;
-        while((ent = *clients) != NULL)
-        {
-		if(data->data_fd == ent->data_fd)
-                {
+        while((ent = *clients) != NULL ){
+		if(data->data_fd == ent->data_fd) {
                         *clients = ent->next;
                         free(ent);
                         return (0);
@@ -256,13 +250,12 @@ int llc_delete_listen_list(void)
         struct llc_listen *ent1, **clients1;
         
         clients1 = &llc_listen_list;
-        while((ent1 = *clients1) != NULL)
-        {
+        while((ent1 = *clients1) != NULL) {
                 *clients1 = ent1->next;
                 free(ent1);
         }
 
-        return (-ENOENT);
+        return (0);
 }
 
 int llc_delete_data_list(void)
@@ -270,13 +263,12 @@ int llc_delete_data_list(void)
         struct llc_data *ent1, **clients1;
 
         clients1 = &llc_data_list;
-        while((ent1 = *clients1) != NULL)
-        {
+        while((ent1 = *clients1) != NULL) {
                 *clients1 = ent1->next;
                 free(ent1);
         }
 
-        return (-ENOENT);
+        return (0);
 }
 
 int llc_delete_linfo_list(void)
@@ -284,13 +276,12 @@ int llc_delete_linfo_list(void)
         struct llc_linfo *ent1, **clients1;
 
         clients1 = &llc_config_info->ll;
-        while((ent1 = *clients1) != NULL)
-        {
+        while((ent1 = *clients1) != NULL) {
                 *clients1 = ent1->next;
                 free(ent1);
         }
 
-        return (-ENOENT);
+        return (0);
 }
 
 static int llc_accept_client(struct llc_listen *lstn)
@@ -338,8 +329,8 @@ int hexdump(unsigned char *pkt_data, int pkt_len)
                 printf("   ");   /* Leading spaces. */
 
                 /* Print the HEX representation. */
-                for(i=0; i<8; ++i) {
-                        if(pkt_len - (long)i>0)
+                for(i = 0; i < 8; ++i) {
+                        if(pkt_len - (long)i > 0)
                                 printf("%2.2X ", pkt_data[i] & 0xFF);
                         else
                                 printf("  ");
@@ -347,9 +338,9 @@ int hexdump(unsigned char *pkt_data, int pkt_len)
 
                 printf(":");
 
-                for(i=8; i<16; ++i) {
-                        if(pkt_len - (long)i>0)
-                                printf("%2.2X ", pkt_data[i]&0xFF);
+                for(i = 8; i < 16; ++i) {
+                        if(pkt_len - (long)i > 0)
+                                printf("%2.2X ", pkt_data[i] & 0xFF);
                         else
                                 printf("  ");
                 }
@@ -357,8 +348,8 @@ int hexdump(unsigned char *pkt_data, int pkt_len)
                 /* Print the ASCII representation. */
                 printf("  ");
 
-                for(i=0; i<16; ++i) {
-                        if(pkt_len - (long)i>0) {
+                for(i = 0; i < 16; ++i) {
+                        if(pkt_len - (long)i > 0) {
                                 if(isprint(pkt_data[i]))
                                         printf("%c", pkt_data[i]);
                                 else
@@ -391,24 +382,21 @@ static int llc_process_data(struct llc_data *data)
 	memset(&from, 0, sizeof(from));
 	rxlen = recvfrom(data->data_fd, pkt, pktlen, 0, 
 		(struct sockaddr *)&from, &fromlen);
-	if(rxlen < 0)
-	{
-		if(errno == EINTR)
-		{
+	if(rxlen < 0) {
+		if(errno == EINTR) {
 			free(pkt);
 			return (0);
 		}
 
 		/* we assume a disconnect. */
-		if(data->type == 2)
-		{
+		if(data->type == 2) {
 			llc_count_and_clear_fds(data->data_fd, &llc_all_fds);
                 	close(data->data_fd);
 
 			syslog(LOG_ERR, "disconnect llc%d on %s to %02X:%02X:%02X:%02X:%02X:%02X@0x%02X"
 		                " from %02X:%02X:%02X:%02X:%02X:%02X@0x%02X",
 		                data->type, data->ifname, data->ifmac[0], data->ifmac[1], data->ifmac[2],
-		                data->ifmac[3], data->ifmac[4], data->ifmac[5],
+		                data->ifmac[3], data->ifmac[4], data->ifmac[5], data->lsap,
 		                data->data_addr.sllc_smac[0], data->data_addr.sllc_smac[1],
 		                data->data_addr.sllc_smac[2], data->data_addr.sllc_smac[3],
 		                data->data_addr.sllc_smac[4], data->data_addr.sllc_smac[5],
@@ -421,8 +409,7 @@ static int llc_process_data(struct llc_data *data)
 		return (rxlen);
 	}
 
-	if(llc_stats->debug > 5)
-	{
+	if(llc_stats->debug >= 5) {
 		 printf("RX: SRC:%02X:%02X:%02X:%02X:%02X:%02X @ 0x%02X"
                         " -> DST:%02X:%02X:%02X:%02X:%02X:%02X @ 0x%02X\n",
                         from.sllc_smac[0], from.sllc_smac[1], from.sllc_smac[2],
@@ -432,7 +419,7 @@ static int llc_process_data(struct llc_data *data)
                         from.sllc_dmac[3], from.sllc_dmac[4], from.sllc_dmac[5],
                         from.sllc_dsap);
 	}
-	if(llc_stats->debug > 10)
+	if(llc_stats->debug >= 10)
 		hexdump(pkt, rxlen);
 
 	memcpy(&to, &from, sizeof(from));
@@ -441,8 +428,7 @@ static int llc_process_data(struct llc_data *data)
         to.sllc_dsap = from.sllc_ssap;
         to.sllc_ssap = from.sllc_dsap;
 
-	if(llc_stats->debug > 5)
-	{
+	if(llc_stats->debug >= 5) {
 		printf("TX: SRC:%02X:%02X:%02X:%02X:%02X:%02X @ 0x%02X"
                         " -> DST:%02X:%02X:%02X:%02X:%02X:%02X @ 0x%02X\n",
                         to.sllc_smac[0], to.sllc_smac[1], to.sllc_smac[2],
@@ -452,7 +438,7 @@ static int llc_process_data(struct llc_data *data)
                         to.sllc_dmac[3], to.sllc_dmac[4], to.sllc_dmac[5],
                         to.sllc_dsap);
 	}
-	if(llc_stats->debug > 10)
+	if(llc_stats->debug >= 10)
 		hexdump(pkt, rxlen);
 
         rxlen = sendto(data->data_fd, pkt, rxlen, 0, 
@@ -473,8 +459,7 @@ static int llc_director(void)
         syslog(LOG_INFO, "Director activated.\n");
 
 	sig_block();
-        for(;;)
-        {
+        for(;;) {
 		readable = llc_all_fds;
 
 		sig_unblock();
@@ -483,10 +468,8 @@ static int llc_director(void)
 		sig_block();
 
 		llc_stats->director_events++;
-		if(fd < 0)	/* check for immediate errors. */
-		{
-			if(fd < 0 && errno != EINTR) 
-			{
+		if(fd < 0) {	/* check for immediate errors. */
+			if(fd < 0 && errno != EINTR) {
                                 syslog(LOG_ERR, "select failed: %s",
 					strerror(errno));
                                 sleep(1);
@@ -496,22 +479,16 @@ static int llc_director(void)
 		}
 
 		/* find which fd has an event for us. */
-		for(i = 3; i <= llc_stats->highest_fd; i++)
-		{
-                        if(FD_ISSET(i, &readable))
-			{
+		for(i = 3; i <= llc_stats->highest_fd; i++) {
+                        if(FD_ISSET(i, &readable)) {
 				lstn = llc_find_listener_by_fd(i);
-				if(lstn)
-				{
-					/* new connection so accept it. */
+				if(lstn) {	/* new connection so accept it. */
 					llc_accept_client(lstn);
 					continue;
 				}
 
 				data = llc_find_data_by_fd(i);
-				if(data)
-				{
-					/* have data, deal with it. */
+				if(data) { /* have data, deal with it. */
 					llc_process_data(data);
 					continue;
 				}
@@ -549,17 +526,14 @@ void llc_signal_goaway(int signum)
 {
         struct llc_listen *lstn;
 	struct llc_data *data;
-	struct llc_linfo *info;
 
         (void)signum;
 
-	for(lstn = llc_listen_list; lstn != NULL; lstn = lstn->next)
-	{
+	for(lstn = llc_listen_list; lstn != NULL; lstn = lstn->next) {
 		llc_count_and_clear_fds(lstn->listen_fd, &llc_all_fds);
 		close(lstn->listen_fd);
 	}
-	for(data = llc_data_list; data != NULL; data = data->next)
-	{
+	for(data = llc_data_list; data != NULL; data = data->next) {
 		llc_count_and_clear_fds(data->data_fd, &llc_all_fds);
 		close(data->data_fd);
 	}
@@ -569,7 +543,7 @@ void llc_signal_goaway(int signum)
         if(llc_config_info)
                 free(llc_config_info);
 
-        syslog(LOG_ERR, "Structured tear-down complete (%d).",
+        syslog(LOG_ERR, "Structured tear-down complete (%ld).",
                 llc_stats->open_fds);
         free(llc_stats);
 
@@ -606,8 +580,7 @@ void sig_init(void)
 void sig_block(void)
 {
         sigprocmask(SIG_BLOCK, &blockmask, NULL);
-        if(blocked)
-        {
+        if(blocked) {
             syslog(LOG_ERR, "internal error - signals already blocked\n");
             syslog(LOG_ERR, "please report to jschlst@samba.org\n");
         }
@@ -639,8 +612,7 @@ static void logpid(void)
 {
         FILE *fp;
 
-        if((fp = fopen(_PATH_LLCPINGDPID, "w")) != NULL)
-	{
+        if((fp = fopen(_PATH_LLCPINGDPID, "w")) != NULL) {
                 fprintf(fp, "%u\n", getpid());
                 (void)fclose(fp);
         }
@@ -662,13 +634,12 @@ void help(void)
 
 int main(int argc, char **argv)
 {
-        int err, c;
+        int nodaemon = 0, err, c;
 
 	if(!new(llc_stats))
 		return (-ENOMEM);
 	FD_ZERO(&llc_all_fds);
-	while((c = getopt(argc, argv, "hvVf:d:")) != EOF)
-        {
+	while((c = getopt(argc, argv, "hvVf:d:")) != EOF) {
                 switch(c) {
                         case 'd':       /* don't go into background. */
                                 llc_stats->debug = nodaemon = atoi(optarg);

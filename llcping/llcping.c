@@ -22,7 +22,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <dlfcn.h>
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
@@ -42,12 +41,19 @@
 #include <linux/if_arp.h>
 #include <linux/llc.h>
 
+/* llc libraries headers. */
+#include <llcdb.h>
+
 /* our stuff. */
 #include "llcping.h"
 
 #ifndef AF_LLC
 #define AF_LLC          22
 #define PF_LLC          AF_LLC
+#endif
+
+#ifndef SOL_LLC
+#define SOL_LLC         268
 #endif
 
 char version_s[]                        = VERSION;
@@ -74,45 +80,53 @@ unsigned char flip_byte(unsigned char v)
         return ((flip_nibble(nibble(v, 0)) << 4) | flip_nibble(nibble(v, 1)));
 }
 
-char *pr_ether(char *ptr)
+char *pr_ether(char *ptr, int numeric)
 {
+	struct llchostent *lh;
 	static char buff[64];
 
-        snprintf(buff, sizeof(buff), "%02X:%02X:%02X:%02X:%02X:%02X",
-                (ptr[0] & 0377), (ptr[1] & 0377), (ptr[2] & 0377),
-                (ptr[3] & 0377), (ptr[4] & 0377), (ptr[5] & 0377));
-        return(buff);
+	if(numeric) {
+		snprintf(buff, sizeof(buff), "%02X:%02X:%02X:%02X:%02X:%02X",
+	                (ptr[0] & 0377), (ptr[1] & 0377), (ptr[2] & 0377),
+	                (ptr[3] & 0377), (ptr[4] & 0377), (ptr[5] & 0377));
+	        return(buff);
+	}
+
+	lh = getllchostbyaddr(ptr, IFHWADDRLEN, ARPHRD_ETHER);
+	if(lh) {
+		snprintf(buff, sizeof(buff), "%s", lh->lh_name);
+		return (buff);
+	}
+
+        return("");
 }
 
 int hexdump(unsigned char *pkt_data, int pkt_len)
 {
         int i;
 
-        while(pkt_len>0) {
+        while(pkt_len > 0) {
                 printf("   ");   /* Leading spaces. */
-
                 /* Print the HEX representation. */
-                for(i=0; i<8; ++i) {
-                        if(pkt_len - (long)i>0)
+                for(i = 0; i < 8; ++i) {
+                        if(pkt_len - (long)i > 0)
                                 printf("%2.2X ", pkt_data[i] & 0xFF);
                         else
                                 printf("  ");
                 }
 
                 printf(":");
-
-                for(i=8; i<16; ++i) {
-                        if(pkt_len - (long)i>0)
-                                printf("%2.2X ", pkt_data[i]&0xFF);
+                for(i = 8; i < 16; ++i) {
+                        if(pkt_len - (long)i > 0)
+                                printf("%2.2X ", pkt_data[i] & 0xFF);
                         else
                                 printf("  ");
                 }
 
                 /* Print the ASCII representation. */
                 printf("  ");
-
-                for(i=0; i<16; ++i) {
-                        if(pkt_len - (long)i>0) {
+                for(i = 0; i < 16; ++i) {
+                        if(pkt_len - (long)i > 0) {
                                 if(isprint(pkt_data[i]))
                                         printf("%c", pkt_data[i]);
                                 else
@@ -137,8 +151,7 @@ int in_ether(char *bufp, unsigned char *ptr, int flip)
         int i = 0;
 
     	orig = bufp;
-    	while((*bufp != '\0') && (i < ETH_ALEN)) 
-	{
+    	while((*bufp != '\0') && (i < ETH_ALEN)) {
         	val = 0;
         	c = *bufp++;
         	if(isdigit(c))
@@ -147,8 +160,7 @@ int in_ether(char *bufp, unsigned char *ptr, int flip)
             		val = c - 'a' + 10;
         	else if(c >= 'A' && c <= 'F')
             		val = c - 'A' + 10;
-        	else 
-		{
+        	else {
             		errno = EINVAL;
             		return (-1);
         	}
@@ -163,8 +175,7 @@ int in_ether(char *bufp, unsigned char *ptr, int flip)
             		val |= c - 'A' + 10;
         	else if(c == ':' || c == 0)
             		val >>= 4;
-        	else 
-		{
+        	else {
             		errno = EINVAL;
             		return (-1);
         	}
@@ -184,6 +195,58 @@ int in_ether(char *bufp, unsigned char *ptr, int flip)
     	return (0);
 }
 
+/* load socket options specified by the user. */
+int load_options(struct llc_options *llc, char *options)
+{
+        char *start, sbuf[10240];
+	int i;
+
+        if(strlen(options) <= 0)
+                return (0);
+
+	i = 0;
+        strcpy(sbuf, options);
+        start = (void *)strtok(sbuf, ":");
+        do {
+		switch(i) {
+			case 0:		/* retry. */
+				llc->retry = atoi(start);
+				break;
+
+			case 1:		/* size. */
+				llc->size = atoi(start);
+				break;
+
+			case 2:		/* ack. */
+				llc->ack = atoi(start);
+				break;
+
+			case 3:		/* p. */
+				llc->p = atoi(start);
+				break;
+
+			case 4:		/* reject. */
+				llc->reject = atoi(start);
+				break;
+
+			case 5:		/* busy. */
+				llc->busy = atoi(start);
+				break;
+
+			case 6:		/* txwin. */
+				llc->txwin = atoi(start);
+				break;
+
+			case 7:		/* rxwin. */
+				llc->rxwin = atoi(start);
+				break;
+		}
+		i++;
+        } while((start = (void *)strtok(NULL, ":")) != NULL);
+
+	return (0);
+}
+
 /* set an llc_options structure to defaults. */
 int set_llc_defaults(struct llc_options *llc)
 {
@@ -194,6 +257,7 @@ int set_llc_defaults(struct llc_options *llc)
 	llc->quiet	= 0;
 	llc->flood	= 0;
 	llc->hexdump	= 0;
+	llc->numeric	= 0;
 	llc->len	= LLC_DEFAULT_LEN;
 	llc->wait	= LLC_DEFAULT_INTERVAL;
 	llc->count	= 0;
@@ -208,6 +272,165 @@ int set_llc_defaults(struct llc_options *llc)
 	return (0);
 }
 
+/* set socket information on an llc sap. */
+int set_llc_sockopt(struct llc_options *llc)
+{
+	int opt, val, vlen, err;
+
+	if(llc->retry) {
+		opt 	= LLC_OPT_RETRY;
+		val 	= llc->retry;
+		vlen 	= sizeof(val);
+		err = setsockopt(llc->sk, SOL_LLC, opt, &val, vlen);
+		if(err < 0)
+			printf("%s: setsockopt llc->retry failed `%s'.\n",
+				name_s, strerror(errno));
+	}
+
+	if(llc->size) {
+                opt     = LLC_OPT_SIZE;
+                val     = llc->size;
+                vlen    = sizeof(val);
+                err = setsockopt(llc->sk, SOL_LLC, opt, &val, vlen);
+                if(err < 0)
+                        printf("%s: setsockopt llc->size failed `%s'.\n",
+                                name_s, strerror(errno));
+        }
+
+	if(llc->ack) {
+                opt     = LLC_OPT_ACK_TMR_EXP;
+                val     = llc->ack;
+                vlen    = sizeof(val);
+                err = setsockopt(llc->sk, SOL_LLC, opt, &val, vlen);
+                if(err < 0)
+                        printf("%s: setsockopt llc->ack failed `%s'.\n",
+                                name_s, strerror(errno));
+        }
+
+	if(llc->p) {
+                opt     = LLC_OPT_P_TMR_EXP;
+                val     = llc->p;
+                vlen    = sizeof(val);
+                err = setsockopt(llc->sk, SOL_LLC, opt, &val, vlen);
+                if(err < 0)
+                        printf("%s: setsockopt llc->p failed `%s'.\n",
+                                name_s, strerror(errno));
+        }
+
+	if(llc->reject) {
+                opt     = LLC_OPT_REJ_TMR_EXP;
+                val     = llc->reject;
+                vlen    = sizeof(val);
+                err = setsockopt(llc->sk, SOL_LLC, opt, &val, vlen);
+                if(err < 0)
+                        printf("%s: setsockopt llc->reject failed `%s'.\n",
+                                name_s, strerror(errno));
+        }
+
+	if(llc->busy) {
+                opt     = LLC_OPT_BUSY_TMR_EXP;
+                val     = llc->busy;
+                vlen    = sizeof(val);
+                err = setsockopt(llc->sk, SOL_LLC, opt, &val, vlen);
+                if(err < 0)
+                        printf("%s: setsockopt llc->busy failed `%s'.\n",
+                                name_s, strerror(errno));
+        }
+
+	if(llc->txwin) {
+                opt     = LLC_OPT_TX_WIN;
+                val     = llc->txwin;
+                vlen    = sizeof(val);  
+                err = setsockopt(llc->sk, SOL_LLC, opt, &val, vlen); 
+                if(err < 0)     
+                        printf("%s: setsockopt llc->txwin failed `%s'.\n",
+                                name_s, strerror(errno));
+        }
+
+	if(llc->rxwin) {
+                opt     = LLC_OPT_RX_WIN;
+                val     = llc->rxwin;
+                vlen    = sizeof(val);  
+                err = setsockopt(llc->sk, SOL_LLC, opt, &val, vlen); 
+                if(err < 0)     
+                        printf("%s: setsockopt llc->rxwin failed `%s'.\n",
+                                name_s, strerror(errno));
+        }     
+
+	return (0);
+}
+
+/* display socket information on an llc sap. */
+char *display_llc_sockopt(struct llc_options *llc)
+{
+	static char buf[256];
+	int i, blen = 0;
+
+	for(i = LLC_OPT_UNKNOWN + 1; i < LLC_OPT_MAX; i++) {
+		int val, vlen, err;
+
+		vlen = sizeof(val);
+		err = getsockopt(llc->sk, SOL_LLC, i, &val, (size_t *)&vlen);
+		switch(i) {
+			case LLC_OPT_RETRY:
+				if(err < 0)
+					val = err;
+				blen += sprintf(buf + blen, "retry:%d ", val);
+				break;
+
+	                case LLC_OPT_SIZE:
+				if(err < 0) 
+                                        val = err;
+                                blen += sprintf(buf + blen, "size:%d ", val);
+                                break;
+
+	                case LLC_OPT_ACK_TMR_EXP:
+				if(err < 0) 
+                                        val = err;
+                                blen += sprintf(buf + blen, "ack:%d ", val);
+                                break;
+
+	                case LLC_OPT_P_TMR_EXP:
+				if(err < 0) 
+                                        val = err;
+                                blen += sprintf(buf + blen, "p:%d ", val);
+                                break;
+
+        	        case LLC_OPT_REJ_TMR_EXP:
+				if(err < 0) 
+                                        val = err;
+                                blen += sprintf(buf + blen, "reject:%d ", val);
+                                break;
+
+        	        case LLC_OPT_BUSY_TMR_EXP:
+				if(err < 0) 
+                                        val = err;
+                                blen += sprintf(buf + blen, "busy:%d ", val);
+                                break;
+
+			case LLC_OPT_TX_WIN:
+				if(err < 0)
+                                        val = err;
+                                blen += sprintf(buf + blen, "txwin:%d ", val);
+                                break;
+
+			case LLC_OPT_RX_WIN:
+				if(err < 0)
+                                        val = err;
+                                blen += sprintf(buf + blen, "rxwin:%d ", val);
+                                break;
+
+                	default:
+				if(err < 0) 
+                                        val = err;
+                                blen += sprintf(buf + blen, "unknown:%d:%d ", i, val);
+                                break;
+		}
+	}
+
+	return (buf);
+}
+
 /* setup llc socket based on llc type. */
 int setup_llc_socket(struct llc_options *llc)
 {
@@ -219,12 +442,13 @@ int setup_llc_socket(struct llc_options *llc)
 	else
 		sk_type = SOCK_DGRAM;
 	llc->sk = socket(PF_LLC, sk_type, 0);
-	if(llc->sk < 0)
-	{
+	if(llc->sk < 0) {
 		if(errno == EPERM)
 			printf("%s: must run as root.\n", name_s);
 		else
-			printf("%s: socket %s.\n", name_s, strerror(llc->sk));
+			printf("%s: socket `%s'.\n", name_s, strerror(errno));
+		if(errno == EAFNOSUPPORT)
+                        printf("%s: did you load the llc module?\n", name_s);
 		return (llc->sk);
 	}
 
@@ -243,8 +467,7 @@ int setup_llc_socket(struct llc_options *llc)
 
 	err = bind(llc->sk, (struct sockaddr *)&llc->dst, 
 		sizeof(struct sockaddr_llc));
-	if(err < 0)
-	{
+	if(err < 0) {
 		printf("%s: bind %s.\n", name_s, strerror(err));
 		close(llc->sk);
 		return (err);
@@ -255,8 +478,7 @@ int setup_llc_socket(struct llc_options *llc)
 
 	err = connect(llc->sk, (struct sockaddr *)&llc->dst, 
 		sizeof(struct sockaddr_llc));
-	if(err < 0)
-	{
+	if(err < 0) {
 		printf("%s: connect %s.\n", name_s, strerror(err));
 		close(llc->sk);
 		return (err);
@@ -276,8 +498,8 @@ void version(void)
 /* display useless help. */ 
 void help(void)
 {
-        printf("Usage: %s [-h] [-v] [-t 1|2] [-s ssap] [-d dsap] [-c count] [-i wait]\n", name_s);
-	printf("	[-p pattern] [-l len] [-xbfq] SR:CM:AC:AD:DR:ES DS:TM:AC:AD:DR:ES\n");
+        printf("Usage: %s [-h] [-v] [-t 1|2] [-s ssap] [-d dsap] [-c count] [-i wait] [-p pattern] [-l len]\n", name_s);
+	printf("	[-o retry:size:ack:p:reject:busy:txwin:rxwin] [-nxbfquz] source_host destination_host\n");
         exit(1);
 }
 
@@ -287,12 +509,10 @@ void fill(struct llc_options *llc, void *bp1, char *patp)
         int pat[16], ii, jj, kk;    
         char *cp, *bp = (char *)bp1;
         
-        for(cp = patp; *cp; cp++)
-        {
-                if(!isxdigit(*cp))
-                {
-                        (void)fprintf(stderr,
-                            "llcping: patterns must be specified as hex digits.\n");
+        for(cp = patp; *cp; cp++) {
+                if(!isxdigit(*cp)) {
+                        printf("%s: patterns must be specified as hex digits.\n",
+				name_s);
                         exit(2);
                 }
         }
@@ -303,15 +523,13 @@ void fill(struct llc_options *llc, void *bp1, char *patp)
             	&pat[7], &pat[8], &pat[9], &pat[10], &pat[11], &pat[12],
             	&pat[13], &pat[14], &pat[15]);
 
-        if(ii > 0)
-        {
+        if(ii > 0) {
                 for(kk = 0; kk <= LLC_MAX_LEN - (8 + ii); kk += ii)
                         for(jj = 0; jj < ii; ++jj)
                                 bp[jj + kk] = pat[jj];
         }
 
-	if(!llc->quiet)
-        {
+	if(!llc->quiet) {
                 printf("PATTERN: 0x");
                 for(jj = 0; jj < ii; ++jj)
                 	printf("%02x", bp[jj] & 0xFF);
@@ -322,8 +540,7 @@ void fill(struct llc_options *llc, void *bp1, char *patp)
 /* subtract 2 timeval structs:  out = out - in.  out is assumed to be >= in. */
 void tvsub(register struct timeval *out, register struct timeval *in)
 {
-        if((out->tv_usec -= in->tv_usec) < 0)
-        {
+        if((out->tv_usec -= in->tv_usec) < 0) {
                 --out->tv_sec;
                 out->tv_usec += 1000000;
         }
@@ -353,9 +570,13 @@ void pr_pack(struct llc_options *llc, char *buf, int len, struct sockaddr_llc *f
 		return;
 	if(llc->flood)
                 write(STDOUT_FILENO, &bspace, 1);
-        else
-        {
-                printf("%d bytes from %s:", len, pr_ether(from->sllc_smac));
+        else {
+		if(llc->type == LLC_TYPE_2)
+			printf("%d bytes from %s:", len, pr_ether(llc->dst.sllc_dmac,
+				llc->numeric));
+		else
+	                printf("%d bytes from %s:", len, pr_ether(from->sllc_smac,
+				llc->numeric));
                 printf(" num=%d time=%ld.%ld ms\n", llc->received, 
 			triptime / 10, triptime % 10);
 
@@ -375,13 +596,13 @@ void finish(int ignore)
         putchar('\n');
         fflush(stdout);
         printf("--- %s @ 0x%02X via LLC%d %s statistics ---\n",
-                pr_ether(llc->dst.sllc_dmac), llc->dsap, llc->type, name_s);
+                pr_ether(llc->dst.sllc_dmac, llc->numeric), llc->dsap, 
+		llc->type, name_s);
         printf("%d packets transmitted, ", llc->transmitted);
         printf("%d packets received, ", llc->received);
         if(llc->repeats)
         	printf("+%d duplicates, ", llc->repeats);
-        if(llc->transmitted)
-        {
+        if(llc->transmitted) {
                 if(llc->received > llc->transmitted)
                         printf("-- somebody's printing up packets!");
                 else
@@ -390,8 +611,7 @@ void finish(int ignore)
                             llc->transmitted));
         }
         putchar('\n');
-        if(llc->received && llc->timing)
-        {
+        if(llc->received && llc->timing) {
                 printf("round-trip min/avg/max = %d.%d/%d.%d/%d.%d ms\n",
 			llc->tmin / 10, llc->tmin % 10,
                         (llc->tsum / (llc->received + llc->repeats)) / 10,
@@ -413,7 +633,7 @@ void pinger(void)
 {
 	struct llc_options *llc = tmp_llc;
 	char dot = '.';
-        int i, cc;
+        int i = 0, cc = 0;
 
         llc->transmitted++;
 
@@ -421,23 +641,45 @@ void pinger(void)
             (struct timezone *)NULL);
 
 	cc = llc->len;
-        i = sendto(llc->sk, (char *)llc->outpacket, cc, 0, (struct sockaddr *)&llc->dst,
-            sizeof(struct sockaddr_llc));
-
-        if(i < 0 || i != cc)
-        {
+	if(llc->type == LLC_TYPE_2) {
+		if(llc->ua) {
+			llc->dst.sllc_ua = 1;
+			i = sendto(llc->sk, llc->outpacket, cc, 0,
+                        	(struct sockaddr *)&llc->dst,
+                        	sizeof(struct sockaddr_llc));
+			llc->dst.sllc_ua = 0;
+		} else {
+			if(llc->test) {
+				llc->dst.sllc_test = 1;
+				i = sendto(llc->sk, llc->outpacket, cc, 0,
+		                        (struct sockaddr *)&llc->dst,
+		                        sizeof(struct sockaddr_llc));
+                        	llc->dst.sllc_test = 0;
+			} else {
+				i = send(llc->sk, llc->outpacket, cc, 0);
+			}
+		}
+	} else {
+		if(llc->test)
+			llc->dst.sllc_test = 1;
+	        i = sendto(llc->sk, llc->outpacket, cc, 0, 
+			(struct sockaddr *)&llc->dst, 
+			sizeof(struct sockaddr_llc));
+		if(llc->test)
+                        llc->dst.sllc_test = 0;
+	}
+        if(i < 0 || i != cc) {
                 if(i < 0)
-                        printf("%s: sendto %s", name_s, strerror(i));
+                        printf("%s: sendto %s\n", name_s, strerror(errno));
                 printf("%s: wrote %s %d chars, ret=%d\n", name_s,
-                    pr_ether(llc->dst.sllc_dmac), cc, i);
+                    pr_ether(llc->dst.sllc_dmac, llc->numeric), cc, i);
         }
         if(!llc->quiet && llc->flood)
                 write(STDOUT_FILENO, &dot, 1);
-	else
-	{
-		if(llc->hexdump)
-		{
-			printf("%d bytes to %s:", llc->len, pr_ether(llc->dst.sllc_dmac));
+	else {
+		if(llc->hexdump) {
+			printf("%d bytes to %s:", llc->len, 
+				pr_ether(llc->dst.sllc_dmac, llc->numeric));
 			printf(" num=%d time=0.0 ms\n", llc->received + 1);
 	                hexdump(llc->outpacket, llc->len);
 		}
@@ -457,10 +699,8 @@ void catcher(int ignore)
         (void)signal(SIGALRM, catcher);
         if(!llc->count || llc->transmitted < llc->count)
                 alarm((u_int)llc->wait);
-        else
-        {       
-                if(llc->received)
-                {       
+        else {
+                if(llc->received) {
                         waittime = 2 * llc->tmax / 1000;
                         if(!waittime)
                                 waittime = 1;
@@ -479,7 +719,7 @@ int main(int argc, char **argv)
 	struct timeval timeout;
 	struct llc_options *llc;
 	int fdmask;
-	int c;
+	int c, err;
 
 	static char *null = NULL;
         __environ = &null;
@@ -489,8 +729,7 @@ int main(int argc, char **argv)
 	set_llc_defaults(llc);
 	tmp_llc = llc;
 
-	while((c = getopt(argc, argv, "hvVbxfqt:s:d:c:i:p:l:")) != EOF)
-        {
+	while((c = getopt(argc, argv, "hvVbxfqnuzt:s:d:c:i:p:l:o:")) != EOF) {
                 switch(c) {
                         case 'V':       /* Display author and version. */
                         case 'v':       /* Display author and version. */
@@ -505,8 +744,7 @@ int main(int argc, char **argv)
 
 			case 't':	/* type of llc socket to use. */
 				llc->type = atoi(optarg);
-				if(llc->type > LLC_TYPE_2) 
-				{
+				if(llc->type > LLC_TYPE_2) {
 					free(llc);
 					help();
 				}
@@ -526,8 +764,7 @@ int main(int argc, char **argv)
 
 			case 'c':	/* number of packets to send. */
 				llc->count = atoi(optarg);
-				if(llc->count == 0)
-				{
+				if(llc->count == 0) {
 					printf("%s: number of packets to transmit (%d) invalid.\n",
 						name_s, llc->count);
 					free(llc);
@@ -537,8 +774,7 @@ int main(int argc, char **argv)
 
 			case 'i':	/* time between packets. */
 				llc->wait = atoi(optarg);
-				if(llc->wait == 0 || llc->wait > LLC_MAX_INTERVAL)
-				{
+				if(llc->wait == 0 || llc->wait > LLC_MAX_INTERVAL) {
 					printf("%s: timing interval (%d) invalid.\n",
 						name_s, llc->wait);
 					free(llc);
@@ -551,10 +787,14 @@ int main(int argc, char **argv)
 				fill(llc, &llc->outpacket[sizeof(struct timeval)], optarg);
 				break;
 
+			case 'o':	/* llc socket options. */
+				llc->options = 1;
+				load_options(llc, optarg);
+				break;
+
 			case 'l':	/* length of packet. */
 				llc->len = atoi(optarg);
-				if(llc->len > LLC_MAX_LEN || llc->len < LLC_MIN_LEN)
-				{
+				if(llc->len > LLC_MAX_LEN || llc->len < LLC_MIN_LEN) {
 					printf("%s: packet size (%d) invalid.\n",
 						name_s, llc->len);
 					free(llc);
@@ -563,8 +803,7 @@ int main(int argc, char **argv)
 				break;
 
 			case 'f':	/* flood ping. */
-				if(!llc->is_root)
-				{
+				if(!llc->is_root) {
 					printf("%s: %s\n", name_s, strerror(EPERM));
 					free(llc);
 					exit (2);
@@ -581,6 +820,18 @@ int main(int argc, char **argv)
 				llc->hexdump = 1;
 				break;
 
+			case 'n':	/* numeric output. */
+				llc->numeric = 1;
+				break;
+
+			case 'u':	/* send ui frame over llc2. */
+				llc->ua = 1;
+				break;
+
+			case 'z':	/* send test frame over llc1/2. */
+				llc->test = 1;
+				break;
+
 			default:
 				free(llc);
 				help();
@@ -589,25 +840,36 @@ int main(int argc, char **argv)
 
 	argc -= optind;
 	argv += optind;
-	if(argc < 2)
-	{
+	if(argc < 2) {
 		free(llc);
 		help();
 	}
 
-	in_ether(*argv, llc->smac, 0);		/* set source mac. */
+	err = in_ether(*argv, llc->smac, 0);		/* set source mac. */
+	if(err < 0) {
+		struct llchostent *lh;
+		lh = getllchostbyname(*argv);
+		if(!lh)
+			exit (2);
+		memcpy(llc->smac, lh->lh_addr, lh->lh_length);
+	}
 	argc--, argv++;
-	in_ether(*argv, llc->dmac, llc->flip);	/* set destination mac. */
+	err = in_ether(*argv, llc->dmac, llc->flip);	/* set destination mac. */
+	if(err < 0) {
+		struct llchostent *lh;
+                lh = getllchostbyname(*argv);
+                if(!lh)
+                        exit (2);
+                memcpy(llc->dmac, lh->lh_addr, lh->lh_length);
+	}
 
-	if(llc->flood && llc->wait > 1)
-        {
+	if(llc->flood && llc->wait > 1) {
                 printf("%s: -f and -i incompatible options.\n", name_s);
 		free(llc);
-                exit(2);
+                exit (2);
         }
 
-	if(!llc->fill)
-	{
+	if(!llc->fill) {
 		int i;
 		char *datap = &llc->outpacket[sizeof(struct timeval)];
 		for(i = 8; i < llc->len; ++i)
@@ -618,22 +880,25 @@ int main(int argc, char **argv)
                 llc->timing = 1;
 
 	printf("%s: %s, %s\n", name_s, version_s, desc_s);
-	printf("%s: %s @ 0x%02X via LLC%d: %d data bytes\n", name_s,
-		pr_ether(llc->smac), llc->ssap, llc->type, llc->len);
-
-	if(setup_llc_socket(llc) < 0)
-	{
+	if(setup_llc_socket(llc) < 0) {
 		free(llc);
 		exit (2);
 	}
+
+	if(llc->options && llc->type == LLC_TYPE_2)
+		set_llc_sockopt(llc);
+	if(llc->type == LLC_TYPE_2)
+		printf("%s: opts @ %s\n", name_s, display_llc_sockopt(llc));
+
+	printf("%s: %s @ 0x%02X via LLC%d: %d data bytes\n", name_s,
+                pr_ether(llc->smac, llc->numeric), llc->ssap, llc->type, llc->len);
 
         (void)signal(SIGINT, finish);
         (void)signal(SIGALRM, catcher);
 
 	if(!llc->flood)
 		catcher(0);	/* start the process. */
-	for(;;)
-        {
+	for(;;) {
                 struct sockaddr_llc from;
                 size_t fromlen;
 		int cc, packlen;
@@ -644,15 +909,13 @@ int main(int argc, char **argv)
 
 		packlen = llc->len;
         	packet = new_s(packlen);
-        	if(!packet)
-        	{
+        	if(!packet) {
                 	printf("%s: out of memory.\n", name_s);
                 	free(llc);
-                	exit(2);
+                	exit (2);
         	}
 
-                if(llc->flood)
-                {
+                if(llc->flood ){
                         pinger();
                         timeout.tv_sec = 0;
                         timeout.tv_usec = 900000;
@@ -661,15 +924,19 @@ int main(int argc, char **argv)
                         	(fd_set *)NULL, &timeout) < 1)
                                 continue;
                 }
-                fromlen = sizeof(from);
-                if((cc = recvfrom(llc->sk, (char *)packet, packlen, 0,
-                    (struct sockaddr *)&from, &fromlen)) < 0)
-                {
-                        if(errno == EINTR)
-                                continue;
-                        perror("llcping: recvfrom");
+		if(llc->type == LLC_TYPE_2) {
+			cc = recv(llc->sk, packet, packlen, 0);
+		} else {
+	                fromlen = sizeof(from);
+	                cc = recvfrom(llc->sk, packet, packlen, 0,
+	                	(struct sockaddr *)&from, &fromlen);
+		}
+		if(cc < 0) {
+			if(errno == EINTR)
+				continue;
+                        printf("%s: recvfrom `%s'\n", name_s, strerror(cc));
                         continue;
-                }
+		}
 
                 pr_pack(llc, (char *)packet, cc, &from);
 		free(packet);

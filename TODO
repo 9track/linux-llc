@@ -1,12 +1,18 @@
-- send() is broken.
-- [get/set]sockopt needs to support SOCK_DGRAM and non-TCP_ESTABLISHED
-  state sockets.
-- an ssap of 0x00 in sockaddr_llc needs to provide the user with a dynamic
-  ssap allocation.
-- recv is broken when whole llc frame is not read.
-- set rx/tx window size.
-- llc1 null dsap recv loses first 4 bytes of data.
+** pf_llc **
+- test frame w/ dsap causes kernel panic on remote linux-llc machine.
+- recv is broken when whole llc frame is not read (send/recv skb queues).
 - currently no way to have multiple smac+ssap connections.
-- llc_next and llc_pprev pointer needs relocating to sk->llc_opt.
-- fix check for sap->sk_list.lock.users (will never be > 1).
-- /proc/net/802.2 crash on cat with connections.
+
+** lar **
+- finish lar protocol testing.
+- merge llcdb into lardb to allow static and dynamic llc host name resolution.
+
+** dlsw **
+- continue coding base.
+- test against real equipment once it arrives.
+
+** docs **
+- update linux-llc web page.
+- write af_llc socket man page.
+- write howto use llc doc using the important parts of the email discusions
+  that happended durning the last week or so.

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<llchosts:Helping xmlns:llchosts="http://www.linux-sna.org/llchosts">
+<llchosts:hosts>
+  <llchosts:host>
+    <llchosts:name>life-eth0</llchosts:name>
+    <llchosts:mac>02:00:06:E3:1F:C6</llchosts:mac>
+  </llchosts:host>
+  <llchosts:host>
+    <llchosts:name>life-eth1</llchosts:name>
+    <llchosts:mac>00:A0:CC:DC:13:A7</llchosts:mac>
+  </llchosts:host>
+  <llchosts:host>
+    <llchosts:name>little-eth0</llchosts:name>
+    <llchosts:mac>00:90:27:18:0A:0D</llchosts:mac>
+  </llchosts:host>
+  <llchosts:host>
+    <llchosts:name>little-eth1</llchosts:name>
+    <llchosts:mac>02:00:06:E3:20:C6</llchosts:mac>
+  </llchosts:host>
+</llchosts:hosts>
+</llchosts:Helping>

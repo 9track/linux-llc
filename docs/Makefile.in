@@ -62,16 +62,21 @@ host_triplet = @host@
 AS = @AS@
 CC = @CC@
 DLLTOOL = @DLLTOOL@
+ECHO = @ECHO@
+EXEEXT = @EXEEXT@
 LD = @LD@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
 OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+STRIP = @STRIP@
 VERSION = @VERSION@
+XML_CONFIG = @XML_CONFIG@
 
-EXTRA_DIST = dlswd.xml llcpingd.xml llcping.txt llc.txt services 	rfc1434.html rfc1434.pdf rfc1795.html rfc1795.pdf 	rfc2166.html rfc2166.pdf
+EXTRA_DIST = dlswd.xml llcpingd.xml llchosts.xml lard.xml llcping.txt llc.txt services 	rfc1434.html rfc1434.pdf rfc1795.html rfc1795.pdf 	rfc2166.html rfc2166.pdf
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../include/config.h
@@ -155,6 +160,7 @@ clean-am:  clean-generic mostlyclean-am
 clean: clean-am
 
 distclean-am:  distclean-generic clean-am
+	-rm -f libtool
 
 distclean: distclean-am
 

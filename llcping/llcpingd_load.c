@@ -1,6 +1,16 @@
 /* llcpingd_load.c: load a llc echo server configuration file.
  *
- * Jay Schulist <jschlst@samba.org>
+ * Author:
+ * Jay Schulist         <jschlst@samba.org>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version
+ * 2 of the License, or (at your option) any later version.
+ *
+ * None of the authors or maintainers or their employers admit
+ * liability nor provide warranty for any of this software.
+ * This material is provided "as is" and at no charge.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -36,9 +46,9 @@ extern global *llc_config_info;
 extern struct llc_statistics *llc_stats;
 
 struct wordmap on_types[] = {
-        { "off",        0               },
-        { "on",         1               },
-        { NULL,         -1              }
+        { "off",        0	},
+        { "on",		1	},
+        { NULL,         -1      }
 };
 
 char     *altarg;
@@ -56,24 +66,25 @@ char *slurpstring(void)
         register char *ap = argbase;
         char *tmp = argbase;            /* will return this if token found */
 
-        if (*sb == '!' || *sb == '$') { /* recognize ! as a token for shell */
-                switch (slrflag) {      /* and $ as token for macro invoke */
+        if(*sb == '!' || *sb == '$') { 	/* recognize ! as a token for shell */
+                switch(slrflag) {      /* and $ as token for macro invoke */
                         case 0:
                                 slrflag++;
                                 stringbase++;
                                 return ((*sb == '!') ? excl : dols);
-                                /* NOTREACHED */
+
                         case 1:
                                 slrflag++;
                                 altarg = stringbase;
                                 break;
+
                         default:
                                 break;
                 }
         }
 
 S0:
-        switch (*sb) {
+        switch(*sb) {
 
         case '\0':
                 goto OUT;
@@ -201,8 +212,7 @@ int llcpingd_print_global(global *g)
 
         printf("\n================ Global Input Structure ================\n");
 
-        if(!g)
-        {
+        if(!g) {
                 printf("Global data is NULL!\n");
                 goto pr_done;
         }
@@ -225,8 +235,7 @@ static struct llc_linfo *parse_listen(xmlDocPtr doc, xmlNsPtr ns, xmlNodePtr cur
         if(!new(l))
                 return (NULL);
 
-        for(cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next)
-        {
+        for(cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
                 if((!strcmp(cur->name, "type")) && (cur->ns == ns))
                         l->type = atoi(xmlNodeListGetString(doc,
                                 cur->xmlChildrenNode, 1));
@@ -247,8 +256,7 @@ static global *parse_global(xmlDocPtr doc, xmlNsPtr ns, xmlNodePtr cur)
 	if(!new(gi))
 		return (NULL);
 
-	for(cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next)
-        {
+	for(cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
 		if((!strcmp(cur->name, "debuglevel")) && (cur->ns == ns))
                         gi->debug_level = atoi(xmlNodeListGetString(doc,
                                 cur->xmlChildrenNode, 1));
@@ -275,22 +283,19 @@ int load_config_file(char *cfile)
 
 	/* check the document is of the right kind. */
         cur = xmlDocGetRootElement(doc);
-        if(!cur)
-        {
+        if(!cur) {
                 fprintf(stderr, "file (%s) is an empty document.\n", cfile);
                 xmlFreeDoc(doc);
                 return (-1);
         }
         ns = xmlSearchNsByHref(doc, cur, _PATH_LLCPINGD_XML_HREF);
-        if(!ns)
-        {
+        if(!ns) {
                 fprintf(stderr, "file (%s) is of the wrong type,"
                         " llcpingd namespace not found.\n", cfile);
                 xmlFreeDoc(doc);
                 return (-1);
         }
-	if(strcmp(cur->name, "Helping"))
-        {
+	if(strcmp(cur->name, "Helping")) {
                 fprintf(stderr, "file (%s) is of the wrong type,"
                         " root node != Helping.\n", cfile);
                 xmlFreeDoc(doc);
@@ -305,8 +310,7 @@ int load_config_file(char *cfile)
                 return (-1);
 
 	/* first level is just 'llcpingd' */
-        if((strcmp(cur->name, "llcpingd")) || (cur->ns != ns))
-        {
+        if((strcmp(cur->name, "llcpingd")) || (cur->ns != ns)) {
                 fprintf(stderr, "file (%s) is of the wrong type, was '%s',"
                         " llcpingd expected", cfile, cur->name);
                 fprintf(stderr, "xmlDocDump follows.\n");
@@ -317,18 +321,15 @@ int load_config_file(char *cfile)
         }
 
 	/* now we walk the xml tree. */
-	for(cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next)
-        {
-		if((!strcmp(cur->name, "global")) && (cur->ns == ns))
-		{
+	for(cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
+		if((!strcmp(cur->name, "global")) && (cur->ns == ns)) {
 			ginfo = parse_global(doc, ns, cur);
 			if(!ginfo)
 				return (-EINVAL);
 			continue;
 		}
 
-		if((!strcmp(cur->name, "listen")) && (cur->ns == ns))
-                {
+		if((!strcmp(cur->name, "listen")) && (cur->ns == ns)) {
 			struct llc_linfo *l;
 			l = parse_listen(doc, ns, cur);
 			if(!l)

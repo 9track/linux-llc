@@ -44,4 +44,5 @@ typedef struct {
 
 extern int load_config_file(char *cfile);
 extern int load_config(global *ginfo);
+extern int llc_load_listener(struct llc_linfo *l);
 #endif	/* _LLCPINGD_LOAD_H */

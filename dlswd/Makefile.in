@@ -62,15 +62,19 @@ host_triplet = @host@
 AS = @AS@
 CC = @CC@
 DLLTOOL = @DLLTOOL@
+ECHO = @ECHO@
 EXEEXT = @EXEEXT@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
 OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+STRIP = @STRIP@
 VERSION = @VERSION@
+XML_CONFIG = @XML_CONFIG@
 
 AUTOMAKE_OPTIONS = foreign
 
@@ -79,10 +83,10 @@ INCLUDES = -I../include -I../dlswmon
 
 sbin_PROGRAMS = dlswd
 
-dlswd_LDADD = -lxml -lproc
+dlswd_LDADD = -lproc
 dlswd_SOURCES = dlswd.c dlsw_load.c dlsw_monitor.c
 
-include_HEADERS = dlswd.h dlsw_load.h dlsw_monitor.h
+include_HEADERS = dlswd.h dlsw_load.h dlsw_monitor.h dlsw_proto.h
 
 man_MANS = dlswd.8
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -96,7 +100,8 @@ DEFS = @DEFS@ -I. -I$(srcdir)
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
-dlswd_OBJECTS =  dlswd.o dlsw_load.o dlsw_monitor.o
+dlswd_OBJECTS =  dlswd.$(OBJEXT) dlsw_load.$(OBJEXT) \
+dlsw_monitor.$(OBJEXT)
 dlswd_DEPENDENCIES = 
 dlswd_LDFLAGS = 
 CFLAGS = @CFLAGS@
@@ -122,7 +127,7 @@ OBJECTS = $(dlswd_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
-.SUFFIXES: .S .c .lo .o .s
+.SUFFIXES: .S .c .lo .o .obj .s
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps Makefile
 
@@ -166,6 +171,11 @@ uninstall-sbinPROGRAMS:
 .c.o:
 	$(COMPILE) -c $<
 
+# FIXME: We should only use cygpath when building on Windows,
+# and only if it is available.
+.c.obj:
+	$(COMPILE) -c `cygpath -w $<`
+
 .s.o:
 	$(COMPILE) -c $<
 
@@ -174,6 +184,7 @@ uninstall-sbinPROGRAMS:
 
 mostlyclean-compile:
 	-rm -f *.o core *.core
+	-rm -f *.$(OBJEXT)
 
 clean-compile:
 

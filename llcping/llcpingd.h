@@ -63,4 +63,5 @@ struct llc_statistics {
         unsigned long wmark_fd;
         unsigned long highest_fd;
 };
+
 #endif	/* LLCPINGD_H */

@@ -1,443 +1,364 @@
-diff -ruN linux-2.4.10/include/net/llc_conn.h linux/include/net/llc_conn.h
---- linux-2.4.10/include/net/llc_conn.h	Mon Oct 29 22:54:07 2001
-+++ linux/include/net/llc_conn.h	Wed Oct 31 12:50:19 2001
-@@ -132,6 +132,7 @@
- #define llc_sock_assert_ret(__connection)
- #endif /* DEBUG_LLC_CONN_ALLOC */
+diff -ruN linux-2.4.14/include/linux/llc.h linux/include/linux/llc.h
+--- linux-2.4.14/include/linux/llc.h	Sun Nov 11 15:40:15 2001
++++ linux/include/linux/llc.h	Sun Nov 11 14:11:44 2001
+@@ -81,10 +81,10 @@
  
-+extern int llc_sock_init(struct sock *sk);
- extern u16 llc_sock_reset(struct sock *sk);
+ struct llc_ui_opt {
+ 	u16		    link;	/* network layer link number */
+-	struct llc_sap	   *sap;		/* pointer to parent SAP */
+-	struct sock	   *core_sk;
+-	struct net_device  *dev;		/* device to send to remote */
+-	struct sockaddr_llc addr;
++	struct llc_sap	    *sap;	/* pointer to parent SAP */
++	struct sock	    *core_sk;
++	struct net_device   *dev;	/* device to send to remote */
++	struct sockaddr_llc *addr;	/* address sock is bound to */
+ };
  
- /* Access to a connection */
-diff -ruN linux-2.4.10/include/net/sock.h linux/include/net/sock.h
---- linux-2.4.10/include/net/sock.h	Mon Oct 29 22:54:07 2001
-+++ linux/include/net/sock.h	Wed Oct 31 11:38:15 2001
-@@ -501,6 +501,11 @@
- 	struct sock		*bind_next;
- 	struct sock		**bind_pprev;
- 
-+#if defined(CONFIG_LLC) || defined(CONFIG_LLC_MODULE)
-+	struct sock		*llc_next;
-+	struct sock		*llc_pprev;
-+#endif
-+
- 	volatile unsigned char	state,		/* Connection state			*/
- 				zapped;		/* In ax25 & ipx means not linked	*/
- 	__u16			sport;		/* Source port				*/
-@@ -656,7 +661,9 @@
- #if defined(CONFIG_IRDA) || defined(CONFIG_IRDA_MODULE)
- 		struct irda_sock        *irda;
- #endif
-+#if defined(CONFIG_LLC) || defined(CONFIG_LLC_MODULE)
- 		struct llc_opt		af_llc;
-+#endif
- #if defined(CONFIG_WAN_ROUTER) || defined(CONFIG_WAN_ROUTER_MODULE)
-                struct wanpipe_opt      *af_wanpipe;
- #endif
-diff -ruN linux-2.4.10/net/8022llc/llc_c_ac.c linux/net/8022llc/llc_c_ac.c
---- linux-2.4.10/net/8022llc/llc_c_ac.c	Mon Oct 29 22:54:07 2001
-+++ linux/net/8022llc/llc_c_ac.c	Wed Oct 31 12:28:57 2001
-@@ -1596,9 +1596,8 @@
- 		conn_free_event(event);
- 		goto out;
- 	}
--	if (!sk->lock.users)
--		rc = conn_send_event(sk, event);
--	else {
-+
-+	if (sk->lock.users > 1) {
- 		struct sk_buff *skb = alloc_skb(1, GFP_ATOMIC);
- 
- 		if (skb) {
-@@ -1610,6 +1609,8 @@
- 			rc = 1;
- 		}
- 	}
-+	else
-+		rc = conn_send_event(sk, event);
- out:	bh_unlock_sock(sk);
- 	return rc;
- }
-diff -ruN linux-2.4.10/net/8022llc/llc_conn.c linux/net/8022llc/llc_conn.c
---- linux-2.4.10/net/8022llc/llc_conn.c	Mon Oct 29 22:54:07 2001
-+++ linux/net/8022llc/llc_conn.c	Wed Oct 31 12:29:17 2001
-@@ -77,13 +77,6 @@
- 	struct prim_if_block *cfm_prim = event->cfm_prim;
- 
- 	conn_free_event(event);
--	/* check if the connection was freed by the state machine by
--	 * means of conn_disconnect */
--	if (rc == 2) {
--		printk(KERN_INFO __FUNCTION__ ": rc == 2\n");
--		rc = -ECONNABORTED;
--		goto out;
--	}
- 	if (!flag)   /* indicate or confirm not required */
- 		goto out;
- 	rc = 0;
-@@ -428,7 +421,7 @@
- 			rc = sk;
- 			break;
- 		}
--		sk = sk->next;
-+		sk = sk->llc_next;
- 	} while (sk != sap->sk_list.list);
- 
- 	if (rc)
-diff -ruN linux-2.4.10/net/8022llc/llc_if.c linux/net/8022llc/llc_if.c
---- linux-2.4.10/net/8022llc/llc_if.c	Mon Oct 29 22:54:07 2001
-+++ linux/net/8022llc/llc_if.c	Wed Oct 31 12:38:46 2001
-@@ -261,7 +261,6 @@
- 	 * package primitive as an event and send to connection event handler */
- 	struct sock *sk = prim->data->data.sk;
- 
--//	lock_sock(sk);
- 	LLC_SK(sk)->data_ret_val = 0;
- 	if (LLC_SK(sk)->state == CONN_STATE_ADM) {
- 		LLC_SK(sk)->data_ret_val = -ECONNABORTED;
-@@ -285,7 +284,6 @@
- 			rc = 1;
- 		LLC_SK(sk)->data_ret_val = rc;
- 	}
--//	release_sock(sk);
- 	rc = LLC_SK(sk)->data_ret_val;
- 	LLC_SK(sk)->data_ret_val = 0;
- 	return rc;
-@@ -324,16 +322,17 @@
- 	struct sock *sk = p8022_find_conn(sap, &prim->data->conn.dest_addr,
- 					  &prim->data->conn.source_addr);
- 	if (sk) {
-+		rc = -EBUSY;
- 		sock_put(sk);
- 		confirm_impossible(prim);
- 		goto out;
- 	}
--	sk = llc_sock_alloc();
--	if (!sk) {
-+	sk = prim->data->conn.sk;
-+	if (llc_sock_init(sk) < 0) {
-+		rc = -EINVAL;
- 		confirm_impossible(prim);
- 		goto out;
- 	}
--	lock_sock(sk);
- 	/* assign new connection to it's SAP */
- 	sap_assign_sock(sap, sk);
- 	memcpy(&LLC_SK(sk)->remote_dl_addr, &prim->data->conn.dest_addr,
-@@ -349,19 +348,13 @@
- 		event->data.prim.type	= P8022_PRIM_TYPE_REQUEST;
- 		event->data.prim.data	= prim;
- 		rc = conn_send_event(sk, event);
--		if (!rc)
--			prim->data->conn.sk = sk;
- 	} else
- 		rc = 1;
- 	if (rc) {
- 		sap_unassign_sock(sap, sk);
--		llc_sock_free(sk);
--		sk = NULL;
- 		confirm_impossible(prim);
- 	}
--	prim->data->conn.sk = sk;
--	release_sock(sk);
--out:	return 0;
-+out:	return rc;
- }
- 
- /**
-@@ -379,7 +372,6 @@
- 	struct conn_state_event *event;
- 	struct sock* sk = prim->data->disc.sk;
- 
--//	lock_sock(sk);
- 	if (LLC_SK(sk)->state == CONN_STATE_ADM ||
- 	    LLC_SK(sk)->state == CONN_OUT_OF_SVC)
- 		goto out;
-@@ -393,7 +385,6 @@
- 	event->data.prim.type = P8022_PRIM_TYPE_REQUEST;
- 	event->data.prim.data = prim;
- 	rc = conn_send_event(sk, event);
--//out:	release_sock(sk);
- out:	return rc;
- }
- 
-@@ -412,7 +403,6 @@
- 	struct sock *sk = prim->data->res.sk;
- 	struct conn_state_event *event;
- 
--	lock_sock(sk);
- 	event = conn_alloc_event(sk);
- 	if (event) {
- 		event->type = CONN_EV_TYPE_PRIM;
-@@ -421,7 +411,6 @@
- 		event->data.prim.data = prim;
- 		rc = conn_send_event(sk, event);
- 	}
--	release_sock(sk);
- 	return rc;
- }
- 
-@@ -480,7 +469,6 @@
- 	struct sock *sk = prim->data->res.sk;
- 	struct conn_state_event *event;
- 
--	lock_sock(sk);
- 	event = conn_alloc_event(sk);
- 	if (event) {
- 		event->type = CONN_EV_TYPE_PRIM;
-@@ -489,7 +477,6 @@
- 		event->data.prim.data = prim;
- 		rc = conn_send_event(sk, event);
- 	}
--	release_sock(sk);
- 	return rc;
- }
- 
-diff -ruN linux-2.4.10/net/8022llc/llc_mac.c linux/net/8022llc/llc_mac.c
---- linux-2.4.10/net/8022llc/llc_mac.c	Mon Oct 29 22:54:07 2001
-+++ linux/net/8022llc/llc_mac.c	Wed Oct 31 12:40:27 2001
-@@ -114,7 +114,11 @@
- 			sock_hold(sk);
- 		}
- 		bh_lock_sock(sk);
--		if (!sk->lock.users) {
-+		if (sk->lock.users > 1) {
-+			skb->cb[0] = P8022_FRAME;
-+                        sk_add_backlog(sk, skb);
-+                        bh_unlock_sock(sk);
-+                } else {
- 			/* FIXME: with the current code one cannot call
- 			 * llc_pdu_router with the socket lock held, cause
- 			 * it'll route the pdu to the upper layers and it can
-@@ -123,18 +127,8 @@
- 			 * spin_trylock_bh in the Request_primitives
- 			 * (data_req_handler, etc) and add the request to the
- 			 * backlog, well see... */
--			sk->lock.users = 1;
- 			bh_unlock_sock(sk);
- 			llc_pdu_router(LLC_SK(sk)->sap, sk, skb, P8022_TYPE_2);
--			bh_lock_sock(sk);
--			sk->lock.users = 0;
--			/* FIXME: do we have to process the possibly existing
--			 * backlog here (i.e. call __release_sock()? */
--			bh_unlock_sock(sk);
--		} else {
--			skb->cb[0] = P8022_FRAME;
--			sk_add_backlog(sk, skb);
--			bh_unlock_sock(sk);
- 		}
- 		sock_put(sk);
- 	} else /* unknown or not supported pdu */
-diff -ruN linux-2.4.10/net/8022llc/llc_main.c linux/net/8022llc/llc_main.c
---- linux-2.4.10/net/8022llc/llc_main.c	Mon Oct 29 22:54:07 2001
-+++ linux/net/8022llc/llc_main.c	Wed Oct 31 12:57:03 2001
-@@ -171,6 +171,34 @@
- }
- 
- /**
-+ *	llc_sock_init - Initialize a socket with default llc values.
-+ *	@sk: socket to intiailize.
-+ */
-+int llc_sock_init(struct sock *sk)
-+{
-+        struct llc_opt *llc;
-+
-+        if (!sk)
-+                return -EINVAL;
-+        llc = LLC_SK(sk);
-+        llc->state      = CONN_STATE_ADM;
-+        llc->inc_cntr   = llc->dec_cntr = 2;
-+        llc->dec_step   = llc->connect_step = 1;
-+        llc->ack_timer.expire           = P8022_ACK_TIME;
-+        llc->pf_cycle_timer.expire      = P8022_P_TIME;
-+        llc->reject_sent_timer.expire   = P8022_REJ_TIME;
-+        llc->busy_state_timer.expire    = P8022_BUSY_TIME;
-+        llc->n1 = 4105; /* max I pdu octets. */
-+        llc->n2 = 2;    /* max retransmit */
-+        llc->k  = 2;    /* tx window size, will adjust dynam */
-+        llc->rw = 128;  /* rx window size (optional and equal to tx_window
-+                           of remote LLC) */
-+        skb_queue_head_init(&llc->pdu_unack_q);
-+        sk->backlog_rcv = p8022_backlog_rcv;
-+	return 0;
-+}
-+
-+/**
-  *	__llc_sock_alloc - Allocates LLC sock
-  *
-  *	Allocates a LLC sock and initializes it. Returns the new LLC sock
-@@ -279,7 +307,7 @@
- 		LLC_SK(sk)->state = CONN_STATE_TEMP;
- 		if (sap->request(&prim))
- 			rc = 1;
--		sk = sk->next;
-+		sk = sk->llc_next;
- 	} while (sk != sap->sk_list.list);
- out:	spin_unlock_bh(&sap->sk_list.lock);
- 	return rc;
-@@ -548,7 +576,7 @@
- 			len += sprintf(bf + len, "  %-5d%-8d\n",
- 					LLC_SK(sk)->state,
- 					LLC_SK(sk)->retry_count);
--			sk = sk->next;
-+			sk = sk->llc_next;
- 		} while (sk != sap->sk_list.list);
- unlock:		spin_unlock_bh(&sap->sk_list.lock);
-                 pos = begin + len;
-diff -ruN linux-2.4.10/net/8022llc/llc_sap.c linux/net/8022llc/llc_sap.c
---- linux-2.4.10/net/8022llc/llc_sap.c	Mon Oct 29 22:54:07 2001
-+++ linux/net/8022llc/llc_sap.c	Wed Oct 31 12:02:19 2001
-@@ -42,14 +42,13 @@
- 	spin_lock_bh(&sap->sk_list.lock);
- 	LLC_SK(sk)->sap = sap;
- 	/* add sk to the tail of the circular list */
--	sk->next = sap->sk_list.list;
- 	if (sap->sk_list.list) {
--		if (sap->sk_list.list->prev)
--			sap->sk_list.list->prev->next = sk;
--		sk->prev = sap->sk_list.list->prev;
-+		if (sap->sk_list.list->llc_pprev)
-+			sap->sk_list.list->llc_pprev->llc_next = sk;
-+		sk->llc_pprev = sap->sk_list.list->llc_pprev;
- 	} else {
- 		sap->sk_list.list = sk;
--		sk->prev = NULL;
-+		sk->llc_pprev = NULL;
- 	}
- 	spin_unlock_bh(&sap->sk_list.lock);
- }
-@@ -65,11 +64,11 @@
- void sap_unassign_sock(struct p8022_sap *sap, struct sock *sk)
- {
- 	if (sk == sap->sk_list.list)
--		sap->sk_list.list = sk->next;
--	if (sk->next)
--		sk->next->prev = sk->prev;
--	if (sk->prev)
--		sk->prev->next = sk->next;
-+		sap->sk_list.list = sk->llc_next;
-+	if (sk->llc_next)
-+		sk->llc_next->llc_pprev = sk->llc_pprev;
-+	if (sk->llc_pprev)
-+		sk->llc_pprev->llc_next = sk->llc_next;
- }
- 
- /**
-diff -ruN linux-2.4.10/net/8022llc/llc_sock.c linux/net/8022llc/llc_sock.c
---- linux-2.4.10/net/8022llc/llc_sock.c	Mon Oct 29 22:54:07 2001
-+++ linux/net/8022llc/llc_sock.c	Wed Oct 31 12:46:13 2001
-@@ -158,8 +158,8 @@
-  *  0, upon success.
-  *  non-zero, if action did not succeed.
+ #define LLC_UI_SK(sk) (&sk->protinfo.af_llc)
+diff -ruN linux-2.4.14/net/llc/llc_sock.c linux/net/llc/llc_sock.c
+--- linux-2.4.14/net/llc/llc_sock.c	Sun Nov 11 15:40:15 2001
++++ linux/net/llc/llc_sock.c	Sun Nov 11 15:35:57 2001
+@@ -122,12 +122,11 @@
+  *	operation the user would like to perform and the type of socket.
+  *	Returns the correct llc header length.
   */
--static int llc_ui_send_connect(struct p8022_sap *sap, struct sockaddr_llc *addr,
--			       struct net_device *dev, int link_no)
-+static int llc_ui_send_connect(struct sock *sk, struct p8022_sap *sap, 
-+	struct sockaddr_llc *addr, struct net_device *dev, int link_no)
+-static inline u8 llc_ui_header_len(struct sock *sk)
++static inline u8 llc_ui_header_len(struct sock *sk, struct sockaddr_llc *addr)
  {
- 	prim_data_u prim_data;
- 	struct prim_if_block prim;
-@@ -169,11 +169,7 @@
- 	prim.primitive 			= P8022_CONNECT_PRIM;
- 	prim_data.conn.device 		= dev;
- 	prim_data.conn.link_no		= link_no;
--	/* FIXME: we should pass the socket we have so that the sap->request
--	 * see that we already have a socket and doesn't allocates a new one,
--	 * so this function has to receive the struct sock from its caller,
--	 * llc_ui_connect */
--	prim_data.conn.sk		= NULL;
-+	prim_data.conn.sk		= sk;
- 	prim_data.conn.priority 	= 0;
- 	prim_data.conn.source_addr.lsap = addr->sllc_ssap;
- 	prim_data.conn.dest_addr.lsap 	= addr->sllc_dsap;
-@@ -457,6 +453,7 @@
- 	sk = sk_alloc(PF_LLC, GFP_KERNEL, 1);
- 	if (!sk)
- 		goto decmod;
-+	rc = 0;
- 	sock_init_data(sock, sk);
- 	sock->ops = prot;
- out:	return rc;
-@@ -487,9 +484,14 @@
- 		 * else disconnect. */
- 		if (!llc_ui_find_sap(llc->sap->local_dl_addr.lsap))
- 	                llc_sap_close(llc->sap);
--		else
-+		else {
- 			llc_ui_send_disconnect(sk);
-+			MOD_DEC_USE_COUNT;
-+			sock->sk = NULL;
-+			goto out;
-+		}
+-	struct llc_ui_opt *llc = LLC_UI_SK(sk);
+ 	u8 rc = LLC_PDU_LEN_U;
+ 
+-	if (llc->addr.sllc_test || llc->addr.sllc_xid)
++	if (addr->sllc_test || addr->sllc_xid)
+ 		rc = LLC_PDU_LEN_U;
+ 	else if (sk->type == SOCK_STREAM)
+ 		rc = LLC_PDU_LEN_I;
+@@ -145,9 +144,9 @@
+  *	Returns 0 upon success, non-zero if action didn't succeed.
+  */
+ static int llc_ui_send_connect(struct sock *sk, struct llc_sap *sap,
++			       struct sockaddr_llc *addr,
+ 			       struct net_device *dev, int link)
+ {
+-	struct llc_ui_opt *llc = LLC_UI_SK(sk);
+ 	union llc_u_prim_data prim_data;
+ 	struct llc_prim_if_block prim;
+ 
+@@ -158,10 +157,10 @@
+ 	prim_data.conn.link = link;
+ 	prim_data.conn.sk   = NULL;
+ 	prim_data.conn.pri  = 0;
+-	prim_data.conn.saddr.lsap = sap->local_dl_addr.lsap;
+-	prim_data.conn.daddr.lsap = llc->addr.sllc_dsap;
+-	memcpy(prim_data.conn.saddr.mac, sap->local_dl_addr.mac, IFHWADDRLEN);
+-	memcpy(prim_data.conn.daddr.mac, llc->addr.sllc_dmac, IFHWADDRLEN);
++	prim_data.conn.saddr.lsap = LLC_UI_SK(sk)->addr->sllc_ssap;
++	prim_data.conn.daddr.lsap = addr->sllc_dsap;
++	memcpy(prim_data.conn.saddr.mac, dev->dev_addr, IFHWADDRLEN);
++	memcpy(prim_data.conn.daddr.mac, addr->sllc_dmac, IFHWADDRLEN);
+ 	return sap->req(&prim);
+ }
+ 
+@@ -202,9 +201,9 @@
+  *	Send data via reliable llc2 connection.
+  *	Returns 0 upon success,  non-zero if action did not succeed.
+  */
+-int llc_ui_send_data(struct llc_sap *sap, struct sock* sk, struct sk_buff *skb)
++int llc_ui_send_data(struct llc_sap *sap, struct sock* sk, struct sk_buff *skb,
++		     struct sockaddr_llc *addr)
+ {
+-	struct llc_ui_opt *llc = LLC_UI_SK(sk);
+ 	union llc_u_prim_data prim_data;
+ 	struct llc_prim_if_block prim;
+ 
+@@ -214,35 +213,37 @@
+ 	prim_data.data.skb = skb;
+ 	prim_data.data.pri = 0;
+ 	prim_data.data.sk  = sk;
+-	skb->protocol	   = llc_ui_protocol_type(llc->addr.sllc_arphrd);
++	skb->protocol	   = llc_ui_protocol_type(addr->sllc_arphrd);
+ 	return sap->req(&prim);
+ }
+ 
+ /**
+  *	llc_ui_send_llc1 - send llc1 prim data block to llc layer.
+- *	@llc      : llc_ui_opt of the sock
++ *	@sap      : Sap the socket is bound to.
+  *	@skb      : Data the user wishes to send.
++ *	@addr     : Source and destination fields provided by the user.
+  *	@primitive: Action the llc layer should perform.
+  *
+  *	Send an llc1 primitive data block to the llc layer for processing.
+  *	This function is used for test, xid and unit_data messages.
+  *	Returns 0 upon success, non-zero if action did not succeed.
+  */
+-int llc_ui_send_llc1(struct llc_ui_opt *llc, struct sk_buff *skb, int primitive)
++int llc_ui_send_llc1(struct llc_sap *sap, struct sk_buff *skb,
++		     struct sockaddr_llc *addr, int primitive)
+ {
+ 	union llc_u_prim_data prim_data;
+ 	struct llc_prim_if_block prim;
+ 
+ 	prim.data 		  = &prim_data;
+-	prim.sap 		  = llc->sap;
++	prim.sap 		  = sap;
+ 	prim.prim		  = primitive;
+ 	prim_data.test.skb 	  = skb;
+-	prim_data.test.saddr.lsap = llc->sap->local_dl_addr.lsap;
+-	prim_data.test.daddr.lsap = llc->addr.sllc_dsap;
+-	skb->protocol = llc_ui_protocol_type(llc->addr.sllc_arphrd);
++	prim_data.test.saddr.lsap = sap->local_dl_addr.lsap;
++	prim_data.test.daddr.lsap = addr->sllc_dsap;
++	skb->protocol = llc_ui_protocol_type(addr->sllc_arphrd);
+ 	memcpy(prim_data.test.saddr.mac, skb->dev->dev_addr, IFHWADDRLEN);
+-	memcpy(prim_data.test.daddr.mac, llc->addr.sllc_dmac, IFHWADDRLEN);
+-	return llc->sap->req(&prim);
++	memcpy(prim_data.test.daddr.mac, addr->sllc_dmac, IFHWADDRLEN);
++	return sap->req(&prim);
+ }
+ 
+ /**
+@@ -497,6 +498,7 @@
+ /**
+  *	llc_ui_autobind - Bind a socket to a specific address.
+  *	@sk: Socket to bind an address to.
++ *	@addr: Address the user wants the socket bound to.
+  *
+  *	Bind a socket to a specific address. For llc a user is able to bind to
+  *	a specific sap only or mac + sap. If the user only specifies a sap and
+@@ -510,10 +512,9 @@
+  *	otherwise all hell will break loose.
+  *	Returns: 0 upon success, negative otherwise.
+  */
+-static int llc_ui_autobind(struct socket *sock)
++static int llc_ui_autobind(struct socket *sock, struct sockaddr_llc *addr)
+ {
+ 	struct sock *sk = sock->sk;
+-	struct llc_ui_opt *llc = LLC_UI_SK(sk);
+ 	struct llc_sap *sap;
+ 	struct net_device *dev = NULL;
+ 	int rc = -EINVAL;
+@@ -521,10 +522,9 @@
+ 	if (!sk->zapped)
+ 		goto out;
+ 	/* bind to a specific mac, optional. */
+-	if (!llc_ui_mac_null(llc->addr.sllc_smac, IFHWADDRLEN)) {
++	if (!llc_ui_mac_null(addr->sllc_smac, IFHWADDRLEN)) {
+ 		rtnl_lock();
+-		dev = dev_getbyhwaddr(llc->addr.sllc_arphrd,
+-				      llc->addr.sllc_smac);
++		dev = dev_getbyhwaddr(addr->sllc_arphrd, addr->sllc_smac);
+ 		rtnl_unlock();
+ 		rc = -ENETUNREACH;
+ 		if (!dev)
+@@ -532,16 +532,16 @@
+ 		LLC_UI_SK(sk)->dev = dev;
  	}
-+
- 	skb_queue_purge(&sk->receive_queue);
- 	skb_queue_purge(&sk->write_queue);
- 	sock_orphan(sk);
-@@ -715,7 +717,7 @@
+ 	/* bind to a specific sap, optional. */
+-	if (!llc->addr.sllc_ssap) {
++	if (!addr->sllc_ssap) {
+ 		rc = -EUSERS;
+-		llc->addr.sllc_ssap = llc_ui_autoport();
+-		if (!llc->addr.sllc_ssap)
++		addr->sllc_ssap = llc_ui_autoport();
++		if (!addr->sllc_ssap)
+ 			goto out;
+ 	}
+-	sap = llc_ui_find_sap(llc->addr.sllc_ssap);
++	sap = llc_ui_find_sap(addr->sllc_ssap);
+ 	if (!sap) {
+ 		sap = llc_sap_open(llc_ui_indicate, llc_ui_confirm,
+-				   llc->addr.sllc_ssap);
++				   addr->sllc_ssap);
+ 		rc = -EBUSY; /* some other network layer is using the sap */
+ 		if (!sap)
+ 			goto out;
+@@ -552,12 +552,17 @@
+ 		if (!dev)
+ 			goto out;
+ 		memset(&local_addr, 0, sizeof(local_addr));
+-		memcpy(local_addr.mac, llc->addr.sllc_smac, IFHWADDRLEN);
+-		local_addr.lsap = llc->addr.sllc_ssap;
++		memcpy(local_addr.mac, addr->sllc_smac, IFHWADDRLEN);
++		local_addr.lsap = addr->sllc_ssap;
+ 		rc = -EADDRINUSE;   /* mac + sap clash. */
+ 		if (llc_ui_find_socket_by_addr(&local_addr))
+ 			goto out;
+ 	}
++	rc = -ENOMEM;
++	LLC_UI_SK(sk)->addr = kmalloc(sizeof(*addr), GFP_KERNEL);
++	if(!LLC_UI_SK(sk)->addr)
++		goto out;
++	memcpy(LLC_UI_SK(sk)->addr, addr, sizeof(*addr));
+ 	LLC_UI_SK(sk)->sap = sap;
+ 	rc = sk->zapped = 0;
+ 	llc_ui_insert_socket(sk);
+@@ -587,7 +592,6 @@
+ {
+ 	struct sockaddr_llc *addr = (struct sockaddr_llc *)uaddr;
+ 	struct sock *sk = sock->sk;
+-	struct llc_ui_opt *llc = LLC_UI_SK(sk);
+ 	int rc = -EINVAL;
+ 
+ 	if (!sk->zapped || addr_len != sizeof(*addr))
+@@ -595,9 +599,8 @@
+ 	rc = -EAFNOSUPPORT;
+ 	if (addr->sllc_family != AF_LLC)
+ 		goto out;
+-	memcpy(&llc->addr, addr, sizeof(llc->addr));
+ 	/* use autobind, to avoid code replication. */
+-	rc = llc_ui_autobind(sock);
++	rc = llc_ui_autobind(sock, addr);
+ out:	return rc;
+ }
+ 
+@@ -669,11 +672,10 @@
+ 		goto out;
+ 	sock->state = SS_CONNECTING;
+ 	sk->state   = TCP_SYN_SENT;
+-	memcpy(&llc->addr, addr, sizeof(llc->addr));
+ 	/* must bind connection to sap if user hasn't done it. */
+ 	if (sk->zapped) {
+ 		/* bind to sap with null dev, exclusive */
+-		rc = llc_ui_autobind(sock);
++		rc = llc_ui_autobind(sock, addr);
+ 		if (rc) {
+ 			sock->state = SS_UNCONNECTED;
+ 			sk->state   = TCP_CLOSE;
+@@ -692,7 +694,7 @@
  	} else
  		dev = llc->dev;
- 	llc->link_no = llc_ui_next_link_no(addr->sllc_ssap);
--	rc = llc_ui_send_connect(llc->sap, addr, dev, llc->link_no);
-+	rc = llc_ui_send_connect(sk, llc->sap, addr, dev, llc->link_no);
+ 	llc->link = llc_ui_next_link_no(llc->sap->local_dl_addr.lsap);
+-	rc = llc_ui_send_connect(sk, llc->sap, dev, llc->link);
++	rc = llc_ui_send_connect(sk, llc->sap, addr, dev, llc->link);
  	if (rc) {
  		sock->state = SS_UNCONNECTED;
  		sk->state   = TCP_CLOSE;
-@@ -802,6 +804,8 @@
- 		rc = 0;
- 		if (sk->state != TCP_ESTABLISHED)
- 			timeout = schedule_timeout(timeout);
-+		if (sk->state == TCP_ESTABLISHED)
-+                        break;
- 		rc = -EAGAIN;
- 		if (sk->state == TCP_CLOSE)
- 			break;
-@@ -856,10 +860,15 @@
- 	} while (!skb);
- 
- 	/* attach connection to a new socket. */
--	rc = llc_ui_create(newsock, sk->protocol);
--	if (rc < 0)
-+	if (!skb->sk)
- 		goto frees;
-+	rc = 0;
+@@ -848,6 +850,7 @@
+ 	newsock->state	    = SS_CONNECTED;
+ 	LLC_UI_SK(newsk)->sap	  = LLC_UI_SK(sk)->sap;
+ 	LLC_UI_SK(newsk)->dev     = LLC_UI_SK(sk)->dev;
++	LLC_UI_SK(newsk)->addr	  = LLC_UI_SK(sk)->addr;
+ 	LLC_UI_SK(newsk)->link    = LLC_SK(skb->sk)->link;
+ 	LLC_UI_SK(newsk)->core_sk = skb->sk;
+ 	/* put orignal socket back into a clean listen state. */
+@@ -922,6 +925,7 @@
+ {
+ 	struct sock *sk = sock->sk;
+ 	struct llc_ui_opt *llc = LLC_UI_SK(sk);
++	struct sockaddr_llc *addr = (struct sockaddr_llc *)msg->msg_name;
+ 	int flags = msg->msg_flags;
+ 	struct net_device *dev;
+ 	struct sk_buff *skb;
+@@ -930,10 +934,18 @@
+ 	lock_sock(sk);
+ 	if (flags & ~MSG_DONTWAIT)
+ 		goto out;
++	if (sk->type == SOCK_DGRAM &&
++	     msg->msg_namelen < sizeof(struct sockaddr_llc))
++		goto out;
++        if (sk->type == SOCK_STREAM && !addr && llc->addr)
++                addr = llc->addr;
++	if (!addr)
++		goto out;
 +
-+	MOD_INC_USE_COUNT;
-+	newsock->ops 		= &llc_ui_ops;
-+	newsock->sk		= skb->sk;
- 	newsk			= newsock->sk;
-+	newsk->type		= newsock->type;
- 	newsk->pair		= NULL;
- 	newsk->socket		= newsock;
- 	newsk->sleep		= &newsock->wait;
-@@ -1317,7 +1326,7 @@
- 			skb2 = alloc_skb(0, GFP_ATOMIC);
- 			if (!skb2)
- 				goto out;
--			skb2->sk = sk;
-+			skb2->sk = prim_data->sk;
- 			skb_queue_tail(&sk->receive_queue, skb2);
- 			sk->state_change(sk);
- 			break;
-@@ -1328,9 +1337,8 @@
- 							   prim_data->link_no);
+ 	/* must bind connection to sap if user hasn't done it. */
+ 	if (sk->zapped) {
+ 		/* bind to sap with null dev, exclusive. */
+-		rc = llc_ui_autobind(sock);
++		rc = llc_ui_autobind(sock, addr);
+ 		if (rc) {
+ 			sock->state = SS_UNCONNECTED;
+ 			sk->state   = TCP_CLOSE;
+@@ -942,40 +954,42 @@
+ 	}
+ 	if (!llc->dev) {
+ 		rtnl_lock();
+-		dev = dev_getbyhwaddr(llc->addr.sllc_arphrd, llc->addr.sllc_smac);
++		dev = dev_getbyhwaddr(addr->sllc_arphrd, addr->sllc_smac);
+ 		rtnl_unlock();
+ 		rc = -ENETUNREACH;
+ 		if (!dev)
+ 			goto out;
+ 	} else
+ 		dev = llc->dev;
+-	size = dev->hard_header_len + len + llc_ui_header_len(sk);
++	size = dev->hard_header_len + len + llc_ui_header_len(sk, addr);
+ 	rc = -EMSGSIZE;
+ 	if (size > dev->mtu)
+ 		goto out;
+-	skb = sock_alloc_send_skb(sk, size, flags & MSG_DONTWAIT, &rc);
++	skb = sock_alloc_send_skb(sk, size, flags&MSG_DONTWAIT, &rc);
+ 	if (!skb)
+ 		goto out;
+ 	skb->sk  = sk;
+ 	skb->dev = dev;
+ 	skb_reserve(skb, dev->hard_header_len);
+-	skb_reserve(skb, llc_ui_header_len(sk));
++	skb_reserve(skb, llc_ui_header_len(sk, addr));
+ 	rc = memcpy_fromiovec(skb_put(skb, len), msg->msg_iov, len);
+ 	if (rc)
+ 		goto out;
+-	if (llc->addr.sllc_test)
+-		rc = llc_ui_send_llc1(llc, skb, LLC_TEST_PRIM);
++	if (addr->sllc_test)
++		rc = llc_ui_send_llc1(llc->sap, skb, addr, LLC_TEST_PRIM);
+ 	else {
+-		if (llc->addr.sllc_xid)
+-			rc = llc_ui_send_llc1(llc, skb, LLC_XID_PRIM);
++		if (addr->sllc_xid)
++			rc = llc_ui_send_llc1(llc->sap, skb, addr,
++					      LLC_XID_PRIM);
+ 		else {
+-			if (sk->type == SOCK_DGRAM || llc->addr.sllc_ua)
+-				rc = llc_ui_send_llc1(llc, skb,
++			if (sk->type == SOCK_DGRAM || addr->sllc_ua)
++				rc = llc_ui_send_llc1(llc->sap, skb, addr,
+ 						      LLC_DATAUNIT_PRIM);
+-			if (sk->type == SOCK_STREAM && !llc->addr.sllc_ua) {
++			if (sk->type == SOCK_STREAM && !addr->sllc_ua) {
+ 				if (llc->core_sk)
+ 					rc = llc_ui_send_data(llc->sap,
+-							     llc->core_sk, skb);
++							      llc->core_sk, skb,
++							      addr);
+ 				else
+ 					rc = -ENOTCONN;
+ 			}
+@@ -1146,7 +1160,7 @@
+ 	int val = 0, len = 0, rc = -EINVAL;
+ 
+ 	lock_sock(sk);
+-	if (level != SOL_LLC || sk->type != SOCK_STREAM)
++	if (level != SOL_LLC)
+ 		goto out;
+ 	rc = -ENOTCONN;
+ 	if (!llc->core_sk)
+@@ -1214,6 +1228,8 @@
+ 			sk = llc_ui_find_socket_by_addr(&prim_data->daddr);
  			if (!sk)
  				goto out;
--			if (sk->type != SOCK_STREAM ||
--			    (sk->state != TCP_ESTABLISHED &&
--			     sk->state != TCP_LISTEN))
-+			if (sk->type != SOCK_STREAM 
-+			    || sk->state != TCP_ESTABLISHED)
- 				goto out;
- 			skb = prim->data->data.skb; 
++			if (sk->state == TCP_LISTEN)
++                                goto out;
+ 			skb = prim->data->test.skb;
  			skb2 = skb_copy_expand(skb, sizeof(struct sockaddr_llc),
-@@ -1369,8 +1377,7 @@
+ 					       0, GFP_ATOMIC);
+@@ -1247,6 +1263,8 @@
+ 			sk = llc_ui_find_socket_by_addr(&prim_data->daddr);
  			if (!sk)
  				goto out;
- 			if (sk->type != SOCK_STREAM ||
--			    (sk->state != TCP_ESTABLISHED &&
--			     sk->state != TCP_LISTEN))
-+			    sk->state != TCP_ESTABLISHED)
++			if (sk->state == TCP_LISTEN)
++                                goto out;
+ 			skb2 = alloc_skb(sizeof(struct sockaddr_llc) + 1,
+ 					 GFP_ATOMIC);
+ 			if (!skb2)
+@@ -1277,6 +1295,8 @@
+ 					(struct llc_prim_unit_data *)prim->data;
+ 			sk = llc_ui_find_socket_by_addr(&prim_data->daddr);
+ 			if (!sk)
++				goto out;
++			if (sk->state == TCP_LISTEN)
  				goto out;
- 			sk->socket->state  = SS_UNCONNECTED;
- 			sk->state	   = TCP_CLOSE;
+ 			skb = prim->data->udata.skb;
+ 			skb2 = skb_copy_expand(skb, sizeof(struct sockaddr_llc),

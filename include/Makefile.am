@@ -1,2 +1,2 @@
-include_HEADERS =
+include_HEADERS = sysinfo.h readproc.h
 noinst_HEADERS =

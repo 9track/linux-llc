@@ -62,18 +62,23 @@ host_triplet = @host@
 AS = @AS@
 CC = @CC@
 DLLTOOL = @DLLTOOL@
+ECHO = @ECHO@
+EXEEXT = @EXEEXT@
 LD = @LD@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
 OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+STRIP = @STRIP@
 VERSION = @VERSION@
+XML_CONFIG = @XML_CONFIG@
 
 AUTOMAKE_OPTIONS = 1.3e foreign
 
-BUILD_SUBDIRS = . include docs llcping dlswd dlswmon
+BUILD_SUBDIRS = . include docs llcdb llcping lar dlswd dlswmon
 SUBDIRS = $(BUILD_SUBDIRS)
 DIST_SUBDIRS = $(BUILD_SUBDIRS) $(CONF_SUBDIRS)
 
@@ -345,6 +350,7 @@ clean-am:  clean-hdr clean-tags clean-generic mostlyclean-am
 clean: clean-recursive
 
 distclean-am:  distclean-hdr distclean-tags distclean-generic clean-am
+	-rm -f libtool
 
 distclean: distclean-recursive
 	-rm -f config.status

@@ -1,4 +1,35 @@
-Change log for Linux-LLC package.
+ChangeLog for linux-LLC package.
+
+0.1.13, November 12, 2001.
+- new patch-o-matic llc kernel patches.
+- added location to get libxml-devel from in error message.
+- updated llcping.8 with new llcping options.
+- added option to llcping send ua frames over established llc2 connection.
+- added option to llcping send test frames over established llc1/2 connection.
+- fixed sendmsg to allow send() write().
+- added version numbers to libraries upon release.
+- changed version number recording to better format.
+- made the libxml check error more verbose.
+- added config check for libproc and print error message if not found.
+- added message to tell user to load module on error of llcping 
+  and llcpingd socket load.
+- added lard.xml configuration file to docs/
+- added support for Lan Address Resolution protocol using llc sockets.
+- added ability to set tx/rx window size in setsock options.
+- added llcping support to change socket options (-o options).
+- added display of socket options upon start of llcping.
+
+1.00PRE12, November 3, 2001.
+- changed llcping to use sendto/recvfrom or send/recv based on llc socket type.
+- added option to llcping to display hosts in numeric only format.
+- added llc host and  address mapping, /etc/llchosts.xml.
+- started adding better system header file and function checks.
+- added autoconf for libxml.
+- fixed long standing libtool missing problem.
+- fixed number of included files that were missing from `make dist`.
+- added llcping.h to makefile, oops.
+- actually wrote the llcpingd.8 man page, was empty file previously.
+- did some code format cleanups.
 
 1.00PRE11, November 2, 2001.
 - changed llcping dsap and ssap default to 0x00.

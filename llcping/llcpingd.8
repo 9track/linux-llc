@@ -1,0 +1,52 @@
+.Dd November 2, 2001 
+.Dt LLCPINGD 8
+.Os "Linux-SNA Project"
+.Sh NAME
+.Nm llcpingd
+.Tn LLC socket based echo server.
+.Sh SYNOPSIS
+.Nm llcpingd
+.Op Fl hv
+.Op Fl d Ar level
+.Op Fl f Ar config
+.Sh DESCRIPTION
+.Nm llcpingd 
+uses the linux-LLC protocol's socket interface to provide LLC class 1 and
+class 2 echo services. This server listens on a configured LLC SAP for data,
+once data has been received that exact data is resent to the transmitter. For
+LLC class 1 connections the data is returned via LLC1 UI-frames. For class 2
+connections the data is returned via LLC2 I-frames.
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl h
+Useless help information.
+.It Fl v
+Displays the current maintainer and version of 
+.Nm llcpingd .
+.It Fl d Ar level
+Set the debug output level for
+.Nm llcpingd .
+If no debug level is specified the
+.Nm llcpingd
+program will turn into a daemon process. The level of 1 - 10 is supported.
+Level 5 will display information for each packet recevied and transmitted.
+Level 10 includes all the display of level 5 additionally hexdumps the incomming
+and outgoing data.
+.It Fl f Ar config
+Specify the location of the
+.Nm llcpingd
+XML configuration file to use.
+.Nm llcpingd
+will not function unless a valid configuration file is present in /etc/llcpingd.xml or
+the specified location using this option.
+.Sh BUGS
+Prior to Linux kernel version 2.5.x LLC TEST commands were not honored
+in Linux, hosts prior to kernel 2.5.x need to have a patched LLC layer.
+.Pp
+Flood pinging is not recommended in general, and flood pinging the
+broadcast address should only be done under very controlled conditions.
+.Sh SEE ALSO
+.Xr llcping 8
+.Pp
+.Sh AUTHORS
+Jay Schulist, <jschlst@samba.org>

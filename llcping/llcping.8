@@ -1,4 +1,4 @@
-.Dd May 31, 2000 
+.Dd November 2, 2001 
 .Dt LLCPING 8
 .Os "Linux-SNA Project"
 .Sh NAME
@@ -8,7 +8,7 @@
 packets to network hosts
 .Sh SYNOPSIS
 .Nm llcping
-.Op Fl hvxbfq
+.Op Fl hvxbfqnuz
 .Op Fl t Ar 1|2
 .Op Fl s Ar ssap
 .Op Fl d Ar dsap
@@ -40,6 +40,12 @@ The options are as follows:
 Useless help information.
 .It Fl x
 Hexdump each outgoing and incomming llcping packet.
+.It Fl u
+Send LLC UA frames over an established LLC2 connection.
+.It Fl z
+Send LLU TEST frames over an LLC1 or established LLC2 connection.
+.It Fl n
+Display MAC address in numeric format, don't perform llc name resolution.
 .It Fl b
 Bit-swap the destination MAC address.
 .It Fl c Ar count

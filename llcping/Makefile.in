@@ -62,30 +62,34 @@ host_triplet = @host@
 AS = @AS@
 CC = @CC@
 DLLTOOL = @DLLTOOL@
+ECHO = @ECHO@
 EXEEXT = @EXEEXT@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
 OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+STRIP = @STRIP@
 VERSION = @VERSION@
+XML_CONFIG = @XML_CONFIG@
 
 AUTOMAKE_OPTIONS = foreign
 
 EXTRA_DIST = $(man_MANS)
-INCLUDES = -I../include
+INCLUDES = -I../include -I../llcdb
 CFLAGS = -Wall
 
 sbin_PROGRAMS = llcping llcpingd
 
+llcping_LDADD = -L../llcdb -lllcdb
 llcping_SOURCES = llcping.c
-
-llcpingd_LDADD = -lxml
 llcpingd_SOURCES = llcpingd.c llcpingd_load.c
 
-include_HEADERS = llcpingd.h llcpingd_load.h
+include_HEADERS = 
+noinst_HEADERS = llcping.h llcpingd.h llcpingd_load.h
 
 man_MANS = llcping.8 llcpingd.8
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -99,11 +103,11 @@ DEFS = @DEFS@ -I. -I$(srcdir)
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
-llcping_OBJECTS =  llcping.o
-llcping_LDADD = $(LDADD)
+llcping_OBJECTS =  llcping.$(OBJEXT)
 llcping_DEPENDENCIES = 
 llcping_LDFLAGS = 
-llcpingd_OBJECTS =  llcpingd.o llcpingd_load.o
+llcpingd_OBJECTS =  llcpingd.$(OBJEXT) llcpingd_load.$(OBJEXT)
+llcpingd_LDADD = $(LDADD)
 llcpingd_DEPENDENCIES = 
 llcpingd_LDFLAGS = 
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -114,7 +118,7 @@ man8dir = $(mandir)/man8
 MANS = $(man_MANS)
 
 NROFF = nroff
-HEADERS =  $(include_HEADERS)
+HEADERS =  $(include_HEADERS) $(noinst_HEADERS)
 
 DIST_COMMON =  Makefile.am Makefile.in aclocal.m4 configure configure.in
 
@@ -128,7 +132,7 @@ OBJECTS = $(llcping_OBJECTS) $(llcpingd_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
-.SUFFIXES: .S .c .lo .o .s
+.SUFFIXES: .S .c .lo .o .obj .s
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps Makefile
 
@@ -172,6 +176,11 @@ uninstall-sbinPROGRAMS:
 .c.o:
 	$(COMPILE) -c $<
 
+# FIXME: We should only use cygpath when building on Windows,
+# and only if it is available.
+.c.obj:
+	$(COMPILE) -c `cygpath -w $<`
+
 .s.o:
 	$(COMPILE) -c $<
 
@@ -180,6 +189,7 @@ uninstall-sbinPROGRAMS:
 
 mostlyclean-compile:
 	-rm -f *.o core *.core
+	-rm -f *.$(OBJEXT)
 
 clean-compile:
 
