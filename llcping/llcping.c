@@ -459,10 +459,8 @@ int setup_llc_socket(struct llc_options *llc)
 	to->sllc_test	= 0;
 	to->sllc_xid	= 0;
 	to->sllc_ua	= 0;
-	to->sllc_dsap	= llc->dsap;
-	to->sllc_ssap	= llc->ssap;
-	memcpy(&to->sllc_dmac, &llc->dmac, IFHWADDRLEN);
-	memcpy(&to->sllc_smac, &llc->smac, IFHWADDRLEN);
+	to->sllc_sap	= llc->ssap;
+	memcpy(&to->sllc_mac, &llc->smac, IFHWADDRLEN);
 	if(llc->type == LLC_TYPE_NULL)
 		to->sllc_test = 1;
 
@@ -476,6 +474,9 @@ int setup_llc_socket(struct llc_options *llc)
 
 	if(sk_type != SOCK_STREAM)
 		return (0);
+
+	to->sllc_sap	= llc->dsap;
+	memcpy(&to->sllc_mac, &llc->dmac, IFHWADDRLEN);
 
 	err = connect(llc->sk, (struct sockaddr *)&llc->dst, 
 		sizeof(struct sockaddr_llc));
@@ -574,10 +575,10 @@ void pr_pack(struct llc_options *llc, char *buf, int len, struct sockaddr_llc *f
                 write(STDOUT_FILENO, &bspace, 1);
         else {
 		if(llc->type == LLC_TYPE_2)
-			printf("%d bytes from %s:", len, pr_ether(llc->dst.sllc_dmac,
+			printf("%d bytes from %s:", len, pr_ether(llc->dst.sllc_mac,
 				llc->numeric));
 		else
-	                printf("%d bytes from %s:", len, pr_ether(from->sllc_smac,
+	                printf("%d bytes from %s:", len, pr_ether(from->sllc_mac,
 				llc->numeric));
                 printf(" num=%d time=%ld.%ld ms\n", llc->received, 
 			triptime / 10, triptime % 10);
@@ -598,7 +599,7 @@ void finish(int ignore)
         putchar('\n');
         fflush(stdout);
         printf("--- %s @ 0x%02X via LLC%d %s statistics ---\n",
-                pr_ether(llc->dst.sllc_dmac, llc->numeric), llc->dsap, 
+                pr_ether(llc->dst.sllc_mac, llc->numeric), llc->dsap, 
 		llc->type, name_s);
         printf("%d packets transmitted, ", llc->transmitted);
         printf("%d packets received, ", llc->received);
@@ -686,14 +687,14 @@ void pinger(void)
                 if(i < 0)
                         printf("%s: sendto %s\n", name_s, strerror(errno));
                 printf("%s: wrote %s %d chars, ret=%d\n", name_s,
-                    pr_ether(llc->dst.sllc_dmac, llc->numeric), cc, i);
+                    pr_ether(llc->dst.sllc_mac, llc->numeric), cc, i);
         }
         if(!llc->quiet && llc->flood)
                 write(STDOUT_FILENO, &dot, 1);
 	else {
 		if(llc->hexdump) {
 			printf("%d bytes to %s:", llc->len, 
-				pr_ether(llc->dst.sllc_dmac, llc->numeric));
+				pr_ether(llc->dst.sllc_mac, llc->numeric));
 			printf(" num=%d time=0.0 ms\n", llc->received + 1);
 	                hexdump(llc->outpacket, llc->len);
 		}

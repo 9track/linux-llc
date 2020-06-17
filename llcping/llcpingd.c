@@ -152,8 +152,8 @@ int llc_load_listener(struct llc_linfo *l)
 	memset(&laddr, 0, sizeof(laddr));
 	laddr.sllc_family	= PF_LLC;
 	laddr.sllc_arphrd	= ARPHRD_ETHER;
-	laddr.sllc_ssap		= l->lsap; 
-	memcpy(&laddr.sllc_smac, l->ifmac, IFHWADDRLEN);
+	laddr.sllc_sap		= l->lsap; 
+	memcpy(&laddr.sllc_mac, l->ifmac, IFHWADDRLEN);
 
 	/* now lets open the socket, bind and start listening. */
 	if(l->type == 1)
@@ -323,10 +323,10 @@ static int llc_accept_client(struct llc_listen *lstn)
 		" from %02X:%02X:%02X:%02X:%02X:%02X@0x%02X", data->data_fd,
                 data->type, data->ifname, data->ifmac[0], data->ifmac[1], data->ifmac[2],
                 data->ifmac[3], data->ifmac[4], data->ifmac[5], data->lsap, 
-		data->data_addr.sllc_smac[0], data->data_addr.sllc_smac[1],
-		data->data_addr.sllc_smac[2], data->data_addr.sllc_smac[3],
-		data->data_addr.sllc_smac[4], data->data_addr.sllc_smac[5],
-		data->data_addr.sllc_ssap);
+		data->data_addr.sllc_mac[0], data->data_addr.sllc_mac[1],
+		data->data_addr.sllc_mac[2], data->data_addr.sllc_mac[3],
+		data->data_addr.sllc_mac[4], data->data_addr.sllc_mac[5],
+		data->data_addr.sllc_sap);
 
 	data->next      = llc_data_list;
         llc_data_list   = data;
@@ -410,10 +410,10 @@ static int llc_process_data(struct llc_data *data)
 		                " from %02X:%02X:%02X:%02X:%02X:%02X@0x%02X",
 		                data->type, data->ifname, data->ifmac[0], data->ifmac[1], data->ifmac[2],
 		                data->ifmac[3], data->ifmac[4], data->ifmac[5], data->lsap,
-		                data->data_addr.sllc_smac[0], data->data_addr.sllc_smac[1],
-		                data->data_addr.sllc_smac[2], data->data_addr.sllc_smac[3],
-		                data->data_addr.sllc_smac[4], data->data_addr.sllc_smac[5],
-		                data->data_addr.sllc_ssap);
+		                data->data_addr.sllc_mac[0], data->data_addr.sllc_mac[1],
+		                data->data_addr.sllc_mac[2], data->data_addr.sllc_mac[3],
+		                data->data_addr.sllc_mac[4], data->data_addr.sllc_mac[5],
+		                data->data_addr.sllc_sap);
 			llc_delete_data(data);
 			free(pkt);
 			return (0);
@@ -425,31 +425,29 @@ static int llc_process_data(struct llc_data *data)
 	if(llc_stats->debug >= 5) {
 		 printf("RX: SRC:%02X:%02X:%02X:%02X:%02X:%02X @ 0x%02X"
                         " -> DST:%02X:%02X:%02X:%02X:%02X:%02X @ 0x%02X\n",
-                        from.sllc_smac[0], from.sllc_smac[1], from.sllc_smac[2],
-                        from.sllc_smac[3], from.sllc_smac[4], from.sllc_smac[5],
-                        from.sllc_ssap,
-                        from.sllc_dmac[0], from.sllc_dmac[1], from.sllc_dmac[2],
-                        from.sllc_dmac[3], from.sllc_dmac[4], from.sllc_dmac[5],
-                        from.sllc_dsap);
+                        from.sllc_mac[0], from.sllc_mac[1], from.sllc_mac[2],
+                        from.sllc_mac[3], from.sllc_mac[4], from.sllc_mac[5],
+                        from.sllc_sap,
+                        data->ifmac[0], data->ifmac[1], data->ifmac[2],
+                        data->ifmac[3], data->ifmac[4], data->ifmac[5],
+                        data->lsap);
 	}
 	if(llc_stats->debug >= 10)
 		hexdump(pkt, rxlen);
 
 	memcpy(&to, &from, sizeof(from));
-        memcpy(to.sllc_dmac, from.sllc_smac, IFHWADDRLEN);
-        memcpy(to.sllc_smac, from.sllc_dmac, IFHWADDRLEN);
-        to.sllc_dsap = from.sllc_ssap;
-        to.sllc_ssap = from.sllc_dsap;
+        memcpy(to.sllc_mac, from.sllc_mac, IFHWADDRLEN);
+        to.sllc_sap = from.sllc_sap;
 
 	if(llc_stats->debug >= 5) {
 		printf("TX: SRC:%02X:%02X:%02X:%02X:%02X:%02X @ 0x%02X"
                         " -> DST:%02X:%02X:%02X:%02X:%02X:%02X @ 0x%02X\n",
-                        to.sllc_smac[0], to.sllc_smac[1], to.sllc_smac[2],
-                        to.sllc_smac[3], to.sllc_smac[4], to.sllc_smac[5],
-                        to.sllc_ssap,
-                        to.sllc_dmac[0], to.sllc_dmac[1], to.sllc_dmac[2],
-                        to.sllc_dmac[3], to.sllc_dmac[4], to.sllc_dmac[5],
-                        to.sllc_dsap);
+                        data->ifmac[0], data->ifmac[1], data->ifmac[2],
+                        data->ifmac[3], data->ifmac[4], data->ifmac[5],
+                        data->lsap,
+                        to.sllc_mac[0], to.sllc_mac[1], to.sllc_mac[2],
+                        to.sllc_mac[3], to.sllc_mac[4], to.sllc_mac[5],
+                        to.sllc_sap);
 	}
 	if(llc_stats->debug >= 10)
 		hexdump(pkt, rxlen);
