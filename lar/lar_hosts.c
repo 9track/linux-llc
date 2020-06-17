@@ -34,8 +34,8 @@
 #include <linux/if_arp.h>
 #include <linux/llc.h>
 
-#include <gnome-xml/xmlmemory.h>
-#include <gnome-xml/parser.h>
+#include <libxml/xmlmemory.h>
+#include <libxml/parser.h>
 
 /* out stuff. */
 

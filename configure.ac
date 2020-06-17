@@ -1,7 +1,8 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(ltmain.sh)
-AM_INIT_AUTOMAKE(linux-llc, 0.1.17)
+AC_INIT(linux-llc, 0.1.17)
+AC_CONFIG_SRCDIR(ltmain.sh)
+AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER(include/config.h)
 
 CFLAGS="-Wall"
@@ -33,10 +34,10 @@ dnl Checks for library functions.
 AC_CHECK_LIB(proc, main)
 
 dnl Check for XML libraries.
-AC_PATH_PROG(XML_CONFIG, xml-config, no)
+AC_PATH_PROG(XML_CONFIG, xml2-config, no)
 if test x$XML_CONFIG = xno ; then
-        AC_MSG_WARN(** Can't find xml-config.  Is libxml or libxml-devel rpm installed? **)
-	AC_MSG_ERROR(** libxml-devel is available via ftp from your linux distro or ftp.ximian.com **)
+        AC_MSG_WARN(** Can't find xml2-config.  Is libxml2 or libxml2-devel rpm installed? **)
+	AC_MSG_ERROR(** libxml2-devel is available via ftp from your linux distro or ftp.ximian.com **)
 fi
 AC_MSG_CHECKING(for xml C flags)
 XML_CFLAGS="`$XML_CONFIG --cflags`"

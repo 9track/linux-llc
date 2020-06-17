@@ -1,8 +1,8 @@
 AUTOMAKE_OPTIONS = foreign
 
 EXTRA_DIST = $(man_MANS)
-INCLUDES = -I../include -I../llcdb
-CFLAGS = -Wall
+AM_CPPFLAGS = -I$(srcdir)/../include -I$(srcdir)/../llcdb
+AM_CFLAGS = -Wall
 
 bin_PROGRAMS = llcping
 sbin_PROGRAMS = llcpingd

@@ -1,8 +1,8 @@
 AUTOMAKE_OPTIONS = foreign
 
 EXTRA_DIST = $(man_MANS)
-INCLUDES = -I../include -fPIC
-CFLAGS = -Wall
+AM_CPPFLAGS = -I$(srcdir)/../include -fPIC
+AM_CFLAGS = -Wall
 
 lib_LTLIBRARIES = libllcdb.la
 

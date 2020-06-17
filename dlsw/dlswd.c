@@ -235,7 +235,7 @@ static int dlsw_cap_xchng_tx_rsp(dlsw_partner_t *partner, void *data, int len)
         memcpy(ssp->data, data, len);
         err = dlsw_partner_tx_data(partner, ssp, txlen);
         if (err < 0)
-	         printf(__FUNCTION__ ": partner_tx_data error `%s'.\n", 
+	         printf(__func__ ": partner_tx_data error `%s'.\n", 
                          strerror(errno));
         free(ssp);
 	return err;
@@ -272,7 +272,7 @@ static int dlsw_cap_xchng_init(dlsw_partner_t *local, dlsw_partner_t *remote)
 	memcpy(ssp->data, mv, saved_mvlen);
 	err = dlsw_partner_tx_data(remote, ssp, len);
 	if (err < 0)
-		printf(__FUNCTION__ ": partner_tx_data error `%s'.\n", 
+		printf(__func__ ": partner_tx_data error `%s'.\n", 
 			strerror(errno));
 	free(ssp);
 	free(mv);
@@ -282,32 +282,32 @@ static int dlsw_cap_xchng_init(dlsw_partner_t *local, dlsw_partner_t *remote)
 static int dlsw_cap_xchng_ctrl_chk(dlsw_version_t *ver, ssp_ctrl_t *info)
 {
 	if (info->version > ver->version) {
-		printf(__FUNCTION__ ": incompatible version (%02X > %02X)\n",
+		printf(__func__ ": incompatible version (%02X > %02X)\n",
 			info->version, ver->version);
 		return -EINVAL;
 	}
 	if (info->hdrlen != SSP_HDRLEN_CTRL) {
-		printf(__FUNCTION__ ": bad hdrlen (%d)\n", info->hdrlen);
+		printf(__func__ ": bad hdrlen (%d)\n", info->hdrlen);
 		return -EINVAL;
 	}
 	if (info->msgtype != SSP_MSG_CAP_EXCHANGE) {
-		printf(__FUNCTION__ ": bad msgtype (%02X)\n", info->msgtype);
+		printf(__func__ ": bad msgtype (%02X)\n", info->msgtype);
 		return -EINVAL;
 	}
 	if (info->proto != SSP_PROTO_ID) {
-		printf(__FUNCTION__ ": bad proto (%02X)\n", info->proto);
+		printf(__func__ ": bad proto (%02X)\n", info->proto);
 		return -EINVAL;
 	}
 	if (info->hdrnum != SSP_HDRNUM) {
-		printf(__FUNCTION__ ": bad hdrnum (%d)\n", info->hdrnum);
+		printf(__func__ ": bad hdrnum (%d)\n", info->hdrnum);
 		return -EINVAL;
 	}
 	if (info->oldmsgtype != SSP_MSG_CAP_EXCHANGE) {
-                printf(__FUNCTION__ ": bad oldmsgtype (%02X)\n", info->oldmsgtype);
+                printf(__func__ ": bad oldmsgtype (%02X)\n", info->oldmsgtype);
                 return -EINVAL;
         }
 	if (info->fdir > SSP_DIR_RSP) {
-		printf(__FUNCTION__ ": bad frame direction (%02X)\n",
+		printf(__func__ ": bad frame direction (%02X)\n",
 			info->fdir);
 		return -EINVAL;
 	}
@@ -332,7 +332,7 @@ static int dlsw_process_msg_cap_exchange(dlsw_partner_t *partner,
 	/* check ssp control header. */
 	err = dlsw_cap_xchng_ctrl_chk(&partner->version, info);
 	if (err < 0) {
-		printf(__FUNCTION__ ": invalid ctrl header.\n");
+		printf(__func__ ": invalid ctrl header.\n");
 		return err;
 	}
 	
@@ -362,7 +362,7 @@ static int dlsw_process_msg_cap_exchange(dlsw_partner_t *partner,
 			mv = dlsw_vect_tx_cap_xchng_pos_r();
 			err = dlsw_cap_xchng_tx_rsp(partner, mv, mv->len);
 			if (err < 0) {
-				printf(__FUNCTION__ ": cap_xchng pos rsp error\n");
+				printf(__func__ ": cap_xchng pos rsp error\n");
 				free(mv);
 				return err;
 			}
@@ -397,7 +397,7 @@ static int dlsw_process_msg_cap_exchange(dlsw_partner_t *partner,
 			break;
 			
 		default:
-			printf(__FUNCTION__ ": unknown cap_exchange mv %02X\n",
+			printf(__func__ ": unknown cap_exchange mv %02X\n",
 				ntohs(mv->id));
 			return -EINVAL;
 	}
@@ -458,7 +458,7 @@ static int dlsw_process_partner_read_data(dlsw_partner_t *partner)
         rxlen = recv(partner->read_fd, pkt, pktlen, 0);
         if (rxlen < 0 || rxlen == 0) {
 		/* tear down entire dlsw partner. */
-		printf(__FUNCTION__ ": disconnect\n");
+		printf(__func__ ": disconnect\n");
 	        free(pkt);
 	        return 0;
 	}
@@ -470,87 +470,87 @@ static int dlsw_process_partner_read_data(dlsw_partner_t *partner)
 	info = (ssp_info_t *)pkt;
 	switch (info->msgtype) {
 		case SSP_MSG_CANUREACH:
-			printf(__FUNCTION__ ": SSP_MSG_CANUREACH\n");
+			printf(__func__ ": SSP_MSG_CANUREACH\n");
 			break;
 		
 		case SSP_MSG_ICANREACH:
-			printf(__FUNCTION__ ": SSP_MSG_ICANREACH\n");
+			printf(__func__ ": SSP_MSG_ICANREACH\n");
 			break;
 
 		case SSP_MSG_REACH_ACK:
-			printf(__FUNCTION__ ": SSP_MSG_REACH_ACK\n");
+			printf(__func__ ": SSP_MSG_REACH_ACK\n");
 			break;
 
 		case SSP_MSG_DGRMFRAME:
-			printf(__FUNCTION__ ": SSP_MSG_DGRMFRAME\n");
+			printf(__func__ ": SSP_MSG_DGRMFRAME\n");
 			break;
 
 		case SSP_MSG_XIDFRAME:
-			printf(__FUNCTION__ ": SSP_MSG_XIDFRAME\n");
+			printf(__func__ ": SSP_MSG_XIDFRAME\n");
 			break;
 
 		case SSP_MSG_CONTACT:
-			printf(__FUNCTION__ ": SSP_MSG_CONTACT\n");
+			printf(__func__ ": SSP_MSG_CONTACT\n");
 			break;
 
 		case SSP_MSG_CONTACTED:
-			printf(__FUNCTION__ ": SSP_MSG_CONTACTED\n");
+			printf(__func__ ": SSP_MSG_CONTACTED\n");
 			break;
 
 		case SSP_MSG_RESTART_DL:
-			printf(__FUNCTION__ ": SSP_MSG_RESTART_DL\n");
+			printf(__func__ ": SSP_MSG_RESTART_DL\n");
 			break;
 
 		case SSP_MSG_DL_RESTARTED:
-			printf(__FUNCTION__ ": SSP_MSG_DL_RESTARTED\n");
+			printf(__func__ ": SSP_MSG_DL_RESTARTED\n");
 			break;
 
 		case SSP_MSG_ENTER_BUSY:
-			printf(__FUNCTION__ ": SSP_MSG_ENTER_BUSY\n");
+			printf(__func__ ": SSP_MSG_ENTER_BUSY\n");
 			break;
 
 		case SSP_MSG_EXIT_BUSY:
-			printf(__FUNCTION__ ": SSP_MSG_EXIT_BUSY\n");
+			printf(__func__ ": SSP_MSG_EXIT_BUSY\n");
 			break;
 
 		case SSP_MSG_INFOFRAME:
-			printf(__FUNCTION__ ": SSP_MSG_INFOFRAME\n");
+			printf(__func__ ": SSP_MSG_INFOFRAME\n");
 			break;
 
 		case SSP_MSG_HALT_DL:
-			printf(__FUNCTION__ ": SSP_MSG_HALT_DL\n");
+			printf(__func__ ": SSP_MSG_HALT_DL\n");
 			break;
 
 		case SSP_MSG_DL_HALTED:
-			printf(__FUNCTION__ ": SSP_MSG_DL_HALTED\n");
+			printf(__func__ ": SSP_MSG_DL_HALTED\n");
 			break;
 
 		case SSP_MSG_NETBIOS_NQ:
-			printf(__FUNCTION__ ": SSP_MSG_NETBIOS_NQ\n");
+			printf(__func__ ": SSP_MSG_NETBIOS_NQ\n");
 			break;
 
 		case SSP_MSG_NETBIOS_NR:
-			printf(__FUNCTION__ ": SSP_MSG_NETBIOS_NR\n");
+			printf(__func__ ": SSP_MSG_NETBIOS_NR\n");
 			break;
 
 		case SSP_MSG_DATAFRAME:
-			printf(__FUNCTION__ ": SSP_MSG_DATAFRAME\n");
+			printf(__func__ ": SSP_MSG_DATAFRAME\n");
 			break;
 
 		case SSP_MSG_HALT_DL_NOACK:
-			printf(__FUNCTION__ ": SSP_MSG_HALT_DL_NOACK\n");
+			printf(__func__ ": SSP_MSG_HALT_DL_NOACK\n");
 			break;
 
 		case SSP_MSG_NETBIOS_ANQ:
-			printf(__FUNCTION__ ": SSP_MSG_NETBIOS_ANQ\n");
+			printf(__func__ ": SSP_MSG_NETBIOS_ANQ\n");
 			break;
 
 		case SSP_MSG_NETBIOS_ANR:
-			printf(__FUNCTION__ ": SSP_MSG_NETBIOS_ANR\n");
+			printf(__func__ ": SSP_MSG_NETBIOS_ANR\n");
 			break;
 
 		case SSP_MSG_KEEPALIVE:
-			printf(__FUNCTION__ ": SSP_MSG_KEEPALIVE\n");
+			printf(__func__ ": SSP_MSG_KEEPALIVE\n");
 			break;
 
 		case SSP_MSG_CAP_EXCHANGE:
@@ -558,19 +558,19 @@ static int dlsw_process_partner_read_data(dlsw_partner_t *partner)
 			break;
 
 		case SSP_MSG_IFCM:
-			printf(__FUNCTION__ ": SSP_MSG_IFCM\n");
+			printf(__func__ ": SSP_MSG_IFCM\n");
 			break;
 
 		case SSP_MSG_TEST_CIRCUIT_REQ:
-			printf(__FUNCTION__ ": SSP_MSG_TEST_CIRCUIT_REQ\n");
+			printf(__func__ ": SSP_MSG_TEST_CIRCUIT_REQ\n");
 			break;
 
 		case SSP_MSG_TEST_CIRCUIT_RSP:
-			printf(__FUNCTION__ ": SSP_MSG_TEST_CIRCUIT_RSP\n");
+			printf(__func__ ": SSP_MSG_TEST_CIRCUIT_RSP\n");
 			break;
 
 		default:
-			printf(__FUNCTION__ ": unknown SSP msgtype 0x%02X\n", 
+			printf(__func__ ": unknown SSP msgtype 0x%02X\n", 
 				info->msgtype);
 			break;
 	}

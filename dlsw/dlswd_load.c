@@ -44,8 +44,8 @@
 #include <dlswd_load.h>
 #include <dlswd.h>
 
-#include <gnome-xml/xmlmemory.h>
-#include <gnome-xml/parser.h>
+#include <libxml/xmlmemory.h>
+#include <libxml/parser.h>
 
 static global *ginfo = NULL;
 extern global *dlsw_config_info;

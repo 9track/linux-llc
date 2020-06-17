@@ -41,8 +41,8 @@
 #include "lard_load.h"
 #include "lard.h"
 
-#include <gnome-xml/xmlmemory.h>
-#include <gnome-xml/parser.h>
+#include <libxml/xmlmemory.h>
+#include <libxml/parser.h>
 
 static global *ginfo = NULL;
 extern global *lar_config_info;

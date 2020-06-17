@@ -1,8 +1,8 @@
 AUTOMAKE_OPTIONS = foreign
 
 EXTRA_DIST = $(man_MANS)
-INCLUDES   = -I../include
-CFLAGS     = -Wall
+AM_CPPFLAGS   = -I$(srcdir)/../include
+AM_CFLAGS     = -Wall
 
 bin_PROGRAMS  = llctftp
 sbin_PROGRAMS = llctftpd

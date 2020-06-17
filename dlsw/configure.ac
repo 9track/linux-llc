@@ -1,7 +1,8 @@
 dnl Process this file with autoconf to create configure.
 
-AC_INIT(dlswd.c)
-AM_INIT_AUTOMAKE(dlsw, 0.1.17)
+AC_INIT(dlsw, 0.1.17)
+AC_CONFIG_SRCDIR(dlswd.c)
+AM_INIT_AUTOMAKE
 
 AC_PROG_CC
 AC_EXEEXT
@@ -9,10 +10,10 @@ AM_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
 
 dnl Check for XML libraries.
-AC_PATH_PROG(XML_CONFIG, xml-config, no)
+AC_PATH_PROG(XML_CONFIG, xml2-config, no)
 if test x$XML_CONFIG = xno ; then
-	AC_MSG_WARN(** Can't find xml-config.  Is libxml or libxml-devel rpm installed? **)
-        AC_MSG_ERROR(** libxml-devel is available via ftp from your linux distro or ftp.ximian.com **)
+	AC_MSG_WARN(** Can't find xml2-config.  Is libxml2 or libxml2-devel rpm installed? **)
+        AC_MSG_ERROR(** libxml2-devel is available via ftp from your linux distro or ftp.ximian.com **)
 fi
 AC_MSG_CHECKING(for xml C flags)
 XML_CFLAGS="`$XML_CONFIG --cflags`"

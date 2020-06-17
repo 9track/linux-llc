@@ -1,11 +1,10 @@
 AUTOMAKE_OPTIONS = foreign
 
 EXTRA_DIST = $(man_MANS)
-INCLUDES=-I../include
+AM_CPPFLAGS=-I$(srcdir)/../include
 
 sbin_PROGRAMS = dlswd
 
-dlswd_LDADD = -lproc
 dlswd_SOURCES = dlswd.c dlswd_load.c dlsw_list.c dlsw_vector.c dlsw_timer.c \
 	dlsw_ssp.c
 
