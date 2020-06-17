@@ -299,8 +299,8 @@ static int lar_llc_tx_frame(struct lar_listen *lstn, char *dmac, void *data, int
 {
 	struct sockaddr_llc to;
 	memcpy(&to, &lstn->laddr, sizeof(struct sockaddr_llc));
-	memcpy(&to.sllc_dmac, dmac, LAR_MAX_SV_MAC_LEN);
-	to.sllc_dsap = LLC_SAP_LAR;
+	memcpy(&to.sllc_mac, dmac, LAR_MAX_SV_MAC_LEN);
+	to.sllc_sap = LLC_SAP_LAR;
 	return sendto(lstn->listen_fd, data, len, 0, (struct sockaddr *)&to,
 		sizeof(struct sockaddr_llc));
 }
@@ -322,9 +322,9 @@ static int lar_llc_tx_find(struct lar_client *clnt, lar_find_usr_t *ufind)
 		major_vector_t *mv;
 		memcpy(find->onetid, tempname, sizeof(lar_netid_t));
 		memcpy(find->oname, tempname, sizeof(lar_name_t));
-		memcpy(find->cce_mac, l->laddr.sllc_smac, sizeof(lar_mac_t));
-		memcpy(find->omac, l->laddr.sllc_smac, sizeof(lar_mac_t));
-		find->olsap = l->laddr.sllc_ssap;
+		memcpy(find->cce_mac, l->laddr.sllc_mac, sizeof(lar_mac_t));
+		memcpy(find->omac, l->laddr.sllc_mac, sizeof(lar_mac_t));
+		find->olsap = l->laddr.sllc_sap;
 		mv = lar_vect_tx_find(find);
                 lar_llc_tx_frame(l, lar_all_cce_gmac, mv, mv->len);
                 free(mv);
@@ -348,7 +348,7 @@ static int lar_llc_tx_query(struct lar_client *clnt, lar_search_usr_t *srch)
 	list_for_each(le, &lar_listen_list) {
 		struct lar_listen *l = list_entry(le, struct lar_listen, list);
 		major_vector_t *mv;
-		memcpy(query->cce_mac, l->laddr.sllc_smac, sizeof(lar_mac_t));
+		memcpy(query->cce_mac, l->laddr.sllc_mac, sizeof(lar_mac_t));
 		mv = lar_vect_tx_query(query);
 		lar_llc_tx_frame(l, lar_server_gmac, mv, mv->len);
 		free(mv);
@@ -371,7 +371,7 @@ static int lar_llc_tx_notify(struct lar_listen *lstn, lar_query_pkt_t *query,
         notify->rtcap           = recd->rtcap;
         memcpy(notify->netid, recd->netid, sizeof(lar_netid_t));
         memcpy(notify->name, recd->name, sizeof(lar_name_t));
-        memcpy(notify->cce_mac, lstn->laddr.sllc_smac, sizeof(lar_mac_t));
+        memcpy(notify->cce_mac, lstn->laddr.sllc_mac, sizeof(lar_mac_t));
 	for (i = 0; recd->groups[i] != NULL; i++)
 		notify->groups[i] = recd->groups[i];
 	notify->groups[i] = NULL;
@@ -1259,9 +1259,8 @@ static int lar_load_group_mac(char *smac, char *dmac)
 	memset(&laddr, 0, sizeof(laddr));
         laddr.sllc_family       = PF_LLC;
         laddr.sllc_arphrd       = ARPHRD_ETHER;
-        laddr.sllc_ssap         = lar_config_info->lsap;
-	memcpy(&laddr.sllc_smac, smac, IFHWADDRLEN);
-        memcpy(&laddr.sllc_mmac, dmac, IFHWADDRLEN);
+        laddr.sllc_sap          = lar_config_info->lsap;
+        memcpy(&laddr.sllc_mac, dmac, IFHWADDRLEN);
         err = bind(fd, (struct sockaddr *)&laddr, sizeof(laddr));
         if (err < 0) {
                 printf("%s: bind failed `%s'.\n", name_s, strerror(errno));
@@ -1319,8 +1318,8 @@ int lar_load_listen(struct lar_linfo *listen)
 		return fd;
         laddr.sllc_family       = PF_LLC;
         laddr.sllc_arphrd       = ARPHRD_ETHER; 
-        laddr.sllc_ssap         = lar_config_info->lsap;
-        memcpy(&laddr.sllc_smac, listen->ifmac, IFHWADDRLEN);
+        laddr.sllc_sap          = lar_config_info->lsap;
+        memcpy(&laddr.sllc_mac, listen->ifmac, IFHWADDRLEN);
 	err = bind(fd, (struct sockaddr *)&laddr, sizeof(laddr));
         if (err < 0) {
 		printf("%s: bind failed `%s'.\n", name_s, strerror(err));
