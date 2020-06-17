@@ -45,7 +45,7 @@
 
 int dlsw_ssp_dump_info(ssp_info_t *ssp)
 {
-	 printf(__func__ ": ssp information header dump\n");
+	 printf("%s: ssp information header dump\n", __FUNCTION__);
          printf("version       = %02X\n", ssp->version);
          printf("  hdrlen      = %d\n", ssp->hdrlen);
          printf("  msglen      = %d\n", ntohs(ssp->msglen));
@@ -59,7 +59,7 @@ int dlsw_ssp_dump_info(ssp_info_t *ssp)
 
 int dlsw_ssp_dump_ctrl(ssp_ctrl_t *ssp)
 {       
-        printf(__func__ ": ssp control header dump\n");
+        printf("%s: ssp control header dump\n", __FUNCTION__);
         printf("version       = %02X\n", ssp->version);
         printf("  hdrlen      = %d\n", ssp->hdrlen);
         printf("  msglen      = %d\n", ntohs(ssp->msglen));

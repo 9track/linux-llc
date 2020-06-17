@@ -111,7 +111,7 @@ int dlsw_vect_rx_cap_xchng_c_print(sub_vector_t *sv, void *data)
 			break;
 		}
 		default:
-			printf(__func__ ": unknown sv id (%02X)\n", sv->id);
+			printf("%s: unknown sv id (%02X)\n", __FUNCTION__, sv->id);
 			return -EINVAL;
 	}
 	return 0;
@@ -179,7 +179,7 @@ int dlsw_vect_rx_cap_xchng_c(sub_vector_t *sv, void *data, dlsw_cap_cmd_pkt_t *c
 			break;
 			
 		default:
-			printf(__func__ ": unknown sub-vector 0x%02X\n", sv->id);
+			printf("%s: unknown sub-vector 0x%02X\n", __FUNCTION__, sv->id);
 			break;
 	}
 	return 0;
