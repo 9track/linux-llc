@@ -44,11 +44,10 @@ static struct llcdbhost *allhosts = NULL;
 
 static int in_ether(char *bufp, unsigned char *ptr)
 {   
-        char c, *orig;
+        char c;
         unsigned val;
         int i = 0;
 
-        orig = bufp;
         while((*bufp != '\0') && (i < ETH_ALEN)) {
                 val = 0;
                 c = *bufp++;
@@ -98,16 +97,16 @@ static struct llcdbhost *parse_host(xmlDocPtr doc, xmlNsPtr ns, xmlNodePtr cur)
                 return (NULL);
 
         for(cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
-                if((!strcmp(cur->name, "name")) && (cur->ns == ns)) {
-			char *tn = xmlNodeListGetString(doc,
+                if((!xmlStrcmp(cur->name, (xmlChar *)"name")) && (cur->ns == ns)) {
+			xmlChar *tn = xmlNodeListGetString(doc,
 				cur->xmlChildrenNode, 1);
-			lh->host.lh_name = malloc(strlen(tn));
-			strcpy(lh->host.lh_name, tn);
+			lh->host.lh_name = malloc(xmlStrlen(tn));
+			strcpy(lh->host.lh_name, (const char *)tn);
 		}
-		if((!strcmp(cur->name, "mac")) && (cur->ns == ns)) {
+		if((!xmlStrcmp(cur->name, (xmlChar *)"mac")) && (cur->ns == ns)) {
 			lh->host.lh_addr = malloc(IFHWADDRLEN);
-			in_ether(xmlNodeListGetString(doc,
-                                cur->xmlChildrenNode, 1), lh->host.lh_addr);
+			in_ether((char *)xmlNodeListGetString(doc,
+                                cur->xmlChildrenNode, 1), (unsigned char *)lh->host.lh_addr);
 			lh->host.lh_addrtype 	= ARPHRD_ETHER;
 			lh->host.lh_length 	= IFHWADDRLEN;
 		}
@@ -139,14 +138,14 @@ static int load_llchosts_file(char *cfile)
                 xmlFreeDoc(doc);
                 return (-1);
         }
-        ns = xmlSearchNsByHref(doc, cur, _PATH_LLCHOSTS_XML_HREF);
+        ns = xmlSearchNsByHref(doc, cur, (const xmlChar *)_PATH_LLCHOSTS_XML_HREF);
         if(!ns) {
                 fprintf(stderr, "file (%s) is of the wrong type,"
                         " llchosts namespace not found.\n", cfile);
                 xmlFreeDoc(doc);
                 return (-1);
         }
-        if(strcmp(cur->name, "Helping")) {
+        if(xmlStrcmp(cur->name, (xmlChar *)"Helping")) {
                 fprintf(stderr, "file (%s) is of the wrong type,"
                         " root node != Helping.\n", cfile);
                 xmlFreeDoc(doc);
@@ -161,7 +160,7 @@ static int load_llchosts_file(char *cfile)
                 return (-1);
 
         /* first level is just 'hosts' */
-        if((strcmp(cur->name, "hosts")) || (cur->ns != ns)) {
+        if((xmlStrcmp(cur->name, (xmlChar *)"hosts")) || (cur->ns != ns)) {
                 fprintf(stderr, "file (%s) is of the wrong type, was '%s',"
                         " hosts expected", cfile, cur->name);
                 fprintf(stderr, "xmlDocDump follows.\n");
@@ -173,7 +172,7 @@ static int load_llchosts_file(char *cfile)
 
         /* now we walk the xml tree. */
         for(cur = cur->xmlChildrenNode; cur != NULL; cur = cur->next) {
-                if((!strcmp(cur->name, "host")) && (cur->ns == ns)) {
+                if((!xmlStrcmp(cur->name, (xmlChar *)"host")) && (cur->ns == ns)) {
                         host = parse_host(doc, ns, cur);
                         if(!host)
                                 return (-EINVAL);
