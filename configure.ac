@@ -56,5 +56,5 @@ AC_CHECK_FUNCS(getuid gettimeofday socket bind connect close exit write fflush \
 	strtol select perror)
 
 dnl Actual files and directories autoconf touches
-AC_CONFIG_SUBDIRS(llcdb llcping llctftp llctelnet lar dlsw)
-AC_OUTPUT(Makefile include/Makefile docs/Makefile)
+AC_OUTPUT(Makefile include/Makefile docs/Makefile dlsw/Makefile lar/Makefile \
+	  llcdb/Makefile llcping/Makefile llctelnet/Makefile llctftp/Makefile)
