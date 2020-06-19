@@ -3,10 +3,6 @@
 # helps bootstrapping libtool, when checked out from CVS
 # requires GNU autoconf and GNU automake
 
-file=Makefile.in
-
-rm -f libtool
-
 #libtoolize -c		# use when required (ie libtool upgrade)
 aclocal
 automake --gnu --add-missing --copy

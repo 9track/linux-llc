@@ -40,7 +40,7 @@ RPM_BUILD_TARGET=`uname -m`
 ##
 
 new-version:
-	find . \( -name configure.in \) -type f -exec ./chgver.sh {} $(RELEASE) \;
+	find . \( -name configure.ac \) -type f -exec ./chgver.sh {} $(RELEASE) \;
 
 
 # Tag before making distribution.  Also, don't make a distribution if
